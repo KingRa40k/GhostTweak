@@ -260,21 +260,34 @@ fn get_license_store_path() -> PathBuf {
 pub fn verify_native_license(key: String) -> Result<NativeLicenseResult, String> {
     let hwid = get_hardware_id()?;
     let clean_key = key.trim().to_uppercase();
+    let normalized = clean_key.replace("-", "");
 
-    // Check VIP Master Keys and Test Keys
-    let is_vip = match clean_key.as_str() {
-        "GHOST-VIP-PRO-2026" 
-        | "GHOST-FPS-BOOST-9999" 
-        | "GHOST-MAX-PERF-ULTRA"
-        | "GHOST-ESPORTS-CS2-PRO"
-        | "GHOST-BETA-TESTER-01"
-        | "GHOST-TURBO-CORE-777"
-        | "GHOST-STEALTH-VIP-00"
-        | "GHOST-CYBER-WAR-9999" => true,
-        _ => false,
+    // Check VIP Master Keys and Test Keys (matching both normalized and exact)
+    let is_vip = match normalized.as_str() {
+        "GHOSTVIPPRO2026" 
+        | "GHOSTFPSBOOST9999" 
+        | "GHOSTMAXPERFULTRA"
+        | "GHOSTESPORTSCS2PRO"
+        | "GHOSTBETATESTER01"
+        | "GHOSTTURBOCORE777"
+        | "GHOSTSTEALTHVIP00"
+        | "GHOSTCYBERWAR9999" => true,
+        _ => match clean_key.as_str() {
+            "GHOST-VIP-PRO-2026" 
+            | "GHOST-FPS-BOOST-9999" 
+            | "GHOST-MAX-PERF-ULTRA"
+            | "GHOST-ESPORTS-CS2-PRO"
+            | "GHOST-BETA-TESTER-01"
+            | "GHOST-TURBO-CORE-777"
+            | "GHOST-STEALTH-VIP-00"
+            | "GHOST-CYBER-WAR-9999"
+            | "GHOST-CYBE-RWAR-9999"
+            | "GHOST-VIPP-RO20-26" => true,
+            _ => false,
+        },
     };
 
-    let is_trial = clean_key == "TRIAL-ACCESS-FREE";
+    let is_trial = clean_key == "TRIAL-ACCESS-FREE" || normalized == "TRIALACCESSFREE";
 
     // Algorithmic key validation: GHOST-XXXX-YYYY-ZZZZ
     let is_valid_algo = if clean_key.starts_with("GHOST-") {

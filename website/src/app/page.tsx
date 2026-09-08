@@ -77,8 +77,8 @@ export default function HomePage() {
                 </a>
 
                 <a
-                  href="/downloads/GhostTweak_v1.0.0_Portable.exe"
-                  download="GhostTweak_v1.0.0_Portable.exe"
+                  href="/downloads/GhostTweak_Portable.exe"
+                  download="GhostTweak_Portable.exe"
                   className="w-full sm:w-auto py-3.5 px-6 rounded-lg font-mono text-xs uppercase tracking-widest font-bold text-slate-300 border border-white/10 bg-white/[0.04] hover:bg-white/10 hover:text-white hover:border-white/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
                 >
                   <Download className="w-4 h-4 text-accent" />

@@ -27,20 +27,19 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
     getSystemHwidAsync().then(setHwid);
   }, []);
 
-  // Format into 4 segments: GHOST - XXXX - XXXX - XXXX
+  // Format key input while preserving existing hyphens
   const handleKeyChange = (val: string) => {
-    let clean = val.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (clean.length > 20) clean = clean.substring(0, 20);
+    let clean = val.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+    if (clean.length > 25) clean = clean.substring(0, 25);
 
-    let formatted = '';
-    if (clean.startsWith('GHOST')) {
+    let formatted = clean;
+    // Auto-format only if typed as one contiguous word starting with GHOST without any hyphens
+    if (!clean.includes('-') && clean.startsWith('GHOST') && clean.length > 5) {
       const rest = clean.slice(5);
       formatted = 'GHOST';
       if (rest.length > 0) formatted += '-' + rest.slice(0, 4);
       if (rest.length > 4) formatted += '-' + rest.slice(4, 8);
       if (rest.length > 8) formatted += '-' + rest.slice(8, 12);
-    } else {
-      formatted = clean;
     }
 
     setKeyInput(formatted);
