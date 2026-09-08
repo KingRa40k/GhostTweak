@@ -66,20 +66,44 @@ export default function HomePage() {
               </p>
 
               {/* Download Buttons Group */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-lg mx-auto">
                 <a
-                  href="#download-installer"
-                  className="w-full sm:w-auto btn-accent py-3.5 px-8 rounded-lg font-mono text-xs uppercase tracking-widest font-extrabold flex items-center justify-center gap-2 shadow-xl"
+                  href="/downloads/GhostTweak_Setup_v1.0.0.exe"
+                  download="GhostTweak_Setup_v1.0.0.exe"
+                  className="w-full sm:w-auto btn-accent py-3.5 px-8 rounded-lg font-mono text-xs uppercase tracking-widest font-extrabold flex items-center justify-center gap-2 shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
                   <Download className="w-4 h-4" />
                   <span>{t.downloadBanner.msiBtn}</span>
                 </a>
 
                 <a
-                  href="#download-portable"
-                  className="w-full sm:w-auto py-3.5 px-6 rounded-lg font-mono text-xs uppercase tracking-widest font-bold text-slate-300 border border-white/10 bg-white/[0.04] hover:bg-white/10 hover:text-white transition-all"
+                  href="/downloads/GhostTweak_v1.0.0_Portable.exe"
+                  download="GhostTweak_v1.0.0_Portable.exe"
+                  className="w-full sm:w-auto py-3.5 px-6 rounded-lg font-mono text-xs uppercase tracking-widest font-bold text-slate-300 border border-white/10 bg-white/[0.04] hover:bg-white/10 hover:text-white hover:border-white/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
                 >
+                  <Download className="w-4 h-4 text-accent" />
                   <span>{t.downloadBanner.zipBtn}</span>
+                </a>
+              </div>
+
+              {/* Alternative Download Links */}
+              <div className="mt-5 text-xs font-mono text-slate-400 flex flex-wrap items-center justify-center gap-2">
+                <span>{t.downloadBanner.moreOptions}</span>
+                <a
+                  href="/downloads/GhostTweak_v1.0.0.msi"
+                  download="GhostTweak_v1.0.0.msi"
+                  className="text-accent hover:underline inline-flex items-center gap-1 font-semibold"
+                >
+                  {t.downloadBanner.msiLink}
+                </a>
+                <span>•</span>
+                <a
+                  href="https://github.com/89646128494le-svg/GhostTweak/releases"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-slate-300 hover:text-white hover:underline inline-flex items-center gap-1"
+                >
+                  {t.downloadBanner.githubLink}
                 </a>
               </div>
 

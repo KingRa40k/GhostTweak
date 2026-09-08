@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
@@ -95,6 +95,9 @@ export interface Translations {
     cleanTag: string;
     sizeTag: string;
     shaTag: string;
+    moreOptions: string;
+    msiLink: string;
+    githubLink: string;
   };
   faq: {
     tag: string;
@@ -335,12 +338,15 @@ export const translations: Record<Language, Translations> = {
     },
     downloadBanner: {
       title: "Загрузка GhostTweak",
-      desc: "Сборка GhostTweak для Windows 10/11. Без рекламы, телеметрии и фоновых служб. Скомпилированный бинарный файл на Rust.",
-      msiBtn: "Скачать Installer (.msi)",
-      zipBtn: "Portable (.zip)",
+      desc: "Официальные сборки GhostTweak для Windows 10 и 11. Без рекламы, телеметрии и фоновых служб. Нативный бинарный файл на Rust.",
+      msiBtn: "Скачать инсталлятор (.exe)",
+      zipBtn: "Portable (.exe, 4.8 МБ)",
       cleanTag: "VirusTotal Clean (0/72)",
-      sizeTag: "Размер: 4.8 МБ",
-      shaTag: "SHA-256 Verified",
+      sizeTag: "Инсталлятор: 1.58 МБ",
+      shaTag: "SHA-256 Проверен",
+      moreOptions: "Также доступны для загрузки:",
+      msiLink: "MSI пакет (.msi, 2.39 МБ)",
+      githubLink: "Релизы на GitHub",
     },
     faq: {
       tag: "FAQ",
@@ -593,12 +599,15 @@ export const translations: Record<Language, Translations> = {
     },
     downloadBanner: {
       title: "Download GhostTweak",
-      desc: "GhostTweak build for Windows 10/11. No ads, no telemetry, no background services. Standalone compiled binary.",
-      msiBtn: "Download Installer (.msi)",
-      zipBtn: "Portable (.zip)",
+      desc: "Official GhostTweak releases for Windows 10 & 11. No ads, no telemetry, no background services. Standalone compiled Rust binary.",
+      msiBtn: "Download Setup (.exe)",
+      zipBtn: "Portable (.exe, 4.8 MB)",
       cleanTag: "VirusTotal Clean (0/72)",
-      sizeTag: "Size: 4.8 MB",
+      sizeTag: "Installer: 1.58 MB",
       shaTag: "SHA-256 Verified",
+      moreOptions: "Also available for download:",
+      msiLink: "MSI Package (.msi, 2.39 MB)",
+      githubLink: "GitHub Releases",
     },
     faq: {
       tag: "FAQ",

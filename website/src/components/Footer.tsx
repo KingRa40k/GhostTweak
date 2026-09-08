@@ -41,15 +41,16 @@ export const Footer: React.FC = () => {
 
             <div className="flex items-center gap-3 pt-2">
               <a
-                href="#download"
+                href="/downloads/GhostTweak_Setup_v1.0.0.exe"
+                download="GhostTweak_Setup_v1.0.0.exe"
                 className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg font-mono text-[11px] font-bold text-white border border-white/10 bg-white/[0.04] hover:bg-white/10 transition-colors"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>v1.0.0 (.msi)</span>
+                <Download className="w-3.5 h-3.5 text-accent" />
+                <span>v1.0.0 Setup (.exe)</span>
               </a>
 
               <a
-                href="https://github.com"
+                href="https://github.com/89646128494le-svg/GhostTweak"
                 target="_blank"
                 rel="noreferrer"
                 className="p-2 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/10 text-slate-300 hover:text-white transition-colors"
