@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Language = 'ru' | 'en';
 
-const LANG_KEY = 'ghosttweak_language';
+const LANG_KEY = 'ghosttweak_language_v1';
 
 export function getStoredLanguage(): Language | null {
   const saved = localStorage.getItem(LANG_KEY);

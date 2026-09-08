@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   ShieldCheck, ArrowRight,
-  Check, Fingerprint, Lock, Shield, AlertCircle
+  Check, Fingerprint, Lock, Shield, AlertCircle, Globe
 } from 'lucide-react';
 import { verifyLicenseKey, activateTrial, getSystemHwid, getSystemHwidAsync, LicenseData } from '../lib/license';
-import { useI18n } from '../lib/i18n';
+import { useI18n, setStoredLanguage } from '../lib/i18n';
 
 interface AuthScreenProps {
   onAuthorized: (license: LicenseData) => void;
@@ -148,9 +148,20 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] text-[10px] font-mono text-zinc-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>{t.auth.ready}</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setStoredLanguage(lang === 'ru' ? 'en' : 'ru')}
+              title={lang === 'ru' ? 'Switch to English' : 'Переключить на русский'}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.08] text-[11px] font-mono text-zinc-300 hover:text-white transition-all cursor-pointer"
+            >
+              <Globe size={12} className="text-ghost-cyan" />
+              <span>{lang.toUpperCase()}</span>
+            </button>
+
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] text-[10px] font-mono text-zinc-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{t.auth.ready}</span>
+            </div>
           </div>
         </div>
 
