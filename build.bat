@@ -1,4 +1,9 @@
 @echo off
-call "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Auxiliary\Build\vcvars64.bat" >nul 2>&1
-cd /d "c:\Users\Lev\Documents\antigravity\valiant-maxwell\src-tauri"
-cargo build 2>&1
+setlocal
+cd /d "%~dp0src-tauri"
+cargo build --release
+if %ERRORLEVEL% equ 0 (
+    echo [OK] GhostTweak built successfully.
+) else (
+    echo [ERROR] Build failed. Ensure Rust and MSVC Build Tools are installed.
+)

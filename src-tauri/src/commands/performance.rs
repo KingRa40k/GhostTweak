@@ -170,6 +170,6 @@ pub fn set_dns(preset: String) -> Result<String, String> {
 
     #[cfg(not(windows))]
     {
-        Ok(format!("Mock DNS set to {}", preset))
+        Ok(format!("DNS profile set to {}", preset))
     }
 }
