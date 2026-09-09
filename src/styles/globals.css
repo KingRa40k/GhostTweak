@@ -18,6 +18,16 @@
     overflow: hidden;
   }
 
+  [data-tauri-drag-region] {
+    app-region: drag;
+    -webkit-app-region: drag;
+  }
+
+  [data-no-drag], button, a, input, [data-no-drag] * {
+    app-region: no-drag;
+    -webkit-app-region: no-drag;
+  }
+
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;

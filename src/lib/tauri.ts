@@ -1,3 +1,5 @@
+import { getCurrentWindow as getAppWindow } from '@tauri-apps/api/window';
+
 declare global {
   interface Window {
     __TAURI__: {
@@ -22,33 +24,40 @@ export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Pr
 }
 
 export function getCurrentWindow() {
-  return window.__TAURI__?.window?.getCurrentWindow?.() || {
-    minimize: () => minimizeWindow(),
-    close: () => closeWindow(),
-    toggleMaximize: () => toggleMaximizeWindow(),
-    maximize: () => toggleMaximizeWindow(),
-    unmaximize: () => toggleMaximizeWindow(),
-    isMaximized: () => isWindowMaximized(),
-    startDragging: () => startDraggingWindow(),
-  };
+  try {
+    return getAppWindow();
+  } catch {
+    return window.__TAURI__?.window?.getCurrentWindow?.() || {
+      minimize: () => minimizeWindow(),
+      close: () => closeWindow(),
+      toggleMaximize: () => toggleMaximizeWindow(),
+      maximize: () => toggleMaximizeWindow(),
+      unmaximize: () => toggleMaximizeWindow(),
+      isMaximized: () => isWindowMaximized(),
+      startDragging: () => startDraggingWindow(),
+    };
+  }
 }
 
 export async function minimizeWindow(): Promise<void> {
   try {
-    await invoke('window_minimize');
+    const win = getAppWindow();
+    await win.minimize();
   } catch {
-    try { window.__TAURI__?.window?.getCurrentWindow?.()?.minimize(); } catch {}
+    try {
+      await invoke('window_minimize');
+    } catch {}
   }
 }
 
 export async function toggleMaximizeWindow(): Promise<boolean> {
   try {
-    return await invoke<boolean>('window_toggle_maximize');
+    const win = getAppWindow();
+    await win.toggleMaximize();
+    return await win.isMaximized();
   } catch {
     try {
-      const win = window.__TAURI__?.window?.getCurrentWindow?.();
-      await win?.toggleMaximize();
-      return (await win?.isMaximized()) || false;
+      return await invoke<boolean>('window_toggle_maximize');
     } catch {
       return false;
     }
@@ -57,10 +66,17 @@ export async function toggleMaximizeWindow(): Promise<boolean> {
 
 export async function closeWindow(): Promise<void> {
   try {
-    // Minimize / Hide to system tray
     await invoke('window_close');
   } catch {
-    try { window.__TAURI__?.window?.getCurrentWindow?.()?.close(); } catch {}
+    try {
+      const win = getAppWindow();
+      await win.hide();
+    } catch {
+      try {
+        const win = getAppWindow();
+        await win.close();
+      } catch {}
+    }
   }
 }
 
@@ -72,17 +88,25 @@ export async function exitApp(): Promise<void> {
 
 export async function startDraggingWindow(): Promise<void> {
   try {
-    await invoke('window_start_dragging');
+    const win = getAppWindow();
+    await win.startDragging();
   } catch {
-    try { window.__TAURI__?.window?.getCurrentWindow?.()?.startDragging(); } catch {}
+    try {
+      await invoke('window_start_dragging');
+    } catch {}
   }
 }
 
 export async function isWindowMaximized(): Promise<boolean> {
   try {
-    return await invoke<boolean>('window_is_maximized');
+    const win = getAppWindow();
+    return await win.isMaximized();
   } catch {
-    try { return (await window.__TAURI__?.window?.getCurrentWindow?.()?.isMaximized()) || false; } catch { return false; }
+    try {
+      return await invoke<boolean>('window_is_maximized');
+    } catch {
+      return false;
+    }
   }
 }
 

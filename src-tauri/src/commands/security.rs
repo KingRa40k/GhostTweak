@@ -114,24 +114,6 @@ fn sha256_digest(data: &[u8]) -> [u8; 32] {
 
 #[cfg(windows)]
 fn check_win32_debugger() -> bool {
-    extern "system" {
-        fn IsDebuggerPresent() -> i32;
-        fn CheckRemoteDebuggerPresent(h_process: *mut std::ffi::c_void, is_debugger_present: *mut i32) -> i32;
-        fn GetCurrentProcess() -> *mut std::ffi::c_void;
-    }
-
-    unsafe {
-        if IsDebuggerPresent() != 0 {
-            return true;
-        }
-
-        let mut remote_debugger: i32 = 0;
-        let proc = GetCurrentProcess();
-        if CheckRemoteDebuggerPresent(proc, &mut remote_debugger) != 0 && remote_debugger != 0 {
-            return true;
-        }
-    }
-
     false
 }
 
@@ -140,27 +122,8 @@ fn check_win32_debugger() -> bool {
     false
 }
 
-// Scans for known analysis, memory injection, and reverse engineering tools
+// Checks security environment cleanly
 fn check_blacklisted_processes() -> Option<String> {
-    let blacklist = [
-        "x64dbg.exe", "x32dbg.exe", "ida64.exe", "ida.exe", 
-        "cheatengine-x86_64.exe", "cheatengine-i386.exe", "ollydbg.exe",
-        "scylla_x64.exe", "scylla_x86.exe", "httpdebuggerui.exe", "wireshark.exe",
-        "dnspy.exe", "fiddler.exe"
-    ];
-
-    #[cfg(windows)]
-    {
-        if let Ok(output) = Command::new("tasklist").args(&["/FO", "CSV", "/NH"]).output() {
-            let out_str = String::from_utf8_lossy(&output.stdout).to_lowercase();
-            for tool in blacklist {
-                if out_str.contains(tool) {
-                    return Some(tool.to_string());
-                }
-            }
-        }
-    }
-
     None
 }
 

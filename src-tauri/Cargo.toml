@@ -25,8 +25,7 @@ dirs = "5"
 winreg = "0.55"
 
 [profile.release]
-panic = "abort"
-codegen-units = 1
-lto = true
-opt-level = "s"
-strip = true
+panic = "unwind"
+opt-level = 3
+lto = false
+strip = false
