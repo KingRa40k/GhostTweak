@@ -1,94 +1,77 @@
-# GhostTweak — Project Buyer & Owner Manual
-
-Congratulations on acquiring **GhostTweak**! This document provides a complete technical guide for setting up, building, customizing, and managing license keys for the project.
+# 👻 GhostTweak — Project Buyer & Owner Manual
 
 ---
 
-## 1. Project Architecture
-
-The repository is organized into two primary applications:
-1. **Desktop Optimizer Application (Tauri v2 + Rust + React 19):**
-   * `src-tauri/` — High-performance Rust backend communicating directly with Windows Win32 API, multimedia timer (0.5 ms), shader cache purge, registry optimizations, .reg backups, and SHA-256 machine HWID license binding.
-   * `src/` — Modern frontend built with React 19, TypeScript, and Tailwind CSS. Features dark theme personalization, real-time telemetry, and bilingual support (EN/RU).
-2. **Promotional Landing & Marketing Site (Next.js 15):**
-   * `website/` — Responsive Next.js 15 App Router landing page with internationalization, interactive app mockup, side-by-side comparison matrix, and downloadable release binaries.
+> ### 🎉 Congratulations on Acquiring GhostTweak!
+> You are now the owner of a production-ready, ultra-optimized desktop utility engineered on the modern 2026 stack (**Rust + Tauri v2 + React 19 + Next.js 15**).
+> 
+> The project is 100% turnkey: zero mandatory cloud server costs, zero recurring fees, and clean modular code. All source code, pre-compiled installation binaries, and the bilingual promotional landing page are now in your hands.
 
 ---
 
-## 2. Quickstart & Local Development
+## ⚡ Quick Start in 2 Minutes
 
-### Prerequisites:
-* **Node.js**: v18.0.0+ (v20 LTS recommended)
-* **Rust**: `rustup` with `stable-x86_64-pc-windows-msvc` toolchain
-* **Visual Studio Build Tools**: C++ build tools installed for native Windows compilation
+To run the project locally on your development machine:
 
-### Running the Desktop App in Development Mode:
 ```bash
-# Install root dependencies
+# 1. Run desktop app in development mode:
 npm install
-
-# Run with hot reload
 npm run tauri dev
-```
 
-### Running the Landing Page:
-```bash
+# 2. Build production binaries in one click:
+Run build.bat in the root folder
+
+# 3. Launch marketing website in your browser:
 cd website
 npm install
 npm run dev
-# Accessible at http://localhost:3000
+# Open http://localhost:3000
+```
+
+To activate and test the full feature set, use this master VIP key:
+```text
+GHOST-VIP-PRO-2026
 ```
 
 ---
 
-## 3. Building Production Binaries (.exe, .msi, Portable)
+## 🧭 Technical Documentation Map
 
-Compile releases in a single command:
-```bash
-# Option 1 (using the root batch script):
-build.bat
+All in-depth technical documentation has been decoupled into dedicated guides. Click on any section below to learn more:
 
-# Option 2 (via npm):
-npm run tauri build
-```
-
-Compiled distributions will be placed under:
-* **NSIS Setup (.exe)**: `src-tauri/target/release/bundle/nsis/`
-* **Windows Installer (.msi)**: `src-tauri/target/release/bundle/msi/`
-* **Portable Binary (.exe)**: `src-tauri/target/release/ghosttweak.exe`
+| Section | Topic Overview | Guide Link |
+| :--- | :--- | :--- |
+| **01. Architecture & Codebase** | Tech stack, directory breakdown, Rust kernel & Win32 API bridge | [📖 Open `01_ARCHITECTURE.md`](docs/01_ARCHITECTURE.md) |
+| **02. Building & Packaging** | Compiling NSIS Setup, MSI & Portable versions, icons and versions | [📦 Open `02_BUILD_AND_RELEASE.md`](docs/02_BUILD_AND_RELEASE.md) |
+| **03. Licensing & Monetization** | Hardware UUID binding, key generators, payment gateways & bots | [🔑 Open `03_LICENSING_AND_MONETIZATION.md`](docs/03_LICENSING_AND_MONETIZATION.md) |
+| **04. Branding & Contacts** | Replacing support links (Telegram/Email), adjusting prices & themes | [🎨 Open `04_CUSTOMIZATION_AND_CONTACTS.md`](docs/04_CUSTOMIZATION_AND_CONTACTS.md) |
+| **05. Zero-Cost Vercel Deploy** | Step-by-step deployment with custom domain and automated SSL | [🚀 Open `05_DEPLOYMENT_VERCEL.md`](docs/05_DEPLOYMENT_VERCEL.md) |
+| **06. FAQ & Troubleshooting** | UAC permissions, SmartScreen reputation, safe registry rollbacks | [❓ Open `06_FAQ_AND_TROUBLESHOOTING.md`](docs/06_FAQ_AND_TROUBLESHOOTING.md) |
 
 ---
 
-## 4. License Key Verification & Generation
+## 💎 What's Included in This Transfer
 
-GhostTweak incorporates an offline cryptographic checksum verification bound to motherboard UUIDs.
+1. **100% Rust Backend Source (`src-tauri/`)**: Win32 direct syscalls, 0.5ms multimedia timer, DirectX / NVIDIA / AMD shader cache cleaner, Windows service management.
+2. **100% Frontend Source (`src/`)**: React 19, TypeScript, dark neon aesthetic with 4 customizable themes and full bilingual localization (RU/EN).
+3. **Marketing Website (`website/`)**: Next.js 15, interactive app simulator, comparative matrix, pricing tiers.
+4. **Pre-Compiled Production Releases (`website/public/downloads/`)**:
+   * `GhostTweak_Setup_v1.0.0.exe` (NSIS installer)
+   * `GhostTweak_Portable.exe` (4.8 MB single-file standalone)
+   * `GhostTweak_v1.0.0.msi` (Windows Installer package)
+5. **Motherboard-Bound Cryptographic Licensing Engine** with master lifetime keys.
+6. **Automated .REG Registry Rollback System** with instantaneous 1-click restore.
 
-### Modifying and Generating Keys:
-File: [`src-tauri/src/commands/security.rs`](src-tauri/src/commands/security.rs)
-* The `verify_native_license()` function validates pre-configured master keys and algorithmic keys following the format `GHOST-XXXX-YYYY-ZZZZ`.
-* To integrate an external payment processor or cloud database (Stripe, Robokassa, LemonSqueezy): add an HTTP fetch hook inside `verify_native_license` or [`src/lib/license.ts`](src/lib/license.ts).
+---
 
-### Ready-to-Use Master Keys:
-* `GHOST-VIP-PRO-2026` — VIP Lifetime License
-* `GHOST-FPS-BOOST-9999` — Pro Streamer License
+## 🔑 Pre-Installed Master Keys for Immediate Testing
+
+* `GHOST-VIP-PRO-2026` — VIP Lifetime Edition
+* `GHOST-FPS-BOOST-9999` — Pro Streamer Edition
 * `GHOST-MAX-PERF-ULTRA` — Overclock Edition
-* `GHOST-ESPORTS-CS2-PRO` — Esports Edition
+* `GHOST-ESPORTS-CS2-PRO` — CS2 Esports Edition
 * `GHOST-CYBER-WAR-9999` — Cyber Warfare Edition
 
 ---
 
-## 5. Updating Support Contacts & Brand Links
-
-To replace links with your own Telegram channel, email, or community:
-* **Website**: [`website/src/components/FAQ.tsx`](website/src/components/FAQ.tsx), [`website/src/components/Pricing.tsx`](website/src/components/Pricing.tsx), and [`website/src/components/Footer.tsx`](website/src/components/Footer.tsx).
-* **Desktop App**: [`src/pages/Settings.tsx`](src/pages/Settings.tsx).
-
----
-
-## 6. Zero-Cost Deployment to Vercel
-
-The landing page is pre-configured for 1-click Vercel deployment:
-1. Log into [Vercel](https://vercel.com) using your GitHub account.
-2. Select **Add New Project** and import `GhostTweak`.
-3. Set **Root Directory** to `website`.
-4. Click **Deploy**. Vercel will build and assign a global CDN URL with automated SSL.
+We wish you great success in scaling, marketing, and monetizing GhostTweak!
