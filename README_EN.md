@@ -4,6 +4,10 @@
 
 A Windows desktop utility designed for operating system optimization, targeted at competitive gaming and performance-constrained PCs.
 
+> 📚 **Documentation & Owner Manuals:**
+> * [📖 Russian Buyer Manual](ИНСТРУКЦИЯ_ПОКУПАТЕЛЯ.md) | [📖 English Buyer Manual (Portal)](BUYER_GUIDE.md)
+> * [01. Architecture](docs/01_ARCHITECTURE.md) • [02. Build & Release](docs/02_BUILD_AND_RELEASE.md) • [03. Licensing](docs/03_LICENSING_AND_MONETIZATION.md) • [04. Branding](docs/04_CUSTOMIZATION_AND_CONTACTS.md) • [05. Vercel Deploy](docs/05_DEPLOYMENT_VERCEL.md) • [06. FAQ](docs/06_FAQ_AND_TROUBLESHOOTING.md)
+
 Tech Stack: **Tauri v2, Rust, React 19, TypeScript, Tailwind CSS**.  
 Executable Size: **4.8 MB** (NSIS installer: **1.58 MB**). Operates without background web servers and without Electron.
 
