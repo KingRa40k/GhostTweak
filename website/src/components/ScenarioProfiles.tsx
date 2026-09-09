@@ -24,7 +24,7 @@ interface PresetProfile {
   systemLoad: { cpu: string; ram: string; latency: string };
 }
 
-const PRESETS: PresetProfile[] = [
+const PRESETS_RU: PresetProfile[] = [
   {
     id: 'esports',
     name: 'Esports Competitive',
@@ -124,15 +124,116 @@ const PRESETS: PresetProfile[] = [
   },
 ];
 
+const PRESETS_EN: PresetProfile[] = [
+  {
+    id: 'esports',
+    name: 'Esports Competitive',
+    badge: 'LOW LATENCY',
+    icon: Trophy,
+    description: 'Tuned for competitive esports titles. 0.5ms kernel multimedia timer, GameDVR background recording disabled, and Nagle algorithm disabled.',
+    recommendedFor: ['CS2', 'Valorant', 'Apex Legends', 'Overwatch 2', 'Dota 2'],
+    metrics: [
+      { label: 'Input Latency', value: '-3.8 ms', positive: true },
+      { label: '0.1% Low FPS', value: '+20–28%', positive: true },
+      { label: 'Frame Pacing', value: '< 0.5 ms', positive: true },
+    ],
+    tweaksApplied: [
+      'Kernel multimedia timer set to 0.500 ms',
+      'MMCSS high-priority gaming network scheduling',
+      'Network parameters: TCPNoDelay & TcpAckFrequency = 1',
+      'GameDVR background video capture disabled',
+      'Ultimate / High performance power plan activated',
+    ],
+    systemLoad: {
+      cpu: 'High Performance',
+      ram: 'Minimal Background',
+      latency: '18 µs DPC',
+    },
+  },
+  {
+    id: 'aaa',
+    name: 'AAA Cinematic',
+    badge: 'GRAPHICS & FIDELITY',
+    icon: Gamepad2,
+    description: 'Designed for demanding single-player games with DirectX 12 and ray tracing. Flushes corrupted shader caches and prioritizes GPU render threads.',
+    recommendedFor: ['Cyberpunk 2077', 'Black Myth: Wukong', 'Alan Wake 2', 'Stalker 2', 'Forza Horizon 5'],
+    metrics: [
+      { label: 'Texture Streaming', value: 'No Stutters', positive: true },
+      { label: '1% Low FPS', value: '+12–18%', positive: true },
+      { label: 'VRAM Cache', value: 'Flushed', positive: true },
+    ],
+    tweaksApplied: [
+      'Cleared stale DirectX 12, D3DSCache, and GLCache caches',
+      'GPU scheduling prioritization for foreground graphics',
+      'Background search indexing disk throttling minimized',
+      'Optimized texture swapping memory buffers',
+    ],
+    systemLoad: {
+      cpu: 'Balanced',
+      ram: 'VRAM Clean',
+      latency: 'Stable',
+    },
+  },
+  {
+    id: 'streamer',
+    name: 'Streamer & Content',
+    badge: 'STREAMING & CAPTURE',
+    icon: Video,
+    description: 'Balances hardware load between your game and video encoder. Shields OBS Studio processes and audio streams from framerate spikes.',
+    recommendedFor: ['OBS Studio', 'Discord', 'Twitch / YouTube', 'DaVinci Resolve'],
+    metrics: [
+      { label: 'OBS Dropped Frames', value: '0.00%', positive: true },
+      { label: 'Microphone Latency', value: '< 2.5 ms', positive: true },
+      { label: 'Multi-Monitor Sync', value: 'Stable', positive: true },
+    ],
+    tweaksApplied: [
+      'Elevated scheduling priority for OBS Studio process',
+      'MMCSS Pro Audio priority for real-time sound streams',
+      'DWM refresh rate desynchronization fix for mixed Hz displays',
+      'Windows background telemetry disabled',
+    ],
+    systemLoad: {
+      cpu: 'Multi-Core Balanced',
+      ram: 'Encoder Priority',
+      latency: '24 µs Audio',
+    },
+  },
+  {
+    id: 'quiet',
+    name: 'Quiet Work & Battery',
+    badge: 'QUIET EFFICIENCY',
+    icon: Moon,
+    description: 'For productive workflows, office work, and laptops. Reduces background CPU wakeups, fan noise, and thermal throttle spikes.',
+    recommendedFor: ['VS Code / IDE', 'Browser & Office', 'Battery Mode', 'Video Streaming'],
+    metrics: [
+      { label: 'Idle Temperature', value: '-5...-8°C', positive: true },
+      { label: 'Battery Lifespan', value: '+30–45 min', positive: true },
+      { label: 'Fan Acoustics', value: 'Whisper-Quiet', positive: true },
+    ],
+    tweaksApplied: [
+      'Balanced Windows energy conservation scheme',
+      'Background Cortana and Windows search paused',
+      'Reduced polling frequency for minimized background windows',
+      'Energy saving enabled for idle USB controllers',
+    ],
+    systemLoad: {
+      cpu: 'Eco Balanced',
+      ram: 'RAM Cleaned',
+      latency: 'Eco Mode',
+    },
+  },
+];
+
 import { useI18n } from '@/lib/i18n';
 
 export const ScenarioProfiles: React.FC = () => {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [selectedId, setSelectedId] = useState<string>('esports');
   const [appliedPreset, setAppliedPreset] = useState<string>('esports');
   const [isApplying, setIsApplying] = useState<boolean>(false);
 
-  const activePreset = PRESETS.find((p) => p.id === selectedId) || PRESETS[0];
+  const presets = lang === 'en' ? PRESETS_EN : PRESETS_RU;
+  const activePreset = presets.find((p) => p.id === selectedId) || presets[0];
 
   const handleApply = (id: string) => {
     setIsApplying(true);
@@ -141,6 +242,8 @@ export const ScenarioProfiles: React.FC = () => {
       setIsApplying(false);
     }, 500);
   };
+
+  const isEn = lang === 'en';
 
   return (
     <section id="profiles" className="relative py-28 border-t border-white/[0.06] overflow-hidden">
@@ -165,7 +268,7 @@ export const ScenarioProfiles: React.FC = () => {
 
         {/* 4 Cards Selector */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {PRESETS.map((preset) => {
+          {presets.map((preset) => {
             const isSelected = preset.id === selectedId;
             const isCurrentActive = preset.id === appliedPreset;
             const Icon = preset.icon;
@@ -188,9 +291,9 @@ export const ScenarioProfiles: React.FC = () => {
               >
                 {isCurrentActive && (
                   <div 
-                    className="absolute top-0 right-0 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider rounded-bl border-l border-b border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold"
+                    className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wider uppercase border border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
                   >
-                    АКТИВЕН
+                    {isEn ? 'ACTIVE' : 'АКТИВЕН'}
                   </div>
                 )}
 
@@ -222,7 +325,7 @@ export const ScenarioProfiles: React.FC = () => {
                 </div>
 
                 <div className="pt-3 border-t border-white/[0.05] flex items-center justify-between font-mono text-[11px]">
-                  <span className="text-slate-500">Задержка:</span>
+                  <span className="text-slate-500">{isEn ? 'Latency:' : 'Задержка:'}</span>
                   <span className="font-bold" style={{ color: isSelected ? 'var(--accent-color)' : '#E2E8F0' }}>
                     {preset.systemLoad.latency}
                   </span>
@@ -247,11 +350,11 @@ export const ScenarioProfiles: React.FC = () => {
                       borderColor: 'var(--accent-border)',
                     }}
                   >
-                    ПРОФИЛЬ {activePreset.name}
+                    {isEn ? `PROFILE ${activePreset.name}` : `ПРОФИЛЬ ${activePreset.name}`}
                   </span>
                   {appliedPreset === activePreset.id && (
                     <span className="font-mono text-xs text-emerald-400 flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5" /> ВЫБРАН
+                      <Check className="w-3.5 h-3.5" /> {isEn ? 'SELECTED' : 'ВЫБРАН'}
                     </span>
                   )}
                 </div>
@@ -267,7 +370,7 @@ export const ScenarioProfiles: React.FC = () => {
               {/* Recommended Apps */}
               <div>
                 <span className="font-mono text-xs uppercase tracking-wider text-slate-500 block mb-2">
-                  Рекомендовано для:
+                  {isEn ? 'Recommended for:' : 'Рекомендовано для:'}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {activePreset.recommendedFor.map((game, gIdx) => (
@@ -294,17 +397,17 @@ export const ScenarioProfiles: React.FC = () => {
                 {isApplying ? (
                   <>
                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    <span>Применение параметров...</span>
+                    <span>{isEn ? 'Applying settings...' : 'Применение параметров...'}</span>
                   </>
                 ) : appliedPreset === activePreset.id ? (
                   <>
                     <Check className="w-4 h-4 text-emerald-400" />
-                    <span>Профиль активен</span>
+                    <span>{isEn ? 'Profile Active' : 'Профиль активен'}</span>
                   </>
                 ) : (
                   <>
                     <Zap className="w-4 h-4" />
-                    <span>Активировать {activePreset.name}</span>
+                    <span>{isEn ? `Activate ${activePreset.name}` : `Активировать ${activePreset.name}`}</span>
                   </>
                 )}
               </button>
@@ -328,7 +431,7 @@ export const ScenarioProfiles: React.FC = () => {
               <div className="rounded-xl bg-[#131620] border border-white/[0.06] p-4">
                 <span className="font-mono text-xs uppercase tracking-wider text-slate-400 block mb-3 font-semibold flex items-center gap-2">
                   <Activity className="w-3.5 h-3.5" style={{ color: 'var(--accent-color)' }} />
-                  Параметры профиля:
+                  {isEn ? 'Profile parameters:' : 'Параметры профиля:'}
                 </span>
                 <div className="space-y-2">
                   {activePreset.tweaksApplied.map((tweak, tIdx) => (

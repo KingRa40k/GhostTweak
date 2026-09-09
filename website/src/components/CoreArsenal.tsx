@@ -25,7 +25,7 @@ interface FeatureCard {
   visualType: 'timer' | 'cleaner' | 'registry' | 'display' | 'rollback';
 }
 
-const FEATURES: FeatureCard[] = [
+const FEATURES_RU: FeatureCard[] = [
   {
     id: 'esports-engine',
     badge: 'ТАЙМЕР ЯДРА',
@@ -98,20 +98,94 @@ const FEATURES: FeatureCard[] = [
   },
 ];
 
+const FEATURES_EN: FeatureCard[] = [
+  {
+    id: 'esports-engine',
+    badge: 'KERNEL TIMER',
+    title: 'Precision Multimedia Timer (0.5 ms)',
+    tagline: 'Windows kernel multimedia timer scaling down to 0.5ms with MMCSS scheduling',
+    description: 'Standard Windows timer resolution defaults to a sluggish 15.6 ms. GhostTweak locks the multimedia timer to 0.5 ms (timeBeginPeriod) and prioritizes MMCSS gaming scheduler threads.',
+    icon: Crosshair,
+    specs: [
+      { label: 'Timer Interval', value: '0.500 ms', delta: '-96.8%' },
+      { label: 'DPC Latency', value: '< 24 µs', delta: 'Rock Solid' },
+      { label: 'MMCSS Games', value: 'Priority 8', delta: 'Realtime' },
+    ],
+    visualType: 'timer',
+  },
+  {
+    id: 'shader-cleaner',
+    badge: 'CACHE PURGE',
+    title: 'DirectX & GPU Shader Cache Cleaner',
+    tagline: 'Purges stale, corrupted shader caches across NVIDIA, AMD, and DirectX pipelines',
+    description: 'After GPU driver updates, legacy compiled shader blobs become corrupted, causing 1% Low frame rate stuttering. GhostTweak cleans GLCache, DxCache, and D3DSCache safely.',
+    icon: Trash2,
+    specs: [
+      { label: 'Compatibility', value: 'NVIDIA / AMD / Intel', delta: 'DirectX 11/12' },
+      { label: 'Reclaimed Space', value: 'Up to 12.4 GB', delta: 'Cache & Temp' },
+      { label: '1% Low FPS', value: '+10–14%', delta: 'Zero Stutter' },
+    ],
+    visualType: 'cleaner',
+  },
+  {
+    id: 'registry-hardening',
+    badge: 'REGISTRY & SERVICES',
+    title: 'Telemetry & Background Bloat Disabling',
+    tagline: 'Minimizes CPU interrupts without breaking core Windows or store components',
+    description: 'Eliminates verified resource drains: DiagTrack telemetry, GameDVR background screen capture, and CEIP feedback. Microsoft Store and Xbox app components remain 100% operational.',
+    icon: ShieldCheck,
+    specs: [
+      { label: 'Services Tweaked', value: '-18 Services', delta: 'Disabled' },
+      { label: 'DVR Capture', value: 'GameDVR Off', delta: '0% CPU' },
+      { label: 'Store & Xbox', value: '100% Operational', delta: 'Safe' },
+    ],
+    visualType: 'registry',
+  },
+  {
+    id: 'display-sync',
+    badge: 'DISPLAY SYNC',
+    title: 'Monitor EDID Refresh Rate Synchronization',
+    tagline: 'Reads exact hardware refresh rate and calculates strict millisecond frame budget',
+    description: 'GhostTweak queries supported display modes from GPU drivers via Win32 API, calculates frame pacing budget (1000 / Hz), and optimizes Windows DWM flip presentation.',
+    icon: Monitor,
+    specs: [
+      { label: 'Frame Budget', value: '5.56 ms @ 180Hz', delta: 'Precise Target' },
+      { label: 'EDID Resolution', value: 'Native Display', delta: 'Zero Scaling' },
+      { label: 'DWM Model', value: 'Hardware Flip', delta: 'Low Latency' },
+    ],
+    visualType: 'display',
+  },
+  {
+    id: 'atomic-rollback',
+    badge: 'SAFE ROLLBACK',
+    title: 'Automated Registry Snapshots & Undo',
+    tagline: 'Exports affected registry keys into standard .reg files before executing changes',
+    description: 'Prior to modifying any registry key, an exact timestamped snapshot is saved to disk. Revert any or all tweaks back to Windows default state in a single click.',
+    icon: RotateCcw,
+    specs: [
+      { label: 'Backup Format', value: '.REG (Win32)', delta: 'Standard' },
+      { label: 'Rollback Speed', value: '< 100 ms', delta: 'No Reboot' },
+      { label: 'Storage', value: '%APPDATA%\\GhostTweak', delta: 'Local Disk' },
+    ],
+    visualType: 'rollback',
+  },
+];
+
 import { useI18n } from '@/lib/i18n';
 
 export const CoreArsenal: React.FC = () => {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [activeTab, setActiveTab] = useState<string>('esports-engine');
 
-  const currentFeature = FEATURES.find((f) => f.id === activeTab) || FEATURES[0];
+  const isEn = lang === 'en';
+  const features = isEn ? FEATURES_EN : FEATURES_RU;
+  const currentFeature = features.find((f) => f.id === activeTab) || features[0];
 
   return (
     <section id="arsenal" className="relative py-28 border-t border-white/[0.06] overflow-hidden bg-[#090A0E]">
       <div className="absolute inset-0 bg-micro-grid opacity-15 pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-white/10 bg-white/[0.03] backdrop-blur-md mb-4">
             <Zap className="w-3.5 h-3.5" style={{ color: 'var(--accent-color)' }} />
@@ -129,18 +203,15 @@ export const CoreArsenal: React.FC = () => {
           </p>
         </div>
 
-        {/* Feature Navigation Tabs */}
         <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
-          {FEATURES.map((feat) => {
+          {features.map((feat) => {
             const isActive = feat.id === activeTab;
             const Icon = feat.icon;
 
             return (
               <button
                 key={feat.id}
-                onClick={() => {
-                  setActiveTab(feat.id);
-                }}
+                onClick={() => setActiveTab(feat.id)}
                 className={`flex items-center gap-2.5 px-4 py-3 rounded-lg font-mono text-xs uppercase tracking-wider transition-all border ${
                   isActive
                     ? 'border-white/30 text-white shadow-lg'
@@ -159,7 +230,6 @@ export const CoreArsenal: React.FC = () => {
           })}
         </div>
 
-        {/* Active Feature Showcase Card */}
         <div className="rounded-2xl border border-white/[0.08] bg-[#0E1016]/90 backdrop-blur-2xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
           <div 
             className="absolute -top-24 -right-24 w-80 h-80 rounded-full blur-[100px] pointer-events-none opacity-20"
@@ -175,7 +245,6 @@ export const CoreArsenal: React.FC = () => {
               transition={{ duration: 0.25 }}
               className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center"
             >
-              {/* Left Column */}
               <div className="lg:col-span-7 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
@@ -191,7 +260,7 @@ export const CoreArsenal: React.FC = () => {
                     </span>
                     <span className="text-xs font-mono text-slate-500 flex items-center gap-1.5">
                       <Activity className="w-3.5 h-3.5 text-emerald-400" />
-                      ГОТОВО К ПРИМЕНЕНИЮ
+                      {isEn ? 'READY TO DEPLOY' : 'ГОТОВО К ПРИМЕНЕНИЮ'}
                     </span>
                   </div>
 
@@ -208,7 +277,6 @@ export const CoreArsenal: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Telemetry specs grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-white/[0.08]">
                   {currentFeature.specs.map((spec, sIdx) => (
                     <div 
@@ -231,14 +299,13 @@ export const CoreArsenal: React.FC = () => {
                 </div>
               </div>
 
-              {/* Right Column */}
               <div className="lg:col-span-5">
                 <div className="rounded-xl border border-white/[0.08] bg-[#141620]/90 p-5 font-mono text-xs shadow-inner relative overflow-hidden">
                   <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/[0.08] text-slate-400">
                     <div className="flex items-center gap-2">
                       <currentFeature.icon className="w-4 h-4" style={{ color: 'var(--accent-color)' }} />
                       <span className="font-bold uppercase tracking-wider text-slate-200">
-                        ДИАГНОСТИКА
+                        {isEn ? 'DIAGNOSTICS' : 'ДИАГНОСТИКА'}
                       </span>
                     </div>
                     <span className="text-[10px] text-emerald-400 font-bold">STATUS: OK</span>
@@ -247,7 +314,7 @@ export const CoreArsenal: React.FC = () => {
                   {currentFeature.visualType === 'timer' && (
                     <div className="space-y-4 py-2">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400">Интервал таймера NT:</span>
+                        <span className="text-slate-400">{isEn ? 'NT Timer Interval:' : 'Интервал таймера NT:'}</span>
                         <span className="text-white font-bold">0.500 ms</span>
                       </div>
                       <div className="w-full bg-black/40 rounded-full h-3 p-0.5 border border-white/10">
@@ -258,11 +325,11 @@ export const CoreArsenal: React.FC = () => {
                       </div>
                       <div className="p-3 rounded bg-black/30 border border-white/5 space-y-1.5 text-[11px]">
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Разрешение прерываний:</span>
+                          <span className="text-slate-500">{isEn ? 'Interrupt Rate:' : 'Разрешение прерываний:'}</span>
                           <span className="text-slate-300">1000 Hz</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Переключение контекста:</span>
+                          <span className="text-slate-500">{isEn ? 'Context Switch:' : 'Переключение контекста:'}</span>
                           <span className="text-emerald-400 font-bold">0.8 µs</span>
                         </div>
                       </div>
@@ -272,9 +339,9 @@ export const CoreArsenal: React.FC = () => {
                   {currentFeature.visualType === 'cleaner' && (
                     <div className="space-y-3 py-2">
                       {[
-                        { name: 'NVIDIA GLCache', size: '1 420 МБ', status: 'Готов' },
-                        { name: 'DirectX D3DSCache', size: '2 890 МБ', status: 'Готов' },
-                        { name: 'Windows Update Temp', size: '4 100 МБ', status: 'Готов' },
+                        { name: 'NVIDIA GLCache', size: isEn ? '1,420 MB' : '1 420 МБ', status: isEn ? 'Ready' : 'Готов' },
+                        { name: 'DirectX D3DSCache', size: isEn ? '2,890 MB' : '2 890 МБ', status: isEn ? 'Ready' : 'Готов' },
+                        { name: 'Windows Update Temp', size: isEn ? '4,100 MB' : '4 100 МБ', status: isEn ? 'Ready' : 'Готов' },
                       ].map((item, idx) => (
                         <div key={idx} className="flex items-center justify-between p-2.5 rounded bg-black/30 border border-white/5">
                           <div className="flex items-center gap-2">
@@ -321,16 +388,16 @@ export const CoreArsenal: React.FC = () => {
                   {currentFeature.visualType === 'display' && (
                     <div className="space-y-3 py-2">
                       <div className="flex items-center justify-between p-3 rounded bg-black/40 border border-white/5">
-                        <span className="text-slate-400">Частота экрана:</span>
+                        <span className="text-slate-400">{isEn ? 'Display Refresh Rate:' : 'Частота экрана:'}</span>
                         <span className="text-lg font-bold" style={{ color: 'var(--accent-color)' }}>180.00 Hz</span>
                       </div>
                       <div className="flex items-center justify-between p-3 rounded bg-black/40 border border-white/5">
-                        <span className="text-slate-400">Длительность кадра (Frame Budget):</span>
+                        <span className="text-slate-400">{isEn ? 'Frame Budget:' : 'Длительность кадра (Frame Budget):'}</span>
                         <span className="text-emerald-400 font-bold">5.555 ms</span>
                       </div>
                       <div className="text-[11px] text-slate-400 flex items-center gap-1.5 px-1">
                         <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        Расчет интервала без тройной буферизации
+                        {isEn ? 'Pacing calculation without triple buffering penalty' : 'Расчет интервала без тройной буферизации'}
                       </div>
                     </div>
                   )}
@@ -340,14 +407,16 @@ export const CoreArsenal: React.FC = () => {
                       <div className="p-3 rounded bg-black/40 border border-white/5">
                         <div className="flex justify-between text-xs mb-1">
                           <span className="text-slate-300">auto_backup_pre_tweak.reg</span>
-                          <span className="text-emerald-400">СОХРАНЕНО</span>
+                          <span className="text-emerald-400">{isEn ? 'SAVED' : 'СОХРАНЕНО'}</span>
                         </div>
                         <div className="text-[11px] text-slate-500">
-                          Экспортировано 42 ключа реестра
+                          {isEn ? 'Exported 42 registry keys' : 'Экспортировано 42 ключа реестра'}
                         </div>
                       </div>
                       <div className="p-2.5 rounded bg-white/[0.03] border border-white/5 text-[11px] text-slate-300">
-                        Откат восстанавливает исходные значения веток реестра без полной переустановки системы.
+                        {isEn 
+                          ? 'Rollback instantly restores original registry values without requiring Windows reinstallation.' 
+                          : 'Откат восстанавливает исходные значения веток реестра без полной переустановки системы.'}
                       </div>
                     </div>
                   )}

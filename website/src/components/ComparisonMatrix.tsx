@@ -31,7 +31,7 @@ interface ComparisonRow {
   };
 }
 
-const COMPARISON_DATA: ComparisonRow[] = [
+const COMPARISON_DATA_RU: ComparisonRow[] = [
   {
     metric: 'Размер исполняемого файла',
     category: 'Архитектура',
@@ -167,9 +167,147 @@ const COMPARISON_DATA: ComparisonRow[] = [
   },
 ];
 
+const COMPARISON_DATA_EN: ComparisonRow[] = [
+  {
+    metric: 'Executable Binary Size',
+    category: 'Architecture',
+    electron: {
+      value: '140 – 280 MB',
+      status: 'bad',
+      subtext: 'Bundles Chromium runtime & Node.js environment',
+    },
+    scripts: {
+      value: '< 50 KB',
+      status: 'good',
+      subtext: 'Unchecked .bat / .ps1 text scripts',
+    },
+    ghosttweak: {
+      value: '4.8 MB',
+      status: 'good',
+      subtext: 'Compiled native Rust binary with Win32 API',
+    },
+  },
+  {
+    metric: 'Idle Background RAM Footprint',
+    category: 'Resources',
+    electron: {
+      value: '220 – 480 MB',
+      status: 'bad',
+      subtext: 'Multiple background Chromium render processes',
+    },
+    scripts: {
+      value: 'Not Applicable',
+      status: 'warning',
+      subtext: 'Runs once and terminates',
+    },
+    ghosttweak: {
+      value: '8.4 MB',
+      status: 'good',
+      subtext: 'Zero background garbage collection overhead',
+    },
+  },
+  {
+    metric: 'Cold Application Launch Time',
+    category: 'Performance',
+    electron: {
+      value: '1800 – 3400 ms',
+      status: 'bad',
+      subtext: 'Browser engine warm-up & hydration',
+    },
+    scripts: {
+      value: '~ 300 ms',
+      status: 'warning',
+      subtext: 'PowerShell execution engine initialization',
+    },
+    ghosttweak: {
+      value: '< 20 ms',
+      status: 'good',
+      subtext: 'Instant native execution on process spawn',
+    },
+  },
+  {
+    metric: 'Windows Registry Interaction',
+    category: 'Reliability',
+    electron: {
+      value: 'Node.js FFI',
+      status: 'warning',
+      subtext: 'Fragile bindings between JS and WinAPI',
+    },
+    scripts: {
+      value: 'Raw reg.exe calls',
+      status: 'bad',
+      subtext: 'Script commands without type verification',
+    },
+    ghosttweak: {
+      value: 'Direct Win32 API',
+      status: 'good',
+      subtext: 'Type-safe direct syscalls via native Rust structures',
+    },
+  },
+  {
+    metric: 'Automatic Backup & Rollback',
+    category: 'Safety',
+    electron: {
+      value: 'Rarely Included',
+      status: 'bad',
+      subtext: 'Typically overwrites values without registry backup',
+    },
+    scripts: {
+      value: 'None',
+      status: 'bad',
+      subtext: 'Requires manual Windows System Restore point',
+    },
+    ghosttweak: {
+      value: 'Automated .reg Snapshots',
+      status: 'good',
+      subtext: 'Exports affected registry branch prior to each tweak',
+    },
+  },
+  {
+    metric: 'Anti-Cheat Compatibility',
+    category: 'Safety',
+    electron: {
+      value: 'Varies by build',
+      status: 'warning',
+      subtext: 'Game overlays may trigger heuristic warnings',
+    },
+    scripts: {
+      value: 'Ban Risks',
+      status: 'bad',
+      subtext: 'Indiscriminate service disabling can flag anti-cheats',
+    },
+    ghosttweak: {
+      value: '100% Safe',
+      status: 'good',
+      subtext: 'Zero DLL injections; uses native Windows parameters only',
+    },
+  },
+  {
+    metric: 'Telemetry & Outbound Network',
+    category: 'Privacy',
+    electron: {
+      value: 'Built-in Analytics',
+      status: 'bad',
+      subtext: 'Diagnostic pings and crash log uploads',
+    },
+    scripts: {
+      value: 'Unknown Source',
+      status: 'bad',
+      subtext: 'May download remote scripts without integrity checks',
+    },
+    ghosttweak: {
+      value: '100% Offline',
+      status: 'good',
+      subtext: 'Operates completely locally with zero analytics tracking',
+    },
+  },
+];
+
 export const ComparisonMatrix: React.FC = () => {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+
+  const comparisonData = lang === 'en' ? COMPARISON_DATA_EN : COMPARISON_DATA_RU;
 
   return (
     <section id="architecture" className="relative py-28 border-t border-white/[0.06] overflow-hidden">
@@ -216,20 +354,19 @@ export const ComparisonMatrix: React.FC = () => {
               className="p-4 md:col-span-3 flex items-center justify-center font-bold relative"
               style={{ color: 'var(--accent-color)', backgroundColor: 'var(--accent-bg-subtle)' }}
             >
-              <span>{t.comparison.colGhostTweak}</span>
               <div 
                 className="absolute inset-y-0 left-0 w-0.5" 
                 style={{ backgroundColor: 'var(--accent-color)' }}
               />
               <span className="tracking-widest flex items-center gap-2">
-                GhostTweak (Rust)
+                {t.comparison.colGhostTweak}
               </span>
             </div>
           </div>
 
           {/* Table Body */}
           <div className="divide-y divide-white/[0.05]">
-            {COMPARISON_DATA.map((row, idx) => {
+            {comparisonData.map((row, idx) => {
               const isHovered = hoveredRow === idx;
 
               return (

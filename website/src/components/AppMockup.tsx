@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { 
@@ -7,9 +7,13 @@ import {
   Square, X, Check, Flame, Ghost, Crown, Activity
 } from 'lucide-react';
 import { useTheme, THEMES, ThemeId } from '@/lib/themeContext';
+import { useI18n } from '@/lib/i18n';
 
 export default function AppMockup() {
   const { activeTheme, setTheme } = useTheme();
+  const { lang } = useI18n();
+  const isEn = lang === 'en';
+
   const [ramUsed, setRamUsed] = useState(68);
   const [isPurging, setIsPurging] = useState(false);
   const [purgedNotice, setPurgedNotice] = useState<string | null>(null);
@@ -23,7 +27,7 @@ export default function AppMockup() {
     setTimeout(() => {
       setRamUsed(24);
       setIsPurging(false);
-      setPurgedNotice('Освобождено 14.1 ГБ кэша памяти');
+      setPurgedNotice(isEn ? 'Freed 14.1 GB memory cache' : 'Освобождено 14.1 ГБ кэша памяти');
       setTimeout(() => setPurgedNotice(null), 4000);
     }, 600);
   };
@@ -72,9 +76,9 @@ export default function AppMockup() {
           <div className="w-full md:w-52 bg-obsidian-900/50 border-b md:border-b-0 md:border-r border-white/[0.06] p-3 flex flex-col justify-between shrink-0">
             <div className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible">
               {[
-                { id: 'dashboard', label: 'Панель', icon: Activity },
-                { id: 'tweaks', label: 'Твики реестра', icon: Sliders },
-                { id: 'profiles', label: 'Профили', icon: Crosshair },
+                { id: 'dashboard', label: isEn ? 'Dashboard' : 'Панель', icon: Activity },
+                { id: 'tweaks', label: isEn ? 'Registry Tweaks' : 'Твики реестра', icon: Sliders },
+                { id: 'profiles', label: isEn ? 'Profiles' : 'Профили', icon: Crosshair },
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -107,7 +111,9 @@ export default function AppMockup() {
               </div>
               <div className="flex flex-col overflow-hidden">
                 <span className="text-xs font-bold text-white leading-tight">Ghost-1</span>
-                <span className="text-[9px] font-mono text-emerald-400">Лицензия активна</span>
+                <span className="text-[9px] font-mono text-emerald-400">
+                  {isEn ? 'License Active' : 'Лицензия активна'}
+                </span>
               </div>
             </div>
           </div>
@@ -119,7 +125,7 @@ export default function AppMockup() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
               <div>
                 <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">
-                  Текущий режим
+                  {isEn ? 'Current Mode' : 'Текущий режим'}
                 </span>
                 <span className="text-sm font-bold text-white flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -133,7 +139,7 @@ export default function AppMockup() {
                   <span className="text-xs font-bold text-emerald-400">5.56 ms</span>
                 </div>
                 <div className="px-3 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06] text-right font-mono">
-                  <span className="text-[9px] text-zinc-500 block">Таймер</span>
+                  <span className="text-[9px] text-zinc-500 block">{isEn ? 'Timer' : 'Таймер'}</span>
                   <span className="text-xs font-bold" style={{ color: activeTheme.hex }}>0.500 ms</span>
                 </div>
               </div>
@@ -146,8 +152,10 @@ export default function AppMockup() {
                   <Trash2 size={16} />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-white font-mono">14.1 ГБ</div>
-                  <div className="text-[10px] text-zinc-500 font-mono uppercase">Кэш и Temp</div>
+                  <div className="text-sm font-bold text-white font-mono">{isEn ? '14.1 GB' : '14.1 ГБ'}</div>
+                  <div className="text-[10px] text-zinc-500 font-mono uppercase">
+                    {isEn ? 'Cache & Temp' : 'Кэш и Temp'}
+                  </div>
                 </div>
               </div>
 
@@ -157,7 +165,9 @@ export default function AppMockup() {
                 </div>
                 <div>
                   <div className="text-sm font-bold text-white font-mono">{tweaksApplied} / 10</div>
-                  <div className="text-[10px] text-zinc-500 font-mono uppercase">Твики реестра</div>
+                  <div className="text-[10px] text-zinc-500 font-mono uppercase">
+                    {isEn ? 'Registry Tweaks' : 'Твики реестра'}
+                  </div>
                 </div>
               </div>
 
@@ -169,7 +179,9 @@ export default function AppMockup() {
                   <div className="text-sm font-bold text-white font-mono">
                     {tweaksApplied === 10 ? '98%' : '78%'}
                   </div>
-                  <div className="text-[10px] text-zinc-500 font-mono uppercase">Оптимизация</div>
+                  <div className="text-[10px] text-zinc-500 font-mono uppercase">
+                    {isEn ? 'Optimization' : 'Оптимизация'}
+                  </div>
                 </div>
               </div>
             </div>
@@ -182,9 +194,11 @@ export default function AppMockup() {
                     <HardDrive size={15} />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-white">Память (RAM) Standby Purge</div>
+                    <div className="text-xs font-bold text-white">
+                      {isEn ? 'Memory (RAM) Standby Purge' : 'Память (RAM) Standby Purge'}
+                    </div>
                     <div className="text-[10px] font-mono text-zinc-500">
-                      Использовано: {ramUsed}%
+                      {isEn ? 'Used:' : 'Использовано:'} {ramUsed}%
                     </div>
                   </div>
                 </div>
@@ -196,7 +210,7 @@ export default function AppMockup() {
                     className="px-3 py-1.5 rounded-lg border border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/[0.25] text-white text-xs font-mono font-medium flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
                   >
                     <RotateCw size={12} className={isPurging ? "animate-spin text-accent" : "text-zinc-400"} />
-                    <span>{isPurging ? 'Сброс...' : 'Освободить RAM'}</span>
+                    <span>{isPurging ? (isEn ? 'Purging...' : 'Сброс...') : (isEn ? 'Purge RAM' : 'Освободить RAM')}</span>
                   </button>
                 </div>
               </div>
@@ -229,7 +243,7 @@ export default function AppMockup() {
               }}
             >
               <Zap size={14} />
-              <span>Применить рекомендованные настройки</span>
+              <span>{isEn ? 'Apply Recommended Settings' : 'Применить рекомендованные настройки'}</span>
             </button>
 
             {/* Hardware Info Panel */}
@@ -237,7 +251,9 @@ export default function AppMockup() {
               <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-2.5">
                 <Cpu size={14} style={{ color: activeTheme.hex }} />
                 <div className="overflow-hidden">
-                  <div className="text-[9px] font-mono text-zinc-500 uppercase">Процессор</div>
+                  <div className="text-[9px] font-mono text-zinc-500 uppercase">
+                    {isEn ? 'Processor' : 'Процессор'}
+                  </div>
                   <div className="text-xs font-semibold text-white truncate">Intel Core i5-13600K</div>
                 </div>
               </div>
@@ -245,7 +261,9 @@ export default function AppMockup() {
               <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-2.5">
                 <Monitor size={14} style={{ color: activeTheme.hex }} />
                 <div className="overflow-hidden">
-                  <div className="text-[9px] font-mono text-zinc-500 uppercase">Видеокарта & Дисплей</div>
+                  <div className="text-[9px] font-mono text-zinc-500 uppercase">
+                    {isEn ? 'GPU & Display' : 'Видеокарта & Дисплей'}
+                  </div>
                   <div className="text-xs font-semibold text-white truncate">
                     RTX 4070 SUPER • 3440x1440 @ 180Hz
                   </div>
@@ -260,7 +278,7 @@ export default function AppMockup() {
         <div className="bg-obsidian-900/90 border-t border-white/[0.06] p-3 px-5 flex flex-wrap items-center justify-between gap-3 select-none">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
-              Цветовая тема:
+              {isEn ? 'Color Theme:' : 'Цветовая тема:'}
             </span>
             <span className="text-xs font-bold text-white">
               {activeTheme.name}
