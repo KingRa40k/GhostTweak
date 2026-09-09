@@ -116,7 +116,6 @@ export interface Translations {
     copied: string;
     copy: string;
     disclaimer: string;
-    docs: string;
     privacy: string;
     terms: string;
   };
@@ -382,7 +381,6 @@ export const translations: Record<Language, Translations> = {
       copied: "Скопировано!",
       copy: "Копировать хэш",
       disclaimer: "GhostTweak не является продуктом корпорации Microsoft. Все зарегистрированные товарные знаки принадлежат их законным владельцам.",
-      docs: "Документация",
       privacy: "Политика конфиденциальности",
       terms: "Условия использования",
     },
@@ -646,7 +644,6 @@ export const translations: Record<Language, Translations> = {
       copied: "Copied!",
       copy: "Copy Hash",
       disclaimer: "GhostTweak is an independent software tool and is not affiliated with Microsoft Corporation. All registered trademarks belong to their respective owners.",
-      docs: "Documentation",
       privacy: "Privacy Policy",
       terms: "Terms of Service",
     },

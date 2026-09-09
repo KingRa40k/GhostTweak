@@ -140,9 +140,6 @@ export const Footer: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 shrink-0 font-mono text-[10px]">
-          <Link href="/docs" className="text-cyan-400/90 hover:text-cyan-300 font-semibold transition-colors">
-            {t.footer.docs}
-          </Link>
           <Link href="/privacy" className="hover:text-slate-300 transition-colors">
             {t.footer.privacy}
           </Link>

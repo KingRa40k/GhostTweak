@@ -360,19 +360,6 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
                 >
                   {t.auth.termsLink}
                 </button>
-                <span>{' '}</span>
-                <span className="text-zinc-500">
-                  (<button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openUrl('https://ghosttweak.vercel.app/docs');
-                    }}
-                    className="text-zinc-300 hover:text-white underline font-medium cursor-pointer"
-                  >
-                    {t.auth.docsLink}
-                  </button>)
-                </span>
               </div>
             </div>
 

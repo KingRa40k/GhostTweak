@@ -81,7 +81,6 @@ export const translations = {
       privacyLink: 'Политику конфиденциальности',
       agreeAnd: 'и',
       termsLink: 'Условия использования',
-      docsLink: 'Документацию',
       errMustAgree: 'Необходимо подтвердить согласие с Политикой конфиденциальности и Условиями использования',
     },
     // Dashboard
@@ -329,7 +328,6 @@ export const translations = {
       privacyLink: 'Privacy Policy',
       agreeAnd: 'and',
       termsLink: 'Terms of Service',
-      docsLink: 'Documentation',
       errMustAgree: 'You must agree to the Privacy Policy and Terms of Service to continue',
     },
     // Dashboard
