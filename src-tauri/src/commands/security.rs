@@ -289,6 +289,22 @@ pub fn verify_native_license(key: String) -> Result<NativeLicenseResult, String>
 
     let is_trial = clean_key == "TRIAL-ACCESS-FREE" || normalized == "TRIALACCESSFREE";
 
+    let is_day_pass = match normalized.as_str() {
+        "GHOSTDAY1PASS2026"
+        | "GHOSTTEST1DAYPASS"
+        | "GHOST1DAYVIPTEST"
+        | "GHOSTDAYPASS2026"
+        | "GHOSTTRIAL24HPASS" => true,
+        _ => match clean_key.as_str() {
+            "GHOST-DAY1-PASS-2026"
+            | "GHOST-TEST-1DAY-PASS"
+            | "GHOST-1DAY-VIP-TEST"
+            | "GHOST-DAY-PASS-2026"
+            | "GHOST-TRIAL-24H-PASS" => true,
+            _ => false,
+        },
+    };
+
     // Algorithmic key validation: GHOST-XXXX-YYYY-ZZZZ
     let is_valid_algo = if clean_key.starts_with("GHOST-") {
         let parts: Vec<&str> = clean_key.split('-').collect();
@@ -304,21 +320,34 @@ pub fn verify_native_license(key: String) -> Result<NativeLicenseResult, String>
         false
     };
 
-    if is_vip || is_trial || is_valid_algo {
+    if is_vip || is_trial || is_day_pass || is_valid_algo {
         let plan = if is_trial {
             "TRIAL".to_string()
+        } else if is_day_pass {
+            "DAY_PASS".to_string()
         } else {
             "VIP_LIFETIME".to_string()
         };
 
+        let now_ts = chrono::Utc::now().timestamp();
+        let expires_ts = if is_day_pass {
+            now_ts + 86400 // 24 hours after activation
+        } else if is_trial {
+            now_ts + 259200 // 3 days
+        } else {
+            0 // Lifetime
+        };
+
         let expires = if is_trial {
             "3 дня (Пробный доступ)".to_string()
+        } else if is_day_pass {
+            "1 день (24 часа после активации)".to_string()
         } else {
             "Бессрочно (VIP Lifetime)".to_string()
         };
 
         // Encrypt license with HWID XOR stream and save to disk
-        let license_blob = format!("VALID|{}|{}|{}|Ghost Operator", clean_key, plan, hwid);
+        let license_blob = format!("VALID|{}|{}|{}|Ghost Operator|{}", clean_key, plan, hwid, expires_ts);
         let key_bytes = hwid.as_bytes();
         let encrypted: Vec<u8> = license_blob
             .as_bytes()
@@ -371,11 +400,36 @@ pub fn get_native_license() -> Result<NativeLicenseResult, String> {
         if let Ok(text) = String::from_utf8(decrypted) {
             let parts: Vec<&str> = text.split('|').collect();
             if parts.len() >= 5 && parts[0] == "VALID" && parts[3] == hwid {
+                let plan = parts[2].to_string();
+                let expires_ts: i64 = parts.get(5).and_then(|s| s.parse().ok()).unwrap_or(0);
+                let now = chrono::Utc::now().timestamp();
+
+                if expires_ts > 0 && now > expires_ts {
+                    // Expired! Delete stored license file
+                    let _ = std::fs::remove_file(&store_path);
+                    return Ok(NativeLicenseResult {
+                        valid: false,
+                        plan: "EXPIRED".to_string(),
+                        hwid,
+                        expires_at: "Срок действия истек".to_string(),
+                        user_name: "".to_string(),
+                        message: "Срок действия временного ключа (1 день) истек.".to_string(),
+                    });
+                }
+
+                let expires_str = if plan == "DAY_PASS" {
+                    "1 день (24 часа после активации)".to_string()
+                } else if plan == "TRIAL" {
+                    "3 дня (Пробный доступ)".to_string()
+                } else {
+                    "Бессрочно (VIP Lifetime)".to_string()
+                };
+
                 return Ok(NativeLicenseResult {
                     valid: true,
-                    plan: parts[2].to_string(),
+                    plan,
                     hwid,
-                    expires_at: "Бессрочно (VIP Lifetime)".to_string(),
+                    expires_at: expires_str,
                     user_name: parts[4].to_string(),
                     message: "Активная подлинная лицензия".to_string(),
                 });

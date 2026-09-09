@@ -14,7 +14,7 @@ import { useI18n } from '@/lib/i18n';
 export const Footer: React.FC = () => {
   const { t } = useI18n();
   const [copied, setCopied] = useState<boolean>(false);
-  const sha256 = '038045ea66744b2a8772c2ee00740e632c9e8718ce4655fd3f75cc67d4747579';
+  const sha256 = 'f6f53c437922ba084f4341324cb45f40d710c3ff60045246a43f7dfa8a2a59b9';
 
   const handleCopyHash = () => {
     navigator.clipboard.writeText(sha256);

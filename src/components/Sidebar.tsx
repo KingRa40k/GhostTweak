@@ -88,7 +88,11 @@ export default function Sidebar({ activePage, onNavigate, license, onManageLicen
                   {prefs.callsign}
                 </span>
                 <span className="text-[9px] font-mono text-zinc-500 mt-0.5">
-                  {license?.plan === 'VIP_LIFETIME' ? 'VIP Lifetime' : (lang === 'ru' ? 'Триал 3 дня' : 'Trial Edition')}
+                  {license?.plan === 'VIP_LIFETIME' 
+                    ? 'VIP Lifetime' 
+                    : license?.plan === 'DAY_PASS' 
+                      ? (lang === 'ru' ? 'PRO (1 день)' : 'PRO 24h Pass') 
+                      : (lang === 'ru' ? 'Триал 3 дня' : 'Trial Edition')}
                 </span>
               </div>
             </div>

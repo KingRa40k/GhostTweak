@@ -77,6 +77,11 @@ export default function TitleBar({ license, onOpenLicense }: TitleBarProps) {
                   <ShieldCheck size={11} className="text-amber-400" />
                   <span className="text-amber-400 font-semibold">VIP LIFETIME</span>
                 </>
+              ) : license.plan === 'DAY_PASS' ? (
+                <>
+                  <ShieldCheck size={11} className="text-ghost-cyan" />
+                  <span className="text-ghost-cyan font-semibold">PRO 24H</span>
+                </>
               ) : (
                 <>
                   <Sparkles size={11} className="text-ghost-cyan" />

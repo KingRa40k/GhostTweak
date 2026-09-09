@@ -73,7 +73,11 @@ export default function LicenseModal({ isOpen, onClose, license, onUpdateLicense
             <div className="flex items-center justify-between">
               <span className="font-bold text-white flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-ghost-green animate-pulse" />
-                {license?.plan === 'VIP_LIFETIME' ? 'VIP Lifetime Edition' : 'Trial Edition'}
+                {license?.plan === 'VIP_LIFETIME' 
+                  ? 'VIP Lifetime Edition' 
+                  : license?.plan === 'DAY_PASS' 
+                    ? 'PRO 24h Pass (1 день)' 
+                    : 'Trial Edition'}
               </span>
               <span className="text-xs font-mono text-ghost-cyan">
                 {license?.expiresAt}

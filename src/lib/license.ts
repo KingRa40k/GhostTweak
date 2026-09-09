@@ -3,10 +3,11 @@ import { NativeLicenseResult } from './types';
 
 export interface LicenseData {
   key: string;
-  plan: 'VIP_LIFETIME' | 'PRO_ANNUAL' | 'TRIAL';
+  plan: 'VIP_LIFETIME' | 'PRO_ANNUAL' | 'TRIAL' | 'DAY_PASS';
   hwid: string;
   activatedAt: string;
   expiresAt: string;
+  expiresAtTimestamp?: number;
   userName: string;
 }
 
@@ -39,7 +40,12 @@ export function getStoredLicense(): LicenseData | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as LicenseData;
+    const data = JSON.parse(raw) as LicenseData;
+    if (data.expiresAtTimestamp && Date.now() > data.expiresAtTimestamp) {
+      removeLicense();
+      return null;
+    }
+    return data;
   } catch {
     return null;
   }
@@ -50,16 +56,24 @@ export async function syncStoredLicenseWithNative(): Promise<LicenseData | null>
   try {
     const nativeRes = await invoke<NativeLicenseResult>('get_native_license');
     if (nativeRes && nativeRes.valid) {
+      const existing = getStoredLicense();
+      const isDayPass = nativeRes.plan === 'DAY_PASS';
+      const expiresAtTimestamp = existing?.expiresAtTimestamp || (isDayPass ? Date.now() + 86400000 : undefined);
+
       const license: LicenseData = {
-        key: 'GHOST-ACTIVATED',
+        key: existing?.key || 'GHOST-ACTIVATED',
         plan: nativeRes.plan as LicenseData['plan'],
         hwid: nativeRes.hwid,
-        activatedAt: new Date().toLocaleDateString('ru-RU'),
+        activatedAt: existing?.activatedAt || new Date().toLocaleDateString('ru-RU'),
         expiresAt: nativeRes.expires_at,
+        expiresAtTimestamp,
         userName: nativeRes.user_name || 'Ghost Operator',
       };
       saveLicense(license);
       return license;
+    } else if (nativeRes && !nativeRes.valid && nativeRes.plan === 'EXPIRED') {
+      removeLicense();
+      return null;
     }
   } catch {
     // ignore
@@ -77,6 +91,7 @@ export function removeLicense(): void {
 
 // Valid keys for testing and activation:
 export const DEMO_KEYS = [
+  { key: 'GHOST-DAY1-PASS-2026', label: '1-Day Access Pass (24 Hours)' },
   { key: 'GHOST-VIP-PRO-2026', label: 'VIP Lifetime Key' },
   { key: 'GHOST-FPS-BOOST-9999', label: 'Pro Streamer Key' },
   { key: 'GHOST-MAX-PERF-ULTRA', label: 'Overclock Edition' },
@@ -95,12 +110,19 @@ export async function verifyLicenseKey(inputKey: string): Promise<{ success: boo
     const nativeRes = await invoke<NativeLicenseResult>('verify_native_license', { key: cleanKey });
 
     if (nativeRes.valid) {
+      const isDayPass = nativeRes.plan === 'DAY_PASS';
+      const expiresAtTimestamp = isDayPass ? (Date.now() + 86400000) : undefined;
+      const expiresFormatted = isDayPass
+        ? `${new Date(expiresAtTimestamp!).toLocaleDateString('ru-RU')} ${new Date(expiresAtTimestamp!).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })} (24 часа)`
+        : nativeRes.expires_at;
+
       const license: LicenseData = {
         key: cleanKey,
         plan: nativeRes.plan as LicenseData['plan'],
         hwid: nativeRes.hwid,
-        activatedAt: new Date().toLocaleDateString('ru-RU'),
-        expiresAt: nativeRes.expires_at,
+        activatedAt: `${new Date().toLocaleDateString('ru-RU')} ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`,
+        expiresAt: expiresFormatted,
+        expiresAtTimestamp,
         userName: nativeRes.user_name || 'Ghost Operator',
       };
       saveLicense(license);
