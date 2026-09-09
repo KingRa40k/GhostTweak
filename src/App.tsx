@@ -26,6 +26,9 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
   const [themeVersion, setThemeVersion] = useState(0);
   const [securityStatus, setSecurityStatus] = useState<SecurityStatus | null>(null);
+  const [isTermsAgreed, setIsTermsAgreed] = useState<boolean>(() => {
+    return localStorage.getItem('ghosttweak_agreement_accepted') === 'true';
+  });
 
   useEffect(() => {
     // 1. Anti-Tamper & Anti-DevTools Enforcement
@@ -120,13 +123,16 @@ export default function App() {
     );
   }
 
-  // If not authorized yet, show futuristic activation / key input screen
-  if (!license) {
+  // If not authorized yet or terms not agreed, show futuristic activation / key input screen
+  if (!license || !isTermsAgreed) {
     return (
       <div className="flex flex-col h-screen overflow-hidden bg-titanium-950 text-ghost-text font-sans">
         <TitleBar />
         <div className="flex-1 overflow-hidden" style={{ marginTop: '42px' }}>
-          <AuthScreen onAuthorized={(data) => setLicense(data)} />
+          <AuthScreen onAuthorized={(data) => {
+            setIsTermsAgreed(true);
+            setLicense(data);
+          }} />
         </div>
         {showLangModal && (
           <LanguageSelectModal onSelect={() => setShowLangModal(false)} />

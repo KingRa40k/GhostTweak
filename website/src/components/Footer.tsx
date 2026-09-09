@@ -7,13 +7,14 @@ import {
   Github, 
   Download
 } from 'lucide-react';
+import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { useI18n } from '@/lib/i18n';
 
 export const Footer: React.FC = () => {
   const { t } = useI18n();
   const [copied, setCopied] = useState<boolean>(false);
-  const sha256 = '4a899a7217e9bbcd03f56e9bc66258ef9c7625890832049d5bf14a796c738ef1';
+  const sha256 = '038045ea66744b2a8772c2ee00740e632c9e8718ce4655fd3f75cc67d4747579';
 
   const handleCopyHash = () => {
     navigator.clipboard.writeText(sha256);
@@ -138,7 +139,17 @@ export const Footer: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-6 shrink-0 font-mono text-[10px]">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 shrink-0 font-mono text-[10px]">
+          <Link href="/docs" className="text-cyan-400/90 hover:text-cyan-300 font-semibold transition-colors">
+            {t.footer.docs}
+          </Link>
+          <Link href="/privacy" className="hover:text-slate-300 transition-colors">
+            {t.footer.privacy}
+          </Link>
+          <Link href="/terms" className="hover:text-slate-300 transition-colors">
+            {t.footer.terms}
+          </Link>
+          <span className="text-white/10 hidden sm:inline">|</span>
           <a href="#architecture" className="hover:text-slate-300 transition-colors">{t.header.compare}</a>
           <a href="#arsenal" className="hover:text-slate-300 transition-colors">{t.header.features}</a>
           <a href="#pricing" className="hover:text-slate-300 transition-colors">{t.header.pricing}</a>

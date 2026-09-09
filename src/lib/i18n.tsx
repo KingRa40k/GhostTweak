@@ -77,6 +77,12 @@ export const translations = {
       errEmptyKey: 'Введите лицензионный ключ.',
       errInvalidKey: 'Неверный ключ. Проверьте введенные символы.',
       errTrial: 'Ошибка активации пробного периода',
+      agreePrefix: 'Я прочитал(-а) и принимаю',
+      privacyLink: 'Политику конфиденциальности',
+      agreeAnd: 'и',
+      termsLink: 'Условия использования',
+      docsLink: 'Документацию',
+      errMustAgree: 'Необходимо подтвердить согласие с Политикой конфиденциальности и Условиями использования',
     },
     // Dashboard
     dashboard: {
@@ -319,6 +325,12 @@ export const translations = {
       errEmptyKey: 'Please enter a valid license key.',
       errInvalidKey: 'Invalid key. Please check the entered characters.',
       errTrial: 'Failed to activate trial period',
+      agreePrefix: 'I have read and agree to the',
+      privacyLink: 'Privacy Policy',
+      agreeAnd: 'and',
+      termsLink: 'Terms of Service',
+      docsLink: 'Documentation',
+      errMustAgree: 'You must agree to the Privacy Policy and Terms of Service to continue',
     },
     // Dashboard
     dashboard: {

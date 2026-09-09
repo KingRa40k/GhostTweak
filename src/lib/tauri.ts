@@ -85,3 +85,14 @@ export async function isWindowMaximized(): Promise<boolean> {
     try { return (await window.__TAURI__?.window?.getCurrentWindow?.()?.isMaximized()) || false; } catch { return false; }
   }
 }
+
+export async function openUrl(url: string): Promise<void> {
+  try {
+    const { open } = await import('@tauri-apps/plugin-shell');
+    await open(url);
+  } catch (err) {
+    console.warn('Failed to open URL via Tauri shell plugin, falling back to window.open:', err);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+}
+

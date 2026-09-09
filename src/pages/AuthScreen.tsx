@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { verifyLicenseKey, activateTrial, getSystemHwid, getSystemHwidAsync, LicenseData } from '../lib/license';
 import { useI18n, setStoredLanguage } from '../lib/i18n';
+import { openUrl } from '../lib/tauri';
 
 interface AuthScreenProps {
   onAuthorized: (license: LicenseData) => void;
@@ -19,6 +20,9 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
   const [error, setError] = useState('');
   const [isErrorShaking, setIsErrorShaking] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [hasAgreed, setHasAgreed] = useState<boolean>(() => {
+    return localStorage.getItem('ghosttweak_agreement_accepted') === 'true';
+  });
   const inputRef = useRef<HTMLInputElement>(null);
   const [hwid, setHwid] = useState<string>(getSystemHwid());
 
@@ -47,6 +51,12 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
   };
 
   const handleActivate = async () => {
+    if (!hasAgreed) {
+      setError(t.auth.errMustAgree);
+      triggerErrorShake();
+      return;
+    }
+
     if (!keyInput.trim()) {
       setError(t.auth.errEmptyKey);
       triggerErrorShake();
@@ -68,6 +78,7 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
     clearTimeout(timer1);
 
     if (res.success && res.data) {
+      localStorage.setItem('ghosttweak_agreement_accepted', 'true');
       setAuthProgress(100);
       setAuthStep(t.auth.stepApproved);
       setSuccess(true);
@@ -89,12 +100,20 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
   };
 
   const handleTrial = async () => {
+    if (!hasAgreed) {
+      setError(t.auth.errMustAgree);
+      triggerErrorShake();
+      return;
+    }
+
     setLoading(true);
+    setError('');
     setAuthProgress(50);
     setAuthStep(t.auth.stepTrial);
 
     try {
       const trialData = await activateTrial();
+      localStorage.setItem('ghosttweak_agreement_accepted', 'true');
       setAuthProgress(100);
       setSuccess(true);
       setTimeout(() => {
@@ -291,6 +310,70 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
                   <span>{error}</span>
                 </div>
               )}
+            </div>
+
+            {/* Terms & Privacy Agreement Checkbox */}
+            <div className="flex items-start gap-3 p-2.5 rounded-xl bg-titanium-950/60 border border-white/[0.05] hover:border-white/[0.1] transition-all text-[11px] leading-relaxed">
+              <label className="relative flex items-center justify-center w-4 h-4 mt-0.5 rounded cursor-pointer border border-white/20 bg-titanium-900 transition-all hover:border-ghost-cyan/60 shrink-0">
+                <input
+                  type="checkbox"
+                  checked={hasAgreed}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setHasAgreed(checked);
+                    if (checked) {
+                      localStorage.setItem('ghosttweak_agreement_accepted', 'true');
+                      if (error === t.auth.errMustAgree) setError('');
+                    } else {
+                      localStorage.removeItem('ghosttweak_agreement_accepted');
+                    }
+                  }}
+                  className="sr-only peer"
+                />
+                <div className={`w-full h-full rounded flex items-center justify-center transition-all ${
+                  hasAgreed ? 'bg-ghost-cyan text-titanium-950 font-bold' : 'opacity-0'
+                }`}>
+                  <Check size={12} strokeWidth={3} />
+                </div>
+              </label>
+
+              <div className="text-zinc-400">
+                <span>{t.auth.agreePrefix}{' '}</span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openUrl('https://ghosttweak.vercel.app/privacy');
+                  }}
+                  className="text-ghost-cyan hover:underline inline font-medium cursor-pointer"
+                >
+                  {t.auth.privacyLink}
+                </button>
+                <span>{' '}{t.auth.agreeAnd}{' '}</span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openUrl('https://ghosttweak.vercel.app/terms');
+                  }}
+                  className="text-ghost-cyan hover:underline inline font-medium cursor-pointer"
+                >
+                  {t.auth.termsLink}
+                </button>
+                <span>{' '}</span>
+                <span className="text-zinc-500">
+                  (<button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openUrl('https://ghosttweak.vercel.app/docs');
+                    }}
+                    className="text-zinc-300 hover:text-white underline font-medium cursor-pointer"
+                  >
+                    {t.auth.docsLink}
+                  </button>)
+                </span>
+              </div>
             </div>
 
             {/* Action Buttons */}
