@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { verifyLicenseKey, activateTrial, getSystemHwid, getSystemHwidAsync, LicenseData } from '../lib/license';
 import { useI18n, setStoredLanguage } from '../lib/i18n';
-import { openUrl } from '../lib/tauri';
+import LegalModal from '../components/LegalModal';
 
 interface AuthScreenProps {
   onAuthorized: (license: LicenseData) => void;
@@ -23,6 +23,8 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
   const [hasAgreed, setHasAgreed] = useState<boolean>(() => {
     return localStorage.getItem('ghosttweak_agreement_accepted') === 'true';
   });
+  const [legalModalOpen, setLegalModalOpen] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState<'privacy' | 'terms'>('privacy');
   const inputRef = useRef<HTMLInputElement>(null);
   const [hwid, setHwid] = useState<string>(getSystemHwid());
 
@@ -343,7 +345,8 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    openUrl('https://ghosttweak.vercel.app/privacy');
+                    setLegalModalTab('privacy');
+                    setLegalModalOpen(true);
                   }}
                   className="text-ghost-cyan hover:underline inline font-medium cursor-pointer"
                 >
@@ -354,7 +357,8 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    openUrl('https://ghosttweak.vercel.app/terms');
+                    setLegalModalTab('terms');
+                    setLegalModalOpen(true);
                   }}
                   className="text-ghost-cyan hover:underline inline font-medium cursor-pointer"
                 >
@@ -395,6 +399,17 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
         </div>
 
       </div>
+
+      <LegalModal
+        isOpen={legalModalOpen}
+        onClose={() => setLegalModalOpen(false)}
+        initialTab={legalModalTab}
+        onAccept={() => {
+          setHasAgreed(true);
+          localStorage.setItem('ghosttweak_agreement_accepted', 'true');
+          if (error === t.auth.errMustAgree) setError('');
+        }}
+      />
     </div>
   );
 }
