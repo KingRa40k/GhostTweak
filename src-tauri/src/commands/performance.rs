@@ -75,21 +75,14 @@ pub fn flush_memory() -> Result<FlushResult, String> {
 
     #[cfg(windows)]
     {
-        // PowerShell command to trim working set of processes
-        let ps_script = r#"
-            [System.GC]::Collect()
-            [System.GC]::WaitForPendingFinalizers()
-            Get-Process | Where-Object { $_.NonpagedSystemMemorySize64 -gt 0 } | ForEach-Object {
-                try {
-                    $_.MinWorkingSet = [System.IntPtr]::Zero
-                    $_.MaxWorkingSet = [System.IntPtr]::Zero
-                } catch {}
-            }
-        "#;
-
-        let _ = Command::new("powershell")
-            .args(&["-NoProfile", "-NonInteractive", "-Command", ps_script])
-            .output();
+        extern "system" {
+            fn GetCurrentProcess() -> *mut std::ffi::c_void;
+            fn SetProcessWorkingSetSize(h_process: *mut std::ffi::c_void, min: usize, max: usize) -> i32;
+        }
+        unsafe {
+            let proc = GetCurrentProcess();
+            SetProcessWorkingSetSize(proc, usize::MAX, usize::MAX);
+        }
     }
 
     // Short pause for OS to recalculate
