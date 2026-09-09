@@ -1,5 +1,4 @@
-﻿use serde::{Deserialize, Serialize};
-use std::process::Command;
+use serde::{Deserialize, Serialize};
 
 #[cfg(windows)]
 use winreg::enums::*;
@@ -118,23 +117,20 @@ fn delete_value(hive: HKEY, path: &str, name: &str) -> Result<(), String> {
 
 #[cfg(windows)]
 fn is_service_disabled(name: &str) -> bool {
-    let output = Command::new("sc")
-        .args(["qc", name])
-        .output();
-    match output {
-        Ok(o) => {
-            let stdout = String::from_utf8_lossy(&o.stdout);
-            stdout.contains("DISABLED")
+    let path = format!(r"SYSTEM\CurrentControlSet\Services\{}", name);
+    if let Ok(key) = RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey(&path) {
+        if let Ok(start) = key.get_value::<u32, _>("Start") {
+            return start == 4;
         }
-        Err(_) => false,
     }
+    false
 }
 
 #[cfg(windows)]
 fn set_service(name: &str, disable: bool) -> Result<(), String> {
     if disable {
-        let _ = Command::new("sc").args(["stop", name]).output();
-        let output = Command::new("sc")
+        let _ = crate::commands::hidden_command("sc").args(["stop", name]).output();
+        let output = crate::commands::hidden_command("sc")
             .args(["config", name, "start=", "disabled"])
             .output()
             .map_err(|e| e.to_string())?;
@@ -146,7 +142,7 @@ fn set_service(name: &str, disable: bool) -> Result<(), String> {
             ));
         }
     } else {
-        let output = Command::new("sc")
+        let output = crate::commands::hidden_command("sc")
             .args(["config", name, "start=", "auto"])
             .output()
             .map_err(|e| e.to_string())?;
@@ -157,7 +153,7 @@ fn set_service(name: &str, disable: bool) -> Result<(), String> {
                 String::from_utf8_lossy(&output.stderr)
             ));
         }
-        let _ = Command::new("sc").args(["start", name]).output();
+        let _ = crate::commands::hidden_command("sc").args(["start", name]).output();
     }
     Ok(())
 }
@@ -368,7 +364,7 @@ fn is_tweak_applied(id: &str) -> bool {
         ),
         "disable_diagtrack" => is_service_disabled("DiagTrack"),
         "high_perf_power" => {
-            if let Ok(out) = Command::new("powercfg").args(["/getactivescheme"]).output() {
+            if let Ok(out) = crate::commands::hidden_command("powercfg").args(["/getactivescheme"]).output() {
                 let stdout = String::from_utf8_lossy(&out.stdout);
                 stdout.contains("8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c")
                     || stdout.contains("e9a42b02-d5df-448d-aa00-03f14749eb61")
@@ -502,10 +498,10 @@ fn do_apply(id: &str, enable: bool) -> Result<(), String> {
         }
         "unpark_cpu_cores" => {
             let pct = if enable { "100" } else { "5" };
-            let _ = Command::new("powercfg")
+            let _ = crate::commands::hidden_command("powercfg")
                 .args(["-setacvalueindex", "SCHEME_CURRENT", "SUB_PROCESSOR", "CPMINCORES", pct])
                 .output();
-            let _ = Command::new("powercfg")
+            let _ = crate::commands::hidden_command("powercfg")
                 .args(["-setactive", "SCHEME_CURRENT"])
                 .output();
             Ok(())
@@ -521,14 +517,14 @@ fn do_apply(id: &str, enable: bool) -> Result<(), String> {
         }
         "bcd_low_latency" => {
             if enable {
-                let _ = Command::new("bcdedit")
+                let _ = crate::commands::hidden_command("bcdedit")
                     .args(["/set", "disabledynamictick", "yes"])
                     .output();
-                let _ = Command::new("bcdedit")
+                let _ = crate::commands::hidden_command("bcdedit")
                     .args(["/set", "useplatformclock", "false"])
                     .output();
             } else {
-                let _ = Command::new("bcdedit")
+                let _ = crate::commands::hidden_command("bcdedit")
                     .args(["/set", "disabledynamictick", "no"])
                     .output();
             }
@@ -600,7 +596,7 @@ fn do_apply(id: &str, enable: bool) -> Result<(), String> {
             } else {
                 "381b4222-f694-41f0-9685-ff5bb260df2e"
             };
-            let out = Command::new("powercfg")
+            let out = crate::commands::hidden_command("powercfg")
                 .args(["/setactive", scheme])
                 .output()
                 .map_err(|e| e.to_string())?;

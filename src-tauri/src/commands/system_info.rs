@@ -1,5 +1,9 @@
 use serde::Serialize;
-use std::process::Command;
+
+#[cfg(windows)]
+use winreg::enums::*;
+#[cfg(windows)]
+use winreg::RegKey;
 
 #[derive(Serialize, Clone)]
 pub struct SystemInfo {
@@ -11,6 +15,112 @@ pub struct SystemInfo {
     pub display_res: String,
     pub refresh_rate: u32,
     pub available_refresh_rates: Vec<u32>,
+}
+
+#[cfg(windows)]
+#[repr(C)]
+#[allow(non_snake_case)]
+struct MEMORYSTATUSEX {
+    dwLength: u32,
+    dwMemoryLoad: u32,
+    ullTotalPhys: u64,
+    ullAvailPhys: u64,
+    ullTotalPageFile: u64,
+    ullAvailPageFile: u64,
+    ullTotalVirtual: u64,
+    ullAvailVirtual: u64,
+    ullAvailExtendedVirtual: u64,
+}
+
+#[cfg(windows)]
+fn get_win32_ram_gb() -> f64 {
+    extern "system" {
+        fn GlobalMemoryStatusEx(lpBuffer: *mut MEMORYSTATUSEX) -> i32;
+    }
+    unsafe {
+        let mut status: MEMORYSTATUSEX = std::mem::zeroed();
+        status.dwLength = std::mem::size_of::<MEMORYSTATUSEX>() as u32;
+        if GlobalMemoryStatusEx(&mut status) != 0 {
+            return (status.ullTotalPhys as f64) / (1024.0 * 1024.0 * 1024.0);
+        }
+    }
+    16.0
+}
+
+#[cfg(windows)]
+fn get_win32_cpu_name() -> String {
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    if let Ok(key) = hklm.open_subkey(r"HARDWARE\DESCRIPTION\System\CentralProcessor\0") {
+        if let Ok(name) = key.get_value::<String, _>("ProcessorNameString") {
+            let trimmed = name.trim().to_string();
+            if !trimmed.is_empty() {
+                return trimmed;
+            }
+        }
+    }
+    "Intel / AMD Processor".to_string()
+}
+
+#[cfg(windows)]
+fn get_win32_os_info() -> (String, String) {
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    let mut os_name = "Windows 10/11".to_string();
+    let mut os_version = "64-bit".to_string();
+
+    if let Ok(key) = hklm.open_subkey(r"SOFTWARE\Microsoft\Windows NT\CurrentVersion") {
+        if let Ok(prod) = key.get_value::<String, _>("ProductName") {
+            let p = prod.trim();
+            if !p.is_empty() {
+                os_name = p.to_string();
+            }
+        }
+        if let Ok(disp) = key.get_value::<String, _>("DisplayVersion") {
+            let d = disp.trim();
+            if !d.is_empty() {
+                os_version = d.to_string();
+            }
+        } else if let Ok(build) = key.get_value::<String, _>("CurrentBuild") {
+            os_version = format!("Build {}", build.trim());
+        }
+    }
+
+    (os_name, os_version)
+}
+
+#[cfg(windows)]
+fn get_win32_gpu_name() -> String {
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    let class_path = r"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}";
+    
+    let mut discrete_gpu: Option<String> = None;
+    let mut integrated_gpu: Option<String> = None;
+
+    if let Ok(class_key) = hklm.open_subkey(class_path) {
+        for idx in 0..16 {
+            let subkey_name = format!("{:04}", idx);
+            if let Ok(gpu_key) = class_key.open_subkey(&subkey_name) {
+                if let Ok(desc) = gpu_key.get_value::<String, _>("DriverDesc") {
+                    let desc_clean = desc.trim().to_string();
+                    if !desc_clean.is_empty() 
+                        && !desc_clean.contains("Virtual") 
+                        && !desc_clean.contains("Basic Display") 
+                        && !desc_clean.contains("MrIdd") 
+                    {
+                        if desc_clean.contains("NVIDIA") || desc_clean.contains("GeForce") || desc_clean.contains("Radeon") || desc_clean.contains("RTX") || desc_clean.contains("GTX") {
+                            discrete_gpu = Some(desc_clean);
+                            break;
+                        } else if integrated_gpu.is_none() {
+                            integrated_gpu = Some(desc_clean);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    discrete_gpu
+        .or(integrated_gpu)
+        .unwrap_or_else(|| "NVIDIA / AMD Graphics".to_string())
 }
 
 #[cfg(windows)]
@@ -93,90 +203,116 @@ fn get_supported_refresh_rates(target_w: u32, target_h: u32, current_rr: u32) ->
     result
 }
 
+#[cfg(windows)]
+fn get_win32_display_info() -> (String, u32, u32, u32) {
+    extern "system" {
+        fn GetSystemMetrics(nIndex: i32) -> i32;
+    }
+
+    #[repr(C)]
+    #[allow(non_snake_case)]
+    struct DEVMODEW {
+        dmDeviceName: [u16; 32],
+        dmSpecVersion: u16,
+        dmDriverVersion: u16,
+        dmSize: u16,
+        dmDriverExtra: u16,
+        dmFields: u32,
+        dmUnion1: [u8; 16],
+        dmColor: i16,
+        dmDuplex: i16,
+        dmYResolution: i16,
+        dmTTOption: i16,
+        dmCollate: i16,
+        dmFormName: [u16; 32],
+        dmLogPixels: u16,
+        dmBitsPerPel: u32,
+        dmPelsWidth: u32,
+        dmPelsHeight: u32,
+        dmDisplayFlags: u32,
+        dmDisplayFrequency: u32,
+        dmICMMethod: u32,
+        dmICMIntent: u32,
+        dmMediaType: u32,
+        dmDitherType: u32,
+        dmReserved1: u32,
+        dmReserved2: u32,
+        dmPanningWidth: u32,
+        dmPanningHeight: u32,
+    }
+
+    extern "system" {
+        fn EnumDisplaySettingsW(
+            lpszDeviceName: *const u16,
+            iModeNum: u32,
+            lpDevMode: *mut DEVMODEW,
+        ) -> i32;
+    }
+
+    const ENUM_CURRENT_SETTINGS: u32 = 0xFFFFFFFF;
+
+    unsafe {
+        let mut dev_mode: DEVMODEW = std::mem::zeroed();
+        dev_mode.dmSize = std::mem::size_of::<DEVMODEW>() as u16;
+
+        if EnumDisplaySettingsW(std::ptr::null(), ENUM_CURRENT_SETTINGS, &mut dev_mode) != 0 {
+            let w = dev_mode.dmPelsWidth;
+            let h = dev_mode.dmPelsHeight;
+            let rr = dev_mode.dmDisplayFrequency;
+            if w > 0 && h > 0 {
+                return (format!("{} x {}", w, h), rr, w, h);
+            }
+        }
+
+        let w = GetSystemMetrics(0) as u32; // SM_CXSCREEN
+        let h = GetSystemMetrics(1) as u32; // SM_CYSCREEN
+        if w > 0 && h > 0 {
+            return (format!("{} x {}", w, h), 60, w, h);
+        }
+    }
+
+    ("1920 x 1080".to_string(), 60, 1920, 1080)
+}
+
 #[cfg(not(windows))]
 fn get_supported_refresh_rates(_target_w: u32, _target_h: u32, current_rr: u32) -> Vec<u32> {
     vec![60, current_rr.max(60)]
 }
 
-fn run_wmic(args: &[&str]) -> Result<String, String> {
-    let output = Command::new("wmic")
-        .args(args)
-        .output()
-        .map_err(|e| format!("Failed to execute wmic: {}", e))?;
-    
-    if output.status.success() {
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        Ok(stdout.to_string())
-    } else {
-        Err(String::from_utf8_lossy(&output.stderr).to_string())
-    }
-}
-
-fn parse_wmic_output(output: &str) -> String {
-    let mut lines = output.lines();
-    lines.next(); // Skip header
-    let value = lines.next().unwrap_or("").trim().to_string();
-    value
-}
-
 #[tauri::command]
 pub fn get_system_info() -> Result<SystemInfo, String> {
-    let cpu = parse_wmic_output(&run_wmic(&["cpu", "get", "name"])?);
-    
-    let mem_out = run_wmic(&["memorychip", "get", "capacity"])?;
-    let mut ram_bytes: u64 = 0;
-    for line in mem_out.lines().skip(1) {
-        let line = line.trim();
-        if !line.is_empty() {
-            if let Ok(bytes) = line.parse::<u64>() {
-                ram_bytes += bytes;
-            }
-        }
-    }
-    let ram_gb = (ram_bytes as f64) / (1024.0 * 1024.0 * 1024.0);
-    
-    // Query video controller for GPU, Resolution and Refresh Rate
-    let mut gpu = String::from("NVIDIA / AMD Graphics");
-    let mut display_res = String::from("1920 x 1080");
-    let mut refresh_rate: u32 = 60;
-    let mut target_w: u32 = 0;
-    let mut target_h: u32 = 0;
+    #[cfg(windows)]
+    {
+        let cpu = get_win32_cpu_name();
+        let ram_gb = get_win32_ram_gb();
+        let gpu = get_win32_gpu_name();
+        let (os_name, os_version) = get_win32_os_info();
+        let (display_res, refresh_rate, target_w, target_h) = get_win32_display_info();
+        let available_refresh_rates = get_supported_refresh_rates(target_w, target_h, refresh_rate);
 
-    if let Ok(video_out) = run_wmic(&["path", "win32_videocontroller", "get", "CurrentHorizontalResolution,CurrentRefreshRate,CurrentVerticalResolution,Name"]) {
-        for line in video_out.lines().skip(1) {
-            let parts: Vec<&str> = line.split_whitespace().collect();
-            // Typical line with resolution: "3440 180 1440 NVIDIA GeForce RTX 4070 SUPER"
-            if parts.len() >= 4 {
-                if let (Ok(h), Ok(rr), Ok(v)) = (parts[0].parse::<u32>(), parts[1].parse::<u32>(), parts[2].parse::<u32>()) {
-                    if h > 0 && v > 0 && rr > 0 {
-                        display_res = format!("{} x {}", h, v);
-                        refresh_rate = rr;
-                        target_w = h;
-                        target_h = v;
-                        let gpu_name = parts[3..].join(" ");
-                        if !gpu_name.is_empty() {
-                            gpu = gpu_name;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
+        Ok(SystemInfo {
+            os_name,
+            os_version,
+            cpu,
+            ram_gb,
+            gpu,
+            display_res,
+            refresh_rate,
+            available_refresh_rates,
+        })
     }
-    
-    let available_refresh_rates = get_supported_refresh_rates(target_w, target_h, refresh_rate);
 
-    let os_caption = parse_wmic_output(&run_wmic(&["os", "get", "caption"])?);
-    let os_version = parse_wmic_output(&run_wmic(&["os", "get", "version"])?);
-    
-    Ok(SystemInfo {
-        os_name: os_caption,
-        os_version,
-        cpu,
-        ram_gb,
-        gpu,
-        display_res,
-        refresh_rate,
-        available_refresh_rates,
-    })
+    #[cfg(not(windows))]
+    {
+        Ok(SystemInfo {
+            os_name: "Linux / Unix".to_string(),
+            os_version: "Generic".to_string(),
+            cpu: "Multi-core Processor".to_string(),
+            ram_gb: 16.0,
+            gpu: "Dedicated Graphics".to_string(),
+            display_res: "1920 x 1080".to_string(),
+            refresh_rate: 60,
+            available_refresh_rates: vec![60, 144],
+        })
+    }
 }

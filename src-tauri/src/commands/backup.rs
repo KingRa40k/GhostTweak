@@ -1,6 +1,5 @@
 use serde::Serialize;
 use chrono::Local;
-use std::process::Command;
 use std::path::PathBuf;
 
 #[derive(Serialize, Clone)]
@@ -27,7 +26,7 @@ pub(crate) fn backup_registry_key(key_path: &str, description: &str) -> Result<S
     let filename = format!("backup_{}_{}.reg", timestamp, description);
     let file_path = dir.join(&filename);
     
-    let output = Command::new("reg")
+    let output = crate::commands::hidden_command("reg")
         .args(&["export", key_path, file_path.to_str().unwrap(), "/y"])
         .output()
         .map_err(|e| e.to_string())?;
@@ -81,7 +80,7 @@ pub fn restore_backup(backup_id: String) -> Result<(), String> {
         return Err("Backup not found".into());
     }
     
-    let output = Command::new("reg")
+    let output = crate::commands::hidden_command("reg")
         .args(&["import", file_path.to_str().unwrap()])
         .output()
         .map_err(|e| e.to_string())?;

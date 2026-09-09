@@ -1,6 +1,5 @@
 use serde::Serialize;
 use std::path::PathBuf;
-use std::process::Command;
 
 #[derive(Serialize, Clone)]
 pub struct SecurityStatus {
@@ -143,13 +142,12 @@ fn read_raw_machine_guid() -> String {
         }
     }
 
-    // Fallback to wmic csproduct UUID
-    if let Ok(output) = Command::new("wmic").args(&["csproduct", "get", "uuid"]).output() {
-        let text = String::from_utf8_lossy(&output.stdout);
-        for line in text.lines().skip(1) {
-            let clean = line.trim();
-            if !clean.is_empty() {
-                return clean.to_string();
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    if let Ok(crypto) = hklm.open_subkey(r"SOFTWARE\Microsoft\Cryptography") {
+        if let Ok(guid) = crypto.get_value::<String, _>("MachineGuid") {
+            let trimmed = guid.trim().to_string();
+            if !trimmed.is_empty() {
+                return trimmed;
             }
         }
     }

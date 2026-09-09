@@ -1,5 +1,4 @@
 use serde::Serialize;
-use std::process::Command;
 
 #[derive(Serialize, Clone)]
 pub struct MemoryStatus {
@@ -16,50 +15,49 @@ pub struct FlushResult {
     pub after_used_mb: u64,
 }
 
-// Read memory usage on Windows via WMIC or PowerShell
+#[cfg(windows)]
+#[repr(C)]
+#[allow(non_snake_case)]
+struct MEMORYSTATUSEX {
+    dwLength: u32,
+    dwMemoryLoad: u32,
+    ullTotalPhys: u64,
+    ullAvailPhys: u64,
+    ullTotalPageFile: u64,
+    ullAvailPageFile: u64,
+    ullTotalVirtual: u64,
+    ullAvailVirtual: u64,
+    ullAvailExtendedVirtual: u64,
+}
+
+// Read memory usage on Windows via instant Win32 API without subprocesses
 #[tauri::command]
 pub fn get_memory_status() -> Result<MemoryStatus, String> {
     #[cfg(windows)]
     {
-        // Use wmic os get FreePhysicalMemory,TotalVisibleMemorySize /Value
-        let output = Command::new("wmic")
-            .args(&["os", "get", "FreePhysicalMemory,TotalVisibleMemorySize", "/Value"])
-            .output()
-            .map_err(|e| format!("Failed to read memory: {}", e))?;
-
-        let text = String::from_utf8_lossy(&output.stdout);
-        let mut total_kb: u64 = 0;
-        let mut free_kb: u64 = 0;
-
-        for line in text.lines() {
-            let line = line.trim();
-            if line.starts_with("TotalVisibleMemorySize=") {
-                if let Ok(val) = line.replace("TotalVisibleMemorySize=", "").parse::<u64>() {
-                    total_kb = val;
-                }
-            } else if line.starts_with("FreePhysicalMemory=") {
-                if let Ok(val) = line.replace("FreePhysicalMemory=", "").parse::<u64>() {
-                    free_kb = val;
-                }
-            }
+        extern "system" {
+            fn GlobalMemoryStatusEx(lpBuffer: *mut MEMORYSTATUSEX) -> i32;
         }
+        unsafe {
+            let mut status: MEMORYSTATUSEX = std::mem::zeroed();
+            status.dwLength = std::mem::size_of::<MEMORYSTATUSEX>() as u32;
+            if GlobalMemoryStatusEx(&mut status) != 0 {
+                let total_mb = status.ullTotalPhys / (1024 * 1024);
+                let free_mb = status.ullAvailPhys / (1024 * 1024);
+                let used_mb = total_mb.saturating_sub(free_mb);
+                let percent_used = status.dwMemoryLoad.min(100) as u8;
 
-        if total_kb > 0 {
-            let total_mb = total_kb / 1024;
-            let free_mb = free_kb / 1024;
-            let used_mb = total_mb.saturating_sub(free_mb);
-            let percent_used = ((used_mb as f64 / total_mb as f64) * 100.0).round() as u8;
-
-            return Ok(MemoryStatus {
-                total_mb,
-                used_mb,
-                free_mb,
-                percent_used,
-            });
+                return Ok(MemoryStatus {
+                    total_mb,
+                    used_mb,
+                    free_mb,
+                    percent_used,
+                });
+            }
         }
     }
 
-    // Fallback if not on windows or wmic fails
+    // Fallback
     Ok(MemoryStatus {
         total_mb: 16384,
         used_mb: 8192,
@@ -126,7 +124,7 @@ pub fn set_dns(preset: String) -> Result<String, String> {
         for iface in interfaces {
             if primary.is_empty() {
                 // Reset to DHCP
-                let status = Command::new("netsh")
+                let status = crate::commands::hidden_command("netsh")
                     .args(&["interface", "ip", "set", "dns", iface, "dhcp"])
                     .output();
                 if let Ok(out) = status {
@@ -137,14 +135,14 @@ pub fn set_dns(preset: String) -> Result<String, String> {
                 }
             } else {
                 // Set primary
-                let status = Command::new("netsh")
+                let status = crate::commands::hidden_command("netsh")
                     .args(&["interface", "ip", "set", "dns", iface, "static", primary])
                     .output();
                 if let Ok(out) = status {
                     if out.status.success() {
                         applied = true;
                         if let Some(sec) = secondary {
-                            let _ = Command::new("netsh")
+                            let _ = crate::commands::hidden_command("netsh")
                                 .args(&["interface", "ip", "add", "dns", iface, sec, "index=2"])
                                 .output();
                         }
