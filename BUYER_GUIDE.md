@@ -9,24 +9,23 @@
 
 ---
 
-## ⚡ 1-Click Quick Start
+## ⚡ Launching the Ready App (1-Click)
 
-Pre-configured launcher scripts are provided in the root directory:
+The `website/public/downloads/` directory contains pre-compiled, fully self-contained binaries:
 
-1. **Launch Desktop App:** Double click **`ЗАПУСТИТЬ_ПРИЛОЖЕНИЕ.bat`** (or open `GhostTweak.exe`).
-2. **Launch Website:** Double click **`ЗАПУСТИТЬ_САЙТ.bat`** — the web server starts and automatically opens `http://localhost:3000` in your default browser.
+* **`GhostTweak_Portable.exe`** — Portable standalone version. Double-click to launch immediately (no installation, no dev tools, no localhost, no internet required).
+* **`GhostTweak_Setup_v1.0.0.exe`** — Standard Windows NSIS installer.
 
-> **Note on localhost:**  
-> `localhost:3000` is your machine's local address. It only resolves while the local server is active.  
-> To host the website permanently online with a public domain for all buyers, deploy to Vercel in 2 minutes for free (see [`docs/05_DEPLOYMENT_VERCEL.md`](docs/05_DEPLOYMENT_VERCEL.md)).
+End users and buyers do not need to run commands, install Node.js, or configure anything.
 
-### For Developers (Manual CLI):
+### For Developers (Source Code & Custom Builds):
+If you want to customize the design, add features, or rebuild from source:
 ```bash
-# Desktop App (dev mode):
+# 1. Run desktop app in development mode:
 npm install && npm run tauri dev
 
-# Marketing Website:
-cd website && npm install && npm run dev
+# 2. Automated 1-click rebuild of all binaries:
+build.bat
 ```
 
 To activate and test the full feature set, use this master VIP key:
