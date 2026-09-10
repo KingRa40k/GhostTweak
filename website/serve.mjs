@@ -1,7 +1,8 @@
-﻿import http from 'http';
+import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { exec } from 'child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const outDir = path.join(__dirname, 'out');
@@ -46,5 +47,13 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(3000, () => {
-  console.log('GhostTweak website running at http://localhost:3000 and http://127.0.0.1:3000');
+  console.log('===========================================================');
+  console.log(' 👻 GhostTweak Website запущен: http://localhost:3000');
+  console.log(' Сайт автоматически открывается в вашем браузере...');
+  console.log(' Чтобы остановить сервер, нажмите Ctrl + C');
+  console.log('===========================================================');
+  
+  // Автоматически открыть страницу в браузере по умолчанию
+  const startCmd = process.platform === 'win32' ? 'start' : process.platform === 'darwin' ? 'open' : 'xdg-open';
+  exec(`${startCmd} http://localhost:3000`);
 });

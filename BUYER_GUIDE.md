@@ -9,23 +9,24 @@
 
 ---
 
-## ⚡ Quick Start in 2 Minutes
+## ⚡ 1-Click Quick Start
 
-To run the project locally on your development machine:
+Pre-configured launcher scripts are provided in the root directory:
 
+1. **Launch Desktop App:** Double click **`ЗАПУСТИТЬ_ПРИЛОЖЕНИЕ.bat`** (or open `GhostTweak.exe`).
+2. **Launch Website:** Double click **`ЗАПУСТИТЬ_САЙТ.bat`** — the web server starts and automatically opens `http://localhost:3000` in your default browser.
+
+> **Note on localhost:**  
+> `localhost:3000` is your machine's local address. It only resolves while the local server is active.  
+> To host the website permanently online with a public domain for all buyers, deploy to Vercel in 2 minutes for free (see [`docs/05_DEPLOYMENT_VERCEL.md`](docs/05_DEPLOYMENT_VERCEL.md)).
+
+### For Developers (Manual CLI):
 ```bash
-# 1. Run desktop app in development mode:
-npm install
-npm run tauri dev
+# Desktop App (dev mode):
+npm install && npm run tauri dev
 
-# 2. Build production binaries in one click:
-Run build.bat in the root folder
-
-# 3. Launch marketing website in your browser:
-cd website
-npm install
-npm run dev
-# Open http://localhost:3000
+# Marketing Website:
+cd website && npm install && npm run dev
 ```
 
 To activate and test the full feature set, use this master VIP key:
