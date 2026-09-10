@@ -368,7 +368,7 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col gap-2.5 pt-1">
+            <div className="flex flex-col gap-2 pt-1">
               <button
                 onClick={handleActivate}
                 disabled={loading}
@@ -386,6 +386,45 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
               >
                 <span>{t.auth.btnTrial}</span>
               </button>
+            </div>
+
+            {/* Quick Demo Keys for effortless testing */}
+            <div className="pt-2.5 border-t border-white/[0.05]">
+              <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 mb-1.5 px-0.5">
+                <span>{lang === 'ru' ? 'Быстрый ввод лицензии:' : 'Quick Demo Keys:'}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleKeyChange('GHOST-VIP-PRO-2026');
+                    setHasAgreed(true);
+                  }}
+                  className="py-1 px-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] text-[10px] font-mono text-ghost-cyan hover:text-white transition-all text-center cursor-pointer"
+                >
+                  VIP Lifetime
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleKeyChange('GHOST-DAY1-PASS-2026');
+                    setHasAgreed(true);
+                  }}
+                  className="py-1 px-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] text-[10px] font-mono text-amber-400 hover:text-white transition-all text-center cursor-pointer"
+                >
+                  24h Pass
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleKeyChange('GHOST-ESPORTS-CS2-PRO');
+                    setHasAgreed(true);
+                  }}
+                  className="py-1 px-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] text-[10px] font-mono text-emerald-400 hover:text-white transition-all text-center cursor-pointer"
+                >
+                  CS2 Esports
+                </button>
+              </div>
             </div>
           </div>
         )}
