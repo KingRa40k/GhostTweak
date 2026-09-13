@@ -23,7 +23,8 @@ fn get_backup_dir() -> PathBuf {
 pub(crate) fn backup_registry_key(key_path: &str, description: &str) -> Result<String, String> {
     let dir = get_backup_dir();
     let timestamp = Local::now().format("%Y%m%d_%H%M%S").to_string();
-    let filename = format!("backup_{}_{}.reg", timestamp, description);
+    let safe_desc: String = description.chars().filter(|c| c.is_alphanumeric() || *c == '_').collect();
+    let filename = format!("backup_{}_{}.reg", timestamp, safe_desc);
     let file_path = dir.join(&filename);
     
     let output = crate::commands::hidden_command("reg")
@@ -74,6 +75,10 @@ pub fn list_backups() -> Result<Vec<BackupInfo>, String> {
 
 #[tauri::command]
 pub fn restore_backup(backup_id: String) -> Result<(), String> {
+    if backup_id.contains("..") || backup_id.contains('/') || backup_id.contains('\\') || !backup_id.ends_with(".reg") {
+        return Err("Invalid backup ID or path traversal attempt".into());
+    }
+
     let dir = get_backup_dir();
     let file_path = dir.join(&backup_id);
     if !file_path.exists() {
@@ -94,6 +99,10 @@ pub fn restore_backup(backup_id: String) -> Result<(), String> {
 
 #[tauri::command]
 pub fn delete_backup(backup_id: String) -> Result<(), String> {
+    if backup_id.contains("..") || backup_id.contains('/') || backup_id.contains('\\') || !backup_id.ends_with(".reg") {
+        return Err("Invalid backup ID or path traversal attempt".into());
+    }
+
     let dir = get_backup_dir();
     let file_path = dir.join(&backup_id);
     if file_path.exists() {
