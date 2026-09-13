@@ -52,20 +52,20 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           </div>
 
           <h2 className="text-lg font-bold text-white tracking-tight mb-2">
-            {lang === 'ru' ? 'Доступно в тарифах Pro' : 'Available in Pro Plans'}
+            {lang === 'ru' ? 'Функция недоступна в текущем тарифе' : 'Feature Not Available in Current Plan'}
           </h2>
 
           <p className="text-xs text-zinc-400 leading-relaxed max-w-sm mb-5">
             {featureName ? (
               lang === 'ru' ? (
-                <>Модуль <span className="text-ghost-cyan font-semibold">{featureName}</span> требует активную подписку (24h Pass, Pro Monthly или VIP Lifetime).</>
+                <>Данная функция недоступна в вашем тарифном плане. Для модуля <span className="text-ghost-cyan font-semibold">{featureName}</span> требуется тариф PRO (24h Pass, Pro Monthly) или VIP Lifetime.</>
               ) : (
-                <>The <span className="text-ghost-cyan font-semibold">{featureName}</span> feature requires an active subscription (24h Pass, Pro Monthly, or VIP Lifetime).</>
+                <>This feature is not available under your current tariff plan. Module <span className="text-ghost-cyan font-semibold">{featureName}</span> requires a PRO (24h Pass, Monthly) or VIP Lifetime license.</>
               )
             ) : (
               lang === 'ru'
-                ? 'Этот модуль оптимизации требует активную лицензию Pro (24h Pass, Pro Monthly или VIP Lifetime).'
-                : 'This optimization module requires an active Pro license (24h Pass, Pro Monthly, or VIP Lifetime).'
+                ? 'Данная функция недоступна в связи с вашим текущим тарифным планом. Требуется лицензия PRO или VIP Lifetime.'
+                : 'This feature is not available under your current tariff plan. A PRO or VIP Lifetime license is required.'
             )}
           </p>
 
@@ -87,7 +87,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
             </div>
             <div className="flex items-center gap-2 text-zinc-300">
               <Check size={14} className="text-emerald-400 shrink-0" />
-              <span>{lang === 'ru' ? 'Месячная подписка (790 ₽) или навсегда (1 490 ₽)' : 'Monthly pass ($9.99) or Lifetime ($19)'}</span>
+              <span>{lang === 'ru' ? '24h Pass (149 ₽), подписка (790 ₽) или навсегда (1 490 ₽)' : '24h Pass ($1.99), monthly ($9.99) or lifetime ($19)'}</span>
             </div>
           </div>
 

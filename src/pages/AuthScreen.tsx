@@ -211,8 +211,7 @@ export default function AuthScreen({ onAuthorized }: AuthScreenProps) {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-base tracking-tight text-white">GhostTweak</span>
-                <span className="tech-badge text-ghost-cyan border-ghost-cyan/30">v1.0.0-beta.1</span>
-                <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold uppercase rounded bg-ghost-neon/15 border border-ghost-neon/40 text-ghost-neon">BETA</span>
+                <span className="tech-badge text-ghost-cyan border-ghost-cyan/30">v1.0.0</span>
               </div>
               <p className="text-[11px] text-zinc-400">{t.auth.subtitle}</p>
             </div>

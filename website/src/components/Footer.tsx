@@ -53,7 +53,7 @@ export const Footer: React.FC = () => {
               </a>
 
               <a
-                href="https://github.com/GhostTweak/GhostTweak"
+                href="https://github.com/KingRa40k/GhostTweak"
                 target="_blank"
                 rel="noreferrer"
                 className="p-2 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/10 text-slate-300 hover:text-white transition-colors"

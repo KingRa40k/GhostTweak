@@ -48,27 +48,6 @@ export function Hero({
         }}
       />
 
-      {/* Eyebrow Badge */}
-      {eyebrow && (
-        <div className="flex justify-center mb-6 animate-fade-in">
-          <a
-            href="#architecture"
-            className="group inline-flex items-center gap-2 px-4 py-1.5 rounded-full 
-            bg-white/[0.03] border border-white/[0.1] hover:border-white/20 
-            backdrop-blur-md shadow-sm transition-all duration-200"
-          >
-            <span
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: "var(--accent-color, #00f0ff)" }}
-            />
-            <span className="font-mono text-xs font-semibold tracking-wider text-slate-300 group-hover:text-white transition-colors">
-              {eyebrow}
-            </span>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-slate-300" />
-          </a>
-        </div>
-      )}
-
       {/* Title with sleek metallic/accent gradient */}
       <h1
         className="animate-fade-in mx-auto max-w-5xl text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.12] text-white"

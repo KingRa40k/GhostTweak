@@ -35,7 +35,7 @@ export default function Settings() {
 
       const report = [
         '### GhostTweak Diagnostic Report',
-        `- **Version:** v1.0.0-beta.1`,
+        `- **Version:** v1.0.0`,
         `- **Date:** ${new Date().toISOString()}`,
         `- **OS:** ${info?.os_name || 'Windows'} (${info?.os_version || 'N/A'})`,
         `- **CPU:** ${info?.cpu || 'N/A'}`,
@@ -574,12 +574,12 @@ export default function Settings() {
             <h3 className="text-sm font-bold text-white uppercase tracking-wider">
               {t.settings.secBeta}
             </h3>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-ghost-neon/20 border border-ghost-neon/40 text-ghost-neon">
-              v1.0.0-beta.1
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-ghost-cyan/20 border border-ghost-cyan/40 text-ghost-cyan">
+              v1.0.0
             </span>
           </div>
           <span className="text-[10px] font-mono text-zinc-400">
-            {lang === 'ru' ? 'Сборка для тестирования' : 'Testing Release'}
+            {lang === 'ru' ? 'Стабильный релиз' : 'Stable Release'}
           </span>
         </div>
 

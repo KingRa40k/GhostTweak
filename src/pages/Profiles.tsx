@@ -8,6 +8,7 @@ import { getPreferences, savePreferences } from '../lib/theme';
 import { useI18n } from '../lib/i18n';
 import { getStoredLicense, isProLicense, LicenseData } from '../lib/license';
 import UpgradeModal from '../components/UpgradeModal';
+import { PlanRestrictionBanner } from '../components/PlanRestrictionBanner';
 
 interface ProfileDef {
   id: 'esports' | 'cinematic' | 'streamer' | 'quiet';
@@ -198,6 +199,16 @@ export default function Profiles({ license: propLicense }: ProfilesProps = {}) {
           <CheckCircle2 size={16} className="shrink-0" />
           <span>{notice}</span>
         </div>
+      )}
+
+      {!isPro && (
+        <PlanRestrictionBanner
+          featureName={lang === 'ru' ? 'Соревновательные профили (Esports, AAA, Streamer)' : 'Competitive Profiles (Esports, AAA, Streamer)'}
+          onUnlock={() => {
+            setUpgradeFeature(lang === 'ru' ? 'Competitive Presets' : 'Competitive Presets');
+            setShowUpgradeModal(true);
+          }}
+        />
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

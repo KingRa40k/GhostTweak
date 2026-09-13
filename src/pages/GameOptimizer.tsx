@@ -11,6 +11,7 @@ import { getPreferences } from '../lib/theme';
 import { useI18n } from '../lib/i18n';
 import { getStoredLicense, isProLicense, LicenseData } from '../lib/license';
 import UpgradeModal from '../components/UpgradeModal';
+import { PlanRestrictionBanner } from '../components/PlanRestrictionBanner';
 
 type SupportedGame = 'cs2' | 'valorant' | 'apex' | 'dota2';
 
@@ -362,25 +363,13 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
       )}
 
       {!isPro && (
-        <div className="bg-amber-500/10 border border-amber-500/30 p-3.5 rounded-xl flex items-center justify-between gap-3 text-amber-300 text-xs">
-          <div className="flex items-center gap-2.5">
-            <Lock size={16} className="shrink-0 text-amber-400" />
-            <span>
-              {lang === 'ru'
-                ? 'Игровой оптимизатор ядра (Match Turbo, IFEO калибровка и Smart Throttle) доступен только в PRO версии.'
-                : 'Kernel Game Optimizer (Match Turbo, IFEO calibration & Smart Throttle) is exclusive to PRO.'}
-            </span>
-          </div>
-          <button
-            onClick={() => {
-              setUpgradeFeature(lang === 'ru' ? 'Esports Game Optimizer' : 'Esports Game Optimizer');
-              setShowUpgradeModal(true);
-            }}
-            className="px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold border border-amber-500/40 text-[11px] transition-all shrink-0"
-          >
-            {lang === 'ru' ? 'Разблокировать PRO' : 'Unlock PRO'}
-          </button>
-        </div>
+        <PlanRestrictionBanner
+          featureName={lang === 'ru' ? 'Игровой оптимизатор ядра (Match Turbo, IFEO калибровка)' : 'Kernel Game Optimizer (Match Turbo & IFEO)'}
+          onUnlock={() => {
+            setUpgradeFeature(lang === 'ru' ? 'Esports Game Optimizer' : 'Esports Game Optimizer');
+            setShowUpgradeModal(true);
+          }}
+        />
       )}
 
       <div className="glass-card p-6 rounded-2xl border border-ghost-cyan/25 relative overflow-hidden shadow-[0_0_30px_rgba(0,240,255,0.07)]">
