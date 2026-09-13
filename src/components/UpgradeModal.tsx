@@ -21,7 +21,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   if (!isOpen) return null;
 
   const handleOpenPricing = () => {
-    openUrl('https://ghosttweak.com/#pricing');
+    openUrl('https://ghost-tweak.vercel.app/#pricing');
   };
 
   return (

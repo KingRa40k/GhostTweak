@@ -8,7 +8,6 @@ import { TweakInfo, ApplyResult, HardwareTierInfo } from '../lib/types';
 import { useI18n } from '../lib/i18n';
 import { getStoredLicense, isProLicense, LicenseData } from '../lib/license';
 import UpgradeModal from '../components/UpgradeModal';
-import { PlanRestrictionBanner } from '../components/PlanRestrictionBanner';
 
 interface TweaksProps {
   license?: LicenseData | null;
@@ -264,13 +263,6 @@ export default function Tweaks({ license: propLicense }: TweaksProps = {}) {
           <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" />
         </div>
       </div>
-
-      {!isPro && (
-        <PlanRestrictionBanner
-          featureName={lang === 'ru' ? 'Расширенные твики ядра и сетевого стека' : 'Advanced Kernel & Network Stack Tweaks'}
-          onUnlock={() => setShowUpgradeModal(true)}
-        />
-      )}
 
       <div className="flex flex-col gap-2.5">
         {filteredTweaks.map(tweak => {

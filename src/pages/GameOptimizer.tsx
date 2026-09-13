@@ -11,7 +11,6 @@ import { getPreferences } from '../lib/theme';
 import { useI18n } from '../lib/i18n';
 import { getStoredLicense, isProLicense, LicenseData } from '../lib/license';
 import UpgradeModal from '../components/UpgradeModal';
-import { PlanRestrictionBanner } from '../components/PlanRestrictionBanner';
 
 type SupportedGame = 'cs2' | 'valorant' | 'apex' | 'dota2';
 
@@ -184,12 +183,6 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
   };
 
   const handleApplyBoost = async () => {
-    if (!isPro) {
-      setUpgradeFeature(lang === 'ru' ? 'Оптимизатор процессов и IFEO приоритеты' : 'Game Booster & IFEO Priority');
-      setShowUpgradeModal(true);
-      return;
-    }
-
     try {
       setBoosting(true);
       setNotice(null);
@@ -362,16 +355,7 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
         </div>
       )}
 
-      {!isPro && (
-        <PlanRestrictionBanner
-          featureName={lang === 'ru' ? 'Игровой оптимизатор ядра (Match Turbo, IFEO калибровка)' : 'Kernel Game Optimizer (Match Turbo & IFEO)'}
-          onUnlock={() => {
-            setUpgradeFeature(lang === 'ru' ? 'Esports Game Optimizer' : 'Esports Game Optimizer');
-            setShowUpgradeModal(true);
-          }}
-        />
-      )}
-
+      {/* Quick Status Bar */}
       <div className="glass-card p-6 rounded-2xl border border-ghost-cyan/25 relative overflow-hidden shadow-[0_0_30px_rgba(0,240,255,0.07)]">
         <div className="absolute -right-12 -top-12 w-48 h-48 bg-ghost-cyan/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5">
@@ -380,6 +364,9 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
               <span className="w-2 h-2 rounded-full bg-ghost-cyan animate-pulse" />
               <span className="text-xs font-mono uppercase tracking-wider text-ghost-cyan font-bold">
                 {lang === 'ru' ? 'Профиль ядра:' : 'Kernel Profile:'} {activeGame.title}
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold">
+                {lang === 'ru' ? 'БЕСПЛАТНО' : 'FREE'}
               </span>
             </div>
             <h2 className="text-xl font-extrabold text-white">
@@ -397,8 +384,8 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
               onClick={handleMatchTurbo}
               disabled={matchTurboRunning || boosting}
               className="w-full sm:w-auto px-5 py-4 rounded-xl bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:shadow-[0_0_30px_rgba(245,158,11,0.55)] transition-all shrink-0 active:scale-95 border border-amber-400/40"
+              title={lang === 'ru' ? 'Экстремальный овердрайв с фиксацией таймера 0.500 мс (Тариф PRO)' : 'Extreme overdrive with 0.500ms hardware timer lock (PRO)'}
             >
-              {!isPro && <Lock size={14} className="text-amber-200" />}
               {matchTurboRunning ? (
                 <>
                   <RotateCw size={16} className="animate-spin text-amber-200" />
@@ -408,6 +395,11 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
                 <>
                   <Flame size={16} className="text-amber-200 animate-pulse" />
                   <span>Match Turbo</span>
+                  {!isPro && (
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-black/40 border border-amber-300/40 text-amber-200 ml-1">
+                      PRO
+                    </span>
+                  )}
                 </>
               )}
             </button>
@@ -417,7 +409,6 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
               disabled={boosting || matchTurboRunning}
               className="w-full sm:w-auto px-6 py-4 rounded-xl bg-ghost-cyan text-titanium-950 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-[0_0_25px_rgba(0,240,255,0.4)] hover:shadow-[0_0_35px_rgba(0,240,255,0.6)] transition-all shrink-0 active:scale-95"
             >
-              {!isPro && <Lock size={14} className="text-titanium-950" />}
               {boosting ? (
                 <>
                   <RotateCw size={16} className="animate-spin" />
@@ -491,7 +482,14 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
                   <Cpu size={17} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">{t.gameOpt.smartThrottleTitle}</h3>
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="text-sm font-bold text-white">{t.gameOpt.smartThrottleTitle}</h3>
+                    {!isPro && (
+                      <span className="text-[9px] font-mono font-bold text-ghost-neon bg-ghost-neon/15 px-1.5 py-0.5 rounded border border-ghost-neon/30">
+                        PRO
+                      </span>
+                    )}
+                  </div>
                   <span className="text-[10px] font-mono text-zinc-500">{t.gameOpt.smartThrottleSub}</span>
                 </div>
               </div>

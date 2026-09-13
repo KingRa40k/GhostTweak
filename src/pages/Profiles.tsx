@@ -8,7 +8,6 @@ import { getPreferences, savePreferences } from '../lib/theme';
 import { useI18n } from '../lib/i18n';
 import { getStoredLicense, isProLicense, LicenseData } from '../lib/license';
 import UpgradeModal from '../components/UpgradeModal';
-import { PlanRestrictionBanner } from '../components/PlanRestrictionBanner';
 
 interface ProfileDef {
   id: 'esports' | 'cinematic' | 'streamer' | 'quiet';
@@ -136,7 +135,8 @@ export default function Profiles({ license: propLicense }: ProfilesProps = {}) {
   ];
 
   const handleApplyProfile = async (profile: ProfileDef) => {
-    if (profile.id !== 'quiet' && !isPro) {
+    const isProProfile = profile.id === 'cinematic' || profile.id === 'streamer';
+    if (isProProfile && !isPro) {
       setUpgradeFeature(lang === 'ru' ? `Профиль оптимизации «${profile.name}»` : `${profile.name} Optimization Profile`);
       setShowUpgradeModal(true);
       return;
@@ -201,21 +201,12 @@ export default function Profiles({ license: propLicense }: ProfilesProps = {}) {
         </div>
       )}
 
-      {!isPro && (
-        <PlanRestrictionBanner
-          featureName={lang === 'ru' ? 'Соревновательные профили (Esports, AAA, Streamer)' : 'Competitive Profiles (Esports, AAA, Streamer)'}
-          onUnlock={() => {
-            setUpgradeFeature(lang === 'ru' ? 'Competitive Presets' : 'Competitive Presets');
-            setShowUpgradeModal(true);
-          }}
-        />
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {PROFILES.map((profile) => {
           const Icon = profile.icon;
           const isActive = prefs.activeProfile === profile.id;
           const isApplyingThis = applying === profile.id;
+          const isProProfile = profile.id === 'cinematic' || profile.id === 'streamer';
 
           return (
             <div
@@ -242,7 +233,12 @@ export default function Profiles({ license: propLicense }: ProfilesProps = {}) {
                         {isActive && (
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981]" />
                         )}
-                        {profile.id !== 'quiet' && !isPro && (
+                        {profile.id === 'esports' && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+                            {lang === 'ru' ? 'БЕСПЛАТНО' : 'FREE'}
+                          </span>
+                        )}
+                        {isProProfile && !isPro && (
                           <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center gap-1">
                             <Lock size={10} /> PRO
                           </span>
@@ -312,7 +308,7 @@ export default function Profiles({ license: propLicense }: ProfilesProps = {}) {
                   <span>{t.profiles.btnActive}</span>
                 ) : (
                   <>
-                    {profile.id !== 'quiet' && !isPro ? <Lock size={14} className="text-amber-300" /> : <Zap size={14} />}
+                    {isProProfile && !isPro ? <Lock size={14} className="text-amber-300" /> : <Zap size={14} />}
                     <span>{t.profiles.btnActivate}</span>
                   </>
                 )}

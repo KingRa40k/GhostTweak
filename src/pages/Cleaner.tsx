@@ -8,7 +8,6 @@ import { ScanResult, CleanResult, FlushResult } from '../lib/types';
 import { useI18n } from '../lib/i18n';
 import { getStoredLicense, isProLicense, LicenseData } from '../lib/license';
 import UpgradeModal from '../components/UpgradeModal';
-import { PlanRestrictionBanner } from '../components/PlanRestrictionBanner';
 
 const formatBytes = (bytes: number) => {
   if (bytes === 0) return '0 B';
@@ -202,16 +201,6 @@ export default function Cleaner({ license: propLicense }: CleanerProps = {}) {
             <span className="font-bold">{t.cleaner.cleanDone}:</span> {lang === 'ru' ? `Освобождено ${formatBytes(cleanResult.cleaned_bytes)} в ${cleanResult.cleaned_files} файлах.` : `Freed ${formatBytes(cleanResult.cleaned_bytes)} across ${cleanResult.cleaned_files} files.`}
           </div>
         </div>
-      )}
-
-      {!isPro && (
-        <PlanRestrictionBanner
-          featureName={lang === 'ru' ? 'Очистка кэша шейдеров DirectX, NVIDIA & AMD' : 'DirectX, NVIDIA & AMD Shader Cache Flush'}
-          onUnlock={() => {
-            setUpgradeFeature(lang === 'ru' ? 'Shader Cache Purge' : 'Shader Cache Purge');
-            setShowUpgradeModal(true);
-          }}
-        />
       )}
 
       <div className="flex items-center justify-between gap-3">
