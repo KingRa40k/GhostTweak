@@ -157,9 +157,9 @@ const TOURNAMENT_TIERS: TierDefinition[] = [
     badgeRu: 'НА ТУРНИР ИЛИ ВЕЧЕР',
     badgeEn: 'FOR TOURNAMENT NIGHT',
     prices: {
-      RUB: { amount: '490 ₽', periodRu: 'разовый пропуск • 24 часа с момента запуска', periodEn: '24 hours from activation' },
-      USD: { amount: '$5', periodRu: 'one-time pass • 24 hours', periodEn: 'one-time pass • 24 hours' },
-      EUR: { amount: '4.5 €', periodRu: 'one-time pass • 24 hours', periodEn: 'one-time pass • 24 hours' },
+      RUB: { amount: '149 ₽', periodRu: 'разовый пропуск • 24 часа с момента запуска', periodEn: '24 hours from activation' },
+      USD: { amount: '$1.99', periodRu: 'one-time pass • 24 hours', periodEn: 'one-time pass • 24 hours' },
+      EUR: { amount: '1.8 €', periodRu: 'one-time pass • 24 hours', periodEn: 'one-time pass • 24 hours' },
     },
     descriptionRu: 'Мгновенный доступ ко всем Pro-модулям на соревновательный вечер или турнир. Без подписок и автопродлений.',
     descriptionEn: 'Instant access to all Pro modules for tournament nights and scrims. No recurring subscriptions.',
