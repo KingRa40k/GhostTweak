@@ -103,10 +103,10 @@ export default function App() {
     switch (activePage) {
       case 'dashboard': return <Dashboard onNavigate={setActivePage} />;
       case 'game-optimizer':
-      case 'cs2boost': return <GameOptimizer />;
-      case 'cleaner': return <Cleaner />;
-      case 'tweaks': return <Tweaks />;
-      case 'profiles': return <Profiles />;
+      case 'cs2boost': return <GameOptimizer license={license} />;
+      case 'cleaner': return <Cleaner license={license} />;
+      case 'tweaks': return <Tweaks license={license} />;
+      case 'profiles': return <Profiles license={license} />;
       case 'backups': return <Backups />;
       case 'settings': return <Settings />;
       default: return <Dashboard onNavigate={setActivePage} />;

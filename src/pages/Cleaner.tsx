@@ -6,7 +6,7 @@ import {
 import { invoke } from '../lib/tauri';
 import { ScanResult, CleanResult, FlushResult } from '../lib/types';
 import { useI18n } from '../lib/i18n';
-import { getStoredLicense, isProLicense } from '../lib/license';
+import { getStoredLicense, isProLicense, LicenseData } from '../lib/license';
 import UpgradeModal from '../components/UpgradeModal';
 
 const formatBytes = (bytes: number) => {
@@ -17,7 +17,11 @@ const formatBytes = (bytes: number) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-export default function Cleaner() {
+interface CleanerProps {
+  license?: LicenseData | null;
+}
+
+export default function Cleaner({ license: propLicense }: CleanerProps = {}) {
   const { t, lang } = useI18n();
   const [loading, setLoading] = useState(true);
   const [cleaning, setCleaning] = useState(false);
@@ -30,7 +34,7 @@ export default function Cleaner() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState('');
-  const [isPro, setIsPro] = useState<boolean>(() => isProLicense(getStoredLicense()));
+  const isPro = isProLicense(propLicense || getStoredLicense());
 
   const PRO_CATEGORIES = new Set(['nvidia_shader', 'amd_shader', 'dx_shader', 'windows_update']);
 
@@ -52,8 +56,7 @@ export default function Cleaner() {
       setLoading(true);
       setError('');
       setCleanResult(null);
-      const currentPro = isProLicense(getStoredLicense());
-      setIsPro(currentPro);
+      const currentPro = isProLicense(propLicense || getStoredLicense());
       const res = await invoke<ScanResult>('scan_junk');
       setScanResult(res);
       if (currentPro) {

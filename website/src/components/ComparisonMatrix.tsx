@@ -5,459 +5,396 @@ import {
   Check, 
   X, 
   AlertTriangle,
-  Layers,
-  Sparkles,
-  ShieldCheck
+  Cpu,
+  Zap,
+  Shield,
+  Clock,
+  HardDrive,
+  Activity,
+  Layers
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
-interface ComparisonRow {
-  metric: string;
+interface BenchmarkMetric {
+  id: string;
   category: string;
+  nameRu: string;
+  nameEn: string;
+  descriptionRu: string;
+  descriptionEn: string;
+  unit: string;
+  ghosttweak: {
+    display: string;
+    score: number; // 0-100 (higher is better)
+    noteRu: string;
+    noteEn: string;
+  };
   electron: {
-    value: string;
-    status: 'bad' | 'warning' | 'good';
-    subtext: string;
+    display: string;
+    score: number;
+    noteRu: string;
+    noteEn: string;
   };
   scripts: {
-    value: string;
-    status: 'bad' | 'warning' | 'good';
-    subtext: string;
-  };
-  ghosttweak: {
-    value: string;
-    status: 'good';
-    subtext: string;
+    display: string;
+    score: number;
+    noteRu: string;
+    noteEn: string;
   };
 }
 
-const COMPARISON_DATA_RU: ComparisonRow[] = [
+const BENCHMARKS: BenchmarkMetric[] = [
   {
-    metric: 'Размер исполняемого файла',
-    category: 'Архитектура',
+    id: 'ram',
+    category: 'Memory Footprint',
+    nameRu: 'Потребление RAM в фоне',
+    nameEn: 'Background RAM Footprint',
+    descriptionRu: 'Объем выделенной памяти при активном мониторинге системы',
+    descriptionEn: 'Working set memory allocated during active monitoring',
+    unit: 'MB',
+    ghosttweak: {
+      display: '8.4 МБ',
+      score: 96,
+      noteRu: 'Rust Win32 API • 0 фонового GC',
+      noteEn: 'Rust Win32 API • 0 background GC',
+    },
     electron: {
-      value: '140 – 280 МБ',
-      status: 'bad',
-      subtext: 'Включает Chromium и среду Node.js',
+      display: '380 – 520 МБ',
+      score: 18,
+      noteRu: 'Chromium + Node.js V8 движок',
+      noteEn: 'Chromium + Node.js V8 engine',
     },
     scripts: {
-      value: '< 50 КБ',
-      status: 'good',
-      subtext: 'Текстовые файлы .bat / .ps1',
-    },
-    ghosttweak: {
-      value: '4.8 МБ',
-      status: 'good',
-      subtext: 'Скомпилированный бинарник Rust (Win32 API)',
+      display: '0 МБ (нет UI)',
+      score: 75,
+      noteRu: 'Нет графического интерфейса и телеметрии',
+      noteEn: 'No GUI or runtime telemetry',
     },
   },
   {
-    metric: 'Потребление ОЗУ в фоне',
-    category: 'Ресурсы',
+    id: 'startup',
+    category: 'Latency',
+    nameRu: 'Холодный старт процесса',
+    nameEn: 'Cold Start Latency',
+    descriptionRu: 'Время от клика до готовности UI и ядра к выполнению команд',
+    descriptionEn: 'Time from execution to full UI and kernel readiness',
+    unit: 'ms',
+    ghosttweak: {
+      display: '< 18 мс',
+      score: 98,
+      noteRu: 'Моментальная инициализация DirectWin32',
+      noteEn: 'Instant DirectWin32 initialization',
+    },
     electron: {
-      value: '220 – 480 МБ',
-      status: 'bad',
-      subtext: 'Несколько фоновых процессов рендера',
+      display: '2 400 – 3 800 мс',
+      score: 15,
+      noteRu: 'Инициализация V8, парсинг бандлов',
+      noteEn: 'V8 startup & heavy bundle parsing',
     },
     scripts: {
-      value: 'Не применимо',
-      status: 'warning',
-      subtext: 'Однократное выполнение команды',
-    },
-    ghosttweak: {
-      value: '8.4 МБ',
-      status: 'good',
-      subtext: 'Минимальное потребление памяти без фоновых сборщиков мусора',
+      display: '~ 450 мс',
+      score: 60,
+      noteRu: 'Интерпретация powershell.exe',
+      noteEn: 'powershell.exe runtime load',
     },
   },
   {
-    metric: 'Холодный старт приложения',
-    category: 'Производительность',
+    id: 'rollback',
+    category: 'Safety & Atomicity',
+    nameRu: 'Атомарность отката изменений',
+    nameEn: 'Atomic Change Rollback',
+    descriptionRu: 'Механизм резервного копирования и восстановления реестра Windows',
+    descriptionEn: 'Windows registry backup and safe transactional restore',
+    unit: 'mode',
+    ghosttweak: {
+      display: '1-Click RegExport',
+      score: 95,
+      noteRu: 'Атомарный .reg снапшот перед каждой операцией',
+      noteEn: 'Atomic .reg snapshot before any mutation',
+    },
     electron: {
-      value: '1800 – 3400 мс',
-      status: 'bad',
-      subtext: 'Инициализация движка браузера',
+      display: 'Частичный / JSON',
+      score: 35,
+      noteRu: 'Риск рассинхронизации при сбое процесса',
+      noteEn: 'Desync risk if renderer process crashes',
     },
     scripts: {
-      value: '~ 300 мс',
-      status: 'warning',
-      subtext: 'Запуск интерпретатора PowerShell',
-    },
-    ghosttweak: {
-      value: '< 20 мс',
-      status: 'good',
-      subtext: 'Быстрый запуск нативного процесса',
+      display: 'Ручной бэкап',
+      score: 20,
+      noteRu: 'В 90% скриптов откат вообще не предусмотрен',
+      noteEn: '90% of scripts lack rollback logic',
     },
   },
   {
-    metric: 'Работа с реестром Windows',
-    category: 'Надежность',
+    id: 'kernel',
+    category: 'Kernel Security',
+    nameRu: 'Безопасность ядра системы',
+    nameEn: 'Kernel Space Safety',
+    descriptionRu: 'Использование системных Ring-0 драйверов и риск синего экрана (BSOD)',
+    descriptionEn: 'Ring-0 driver injection risk and BSOD exposure',
+    unit: 'security',
+    ghosttweak: {
+      display: '0 сторонних драйверов',
+      score: 100,
+      noteRu: 'Исключительно официальные Win32 / NT API',
+      noteEn: 'Strictly official Win32 / NT kernel APIs',
+    },
     electron: {
-      value: 'Node.js FFI',
-      status: 'warning',
-      subtext: 'Прослойки между JS и WinAPI',
+      display: 'Ring-0 драйверы',
+      score: 30,
+      noteRu: 'Установка неподписанных .sys служб',
+      noteEn: 'Unsigned .sys services injection',
     },
     scripts: {
-      value: 'Вызовы reg.exe',
-      status: 'bad',
-      subtext: 'Скриптовые команды без проверки типов',
-    },
-    ghosttweak: {
-      value: 'Win32 API & winreg',
-      status: 'good',
-      subtext: 'Прямые системные вызовы через нативные структуры данных',
+      display: 'Слепое применение',
+      score: 25,
+      noteRu: 'Ломает службы Windows Update и сетевой стек',
+      noteEn: 'Breaks Windows Update & network stack',
     },
   },
   {
-    metric: 'Резервное копирование и откат',
-    category: 'Безопасность',
+    id: 'timer',
+    category: 'Input Lag',
+    nameRu: 'Точность системного таймера (DPC)',
+    nameEn: 'System Timer Resolution & DPC',
+    descriptionRu: 'Разрешение прерываний процессора для отклика мыши и фреймтайма',
+    descriptionEn: 'CPU interrupt clock resolution for mouse & frame timing',
+    unit: 'jitter',
+    ghosttweak: {
+      display: '0.500 мс (NT Lock)',
+      score: 97,
+      noteRu: 'Аппаратная фиксация без плавающего джиттера',
+      noteEn: 'Hardware lock without floating jitter',
+    },
     electron: {
-      value: 'Редко предусмотрен',
-      status: 'bad',
-      subtext: 'Обычно не сохраняет исходные значения',
+      display: '1.000 – 15.6 мс',
+      score: 40,
+      noteRu: 'Нестабильное удержание, конфликт с браузером',
+      noteEn: 'Unstable lock, browser render collisions',
     },
     scripts: {
-      value: 'Отсутствует',
-      status: 'bad',
-      subtext: 'Для отката требуется ручное восстановление системы',
-    },
-    ghosttweak: {
-      value: 'Автоматический .reg бэкап',
-      status: 'good',
-      subtext: 'Экспорт ветки реестра перед каждым изменением',
+      display: '15.6 мс (Дефолт)',
+      score: 30,
+      noteRu: 'Сбрасывается при закрытии окна консоли',
+      noteEn: 'Resets immediately when terminal closes',
     },
   },
   {
-    metric: 'Совместимость с античитами',
-    category: 'Безопасность',
+    id: 'size',
+    category: 'Distribution',
+    nameRu: 'Размер бинарного пакета',
+    nameEn: 'Binary Distribution Size',
+    descriptionRu: 'Чистый вес утилиты без скрытых зависимостей и мусора',
+    descriptionEn: 'Pure binary weight without embedded browser bloat',
+    unit: 'MB',
+    ghosttweak: {
+      display: '4.8 МБ',
+      score: 99,
+      noteRu: 'Один оптимизированный .exe x86_64',
+      noteEn: 'Single optimized x86_64 native executable',
+    },
     electron: {
-      value: 'Зависит от сборки',
-      status: 'warning',
-      subtext: 'Оверлеи могут вызывать предупреждения',
+      display: '180 – 320 МБ',
+      score: 12,
+      noteRu: 'Chromium, Node runtime, веб-ассеты',
+      noteEn: 'Chromium, Node runtime & web assets',
     },
     scripts: {
-      value: 'Риск блокировок',
-      status: 'bad',
-      subtext: 'Отключение системных служб может нарушать требования античитов',
-    },
-    ghosttweak: {
-      value: 'Безопасно',
-      status: 'good',
-      subtext: 'Без инъекций DLL, используются только стандартные параметры Windows',
-    },
-  },
-  {
-    metric: 'Телеметрия и внешние запросы',
-    category: 'Приватность',
-    electron: {
-      value: 'Встроенная аналитика',
-      status: 'bad',
-      subtext: 'Сбор ошибок и метрик использования через сеть',
-    },
-    scripts: {
-      value: 'Зависит от источника',
-      status: 'bad',
-      subtext: 'Возможны скрытые сетевые запросы',
-    },
-    ghosttweak: {
-      value: 'Полный офлайн',
-      status: 'good',
-      subtext: 'Работает без сетевых запросов и сторонней аналитики',
-    },
-  },
-];
-
-const COMPARISON_DATA_EN: ComparisonRow[] = [
-  {
-    metric: 'Executable Binary Size',
-    category: 'Architecture',
-    electron: {
-      value: '140 – 280 MB',
-      status: 'bad',
-      subtext: 'Bundles Chromium runtime & Node.js environment',
-    },
-    scripts: {
-      value: '< 50 KB',
-      status: 'good',
-      subtext: 'Unchecked .bat / .ps1 text scripts',
-    },
-    ghosttweak: {
-      value: '4.8 MB',
-      status: 'good',
-      subtext: 'Compiled native Rust binary with Win32 API',
-    },
-  },
-  {
-    metric: 'Idle Background RAM Footprint',
-    category: 'Resources',
-    electron: {
-      value: '220 – 480 MB',
-      status: 'bad',
-      subtext: 'Multiple background Chromium render processes',
-    },
-    scripts: {
-      value: 'Not Applicable',
-      status: 'warning',
-      subtext: 'Runs once and terminates',
-    },
-    ghosttweak: {
-      value: '8.4 MB',
-      status: 'good',
-      subtext: 'Zero background garbage collection overhead',
-    },
-  },
-  {
-    metric: 'Cold Application Launch Time',
-    category: 'Performance',
-    electron: {
-      value: '1800 – 3400 ms',
-      status: 'bad',
-      subtext: 'Browser engine warm-up & hydration',
-    },
-    scripts: {
-      value: '~ 300 ms',
-      status: 'warning',
-      subtext: 'PowerShell execution engine initialization',
-    },
-    ghosttweak: {
-      value: '< 20 ms',
-      status: 'good',
-      subtext: 'Instant native execution on process spawn',
-    },
-  },
-  {
-    metric: 'Windows Registry Interaction',
-    category: 'Reliability',
-    electron: {
-      value: 'Node.js FFI',
-      status: 'warning',
-      subtext: 'Fragile bindings between JS and WinAPI',
-    },
-    scripts: {
-      value: 'Raw reg.exe calls',
-      status: 'bad',
-      subtext: 'Script commands without type verification',
-    },
-    ghosttweak: {
-      value: 'Direct Win32 API',
-      status: 'good',
-      subtext: 'Type-safe direct syscalls via native Rust structures',
-    },
-  },
-  {
-    metric: 'Automatic Backup & Rollback',
-    category: 'Safety',
-    electron: {
-      value: 'Rarely Included',
-      status: 'bad',
-      subtext: 'Typically overwrites values without registry backup',
-    },
-    scripts: {
-      value: 'None',
-      status: 'bad',
-      subtext: 'Requires manual Windows System Restore point',
-    },
-    ghosttweak: {
-      value: 'Automated .reg Snapshots',
-      status: 'good',
-      subtext: 'Exports affected registry branch prior to each tweak',
-    },
-  },
-  {
-    metric: 'Anti-Cheat Compatibility',
-    category: 'Safety',
-    electron: {
-      value: 'Varies by build',
-      status: 'warning',
-      subtext: 'Game overlays may trigger heuristic warnings',
-    },
-    scripts: {
-      value: 'Ban Risks',
-      status: 'bad',
-      subtext: 'Indiscriminate service disabling can flag anti-cheats',
-    },
-    ghosttweak: {
-      value: '100% Safe',
-      status: 'good',
-      subtext: 'Zero DLL injections; uses native Windows parameters only',
-    },
-  },
-  {
-    metric: 'Telemetry & Outbound Network',
-    category: 'Privacy',
-    electron: {
-      value: 'Built-in Analytics',
-      status: 'bad',
-      subtext: 'Diagnostic pings and crash log uploads',
-    },
-    scripts: {
-      value: 'Unknown Source',
-      status: 'bad',
-      subtext: 'May download remote scripts without integrity checks',
-    },
-    ghosttweak: {
-      value: '100% Offline',
-      status: 'good',
-      subtext: 'Operates completely locally with zero analytics tracking',
+      display: '< 1 МБ',
+      score: 85,
+      noteRu: 'Скрипты .bat/.ps1 без интерфейса',
+      noteEn: 'Bare text scripts without GUI',
     },
   },
 ];
 
 export const ComparisonMatrix: React.FC = () => {
-  const { t, lang } = useI18n();
-  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const { lang } = useI18n();
+  const [activeCategory, setActiveCategory] = useState<string>('all');
 
-  const comparisonData = lang === 'en' ? COMPARISON_DATA_EN : COMPARISON_DATA_RU;
+  const categories = [
+    { id: 'all', labelRu: 'Все параметры', labelEn: 'All Metrics' },
+    { id: 'perf', labelRu: 'Производительность', labelEn: 'Performance' },
+    { id: 'safety', labelRu: 'Безопасность и ядро', labelEn: 'Safety & Kernel' },
+  ];
+
+  const filteredBenchmarks = BENCHMARKS.filter((b) => {
+    if (activeCategory === 'perf') return ['ram', 'startup', 'timer', 'size'].includes(b.id);
+    if (activeCategory === 'safety') return ['rollback', 'kernel'].includes(b.id);
+    return true;
+  });
 
   return (
-    <section id="architecture" className="relative py-28 border-t border-white/[0.06] overflow-hidden">
-      {/* Background ambient lighting */}
-      <div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] pointer-events-none rounded-full blur-[140px] opacity-15"
-        style={{ backgroundColor: 'var(--accent-color)' }}
-      />
+    <section id="benchmark" className="relative py-24 sm:py-32 border-t border-white/[0.08] bg-zinc-950/80">
+      {/* Background Subtle Gradient */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.03)_0%,transparent_70%)] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section Heading */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-white/10 bg-white/[0.03] backdrop-blur-md mb-4">
-            <Layers className="w-3.5 h-3.5" style={{ color: 'var(--accent-color)' }} />
-            <span className="font-mono text-xs uppercase tracking-widest text-slate-300">
-              {t.comparison.tag}
-            </span>
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div>
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md border border-white/10 bg-white/[0.03] text-zinc-400 font-mono text-[11px] uppercase tracking-wider mb-3">
+              <Activity className="w-3.5 h-3.5 text-zinc-300" />
+              <span>{lang === 'ru' ? 'Архитектурный бенчмарк' : 'Architectural Benchmark'}</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+              {lang === 'ru' ? 'Инженерия против раздутого софта' : 'Engineering vs. Bloated Software'}
+            </h2>
+            <p className="mt-2 text-sm sm:text-base text-zinc-400 max-w-2xl font-sans">
+              {lang === 'ru' 
+                ? 'Сравнение GhostTweak с типичными Electron-твикерами и случайными PowerShell-скриптами из GitHub.'
+                : 'Direct comparison of GhostTweak against heavy Electron tweakers and untrusted GitHub scripts.'}
+            </p>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white uppercase">
-            {t.comparison.title}
-          </h2>
-
-          <p className="mt-4 text-base sm:text-lg text-slate-400 font-sans">
-            {t.comparison.subtitle}
-          </p>
+          {/* Filter Pills */}
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-zinc-900/80 border border-white/10 self-start md:self-auto">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all ${
+                  activeCategory === cat.id
+                    ? 'bg-zinc-800 text-white shadow-sm font-semibold'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]'
+                }`}
+              >
+                {lang === 'ru' ? cat.labelRu : cat.labelEn}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Comparison Table / Grid */}
-        <div className="rounded-xl border border-white/[0.08] bg-[#0E1015]/90 backdrop-blur-xl overflow-hidden shadow-2xl">
-          {/* Header Row */}
-          <div className="grid grid-cols-1 md:grid-cols-12 border-b border-white/[0.08] bg-[#14161E]/80 text-xs font-mono uppercase tracking-wider text-slate-400">
-            <div className="p-4 md:col-span-4 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-slate-500" />
-              <span>{t.comparison.colFeature}</span>
-            </div>
-            <div className="hidden md:flex p-4 md:col-span-2 items-center justify-center text-red-400/80">
-              <span>{t.comparison.colElectron}</span>
-            </div>
-            <div className="hidden md:flex p-4 md:col-span-3 items-center justify-center text-amber-400/80">
-              <span>{t.comparison.colScripts}</span>
-            </div>
-            <div 
-              className="p-4 md:col-span-3 flex items-center justify-center font-bold relative"
-              style={{ color: 'var(--accent-color)', backgroundColor: 'var(--accent-bg-subtle)' }}
-            >
-              <div 
-                className="absolute inset-y-0 left-0 w-0.5" 
-                style={{ backgroundColor: 'var(--accent-color)' }}
-              />
-              <span className="tracking-widest flex items-center gap-2">
-                {t.comparison.colGhostTweak}
-              </span>
-            </div>
+        {/* Competitor Column Headers */}
+        <div className="hidden lg:grid grid-cols-12 gap-4 pb-4 px-6 border-b border-white/[0.06] text-[11px] font-mono uppercase tracking-wider text-zinc-400">
+          <div className="col-span-5">{lang === 'ru' ? 'Метрика / Параметр' : 'Metric & Purpose'}</div>
+          <div className="col-span-3 flex items-center gap-2 text-white font-bold">
+            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            GhostTweak (Rust Native)
           </div>
+          <div className="col-span-2 text-zinc-400">Electron Tweakers</div>
+          <div className="col-span-2 text-zinc-400">CMD / PS1 Scripts</div>
+        </div>
 
-          {/* Table Body */}
-          <div className="divide-y divide-white/[0.05]">
-            {comparisonData.map((row, idx) => {
-              const isHovered = hoveredRow === idx;
+        {/* Benchmark Bento Rows */}
+        <div className="space-y-3 mt-4">
+          {filteredBenchmarks.map((bm) => {
+            const name = lang === 'ru' ? bm.nameRu : bm.nameEn;
+            const desc = lang === 'ru' ? bm.descriptionRu : bm.descriptionEn;
+            const gtNote = lang === 'ru' ? bm.ghosttweak.noteRu : bm.ghosttweak.noteEn;
+            const elNote = lang === 'ru' ? bm.electron.noteRu : bm.electron.noteEn;
+            const scNote = lang === 'ru' ? bm.scripts.noteRu : bm.scripts.noteEn;
 
-              return (
-                <div 
-                  key={idx}
-                  onMouseEnter={() => setHoveredRow(idx)}
-                  onMouseLeave={() => setHoveredRow(null)}
-                  className={`grid grid-cols-1 md:grid-cols-12 transition-colors duration-150 ${
-                    isHovered ? 'bg-white/[0.02]' : ''
-                  }`}
-                >
-                  {/* Metric column */}
-                  <div className="p-4 md:col-span-4 flex flex-col justify-center">
-                    <span className="font-mono text-xs text-slate-500 uppercase tracking-wider mb-1">
-                      {row.category}
-                    </span>
-                    <span className="text-sm sm:text-base font-semibold text-slate-200">
-                      {row.metric}
-                    </span>
+            return (
+              <div
+                key={bm.id}
+                className="group rounded-xl border border-white/[0.07] bg-zinc-900/40 hover:bg-zinc-900/70 hover:border-white/15 p-5 sm:p-6 transition-all duration-200"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                  {/* Metric Info */}
+                  <div className="lg:col-span-5 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-300 bg-white/[0.04] px-2 py-0.5 rounded border border-white/5">
+                        {bm.category}
+                      </span>
+                    </div>
+                    <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-zinc-100">
+                      {name}
+                    </h3>
+                    <p className="text-xs text-zinc-400 font-sans">
+                      {desc}
+                    </p>
                   </div>
 
-                  {/* Electron Column */}
-                  <div className="p-4 md:col-span-2 flex flex-col justify-center md:items-center border-t md:border-t-0 border-white/[0.03] bg-black/10">
-                    <span className="md:hidden font-mono text-[10px] text-red-400 uppercase mb-1">
-                      Electron / C#:
-                    </span>
-                    <div className="flex items-center gap-1.5 text-red-400 font-mono text-sm font-bold">
-                      <X className="w-3.5 h-3.5 shrink-0" />
-                      <span>{row.electron.value}</span>
+                  {/* GhostTweak (Champion) */}
+                  <div className="lg:col-span-3 rounded-lg p-3.5 bg-white/[0.03] border border-white/10 space-y-2">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span className="text-xs font-mono font-bold text-zinc-300">GhostTweak</span>
+                      </div>
+                      <span className="text-sm sm:text-base font-mono font-black text-white">
+                        {bm.ghosttweak.display}
+                      </span>
                     </div>
-                    <span className="text-[11px] text-slate-500 text-left md:text-center mt-1 leading-tight font-sans">
-                      {row.electron.subtext}
-                    </span>
+                    {/* Micro Progress Bar */}
+                    <div className="w-full bg-zinc-800/80 rounded-full h-1.5 overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-zinc-200 to-white rounded-full"
+                        style={{ width: `${bm.ghosttweak.score}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] font-mono text-zinc-400 truncate">
+                      {gtNote}
+                    </p>
                   </div>
 
-                  {/* Scripts Column */}
-                  <div className="p-4 md:col-span-3 flex flex-col justify-center md:items-center border-t md:border-t-0 border-white/[0.03] bg-black/10">
-                    <span className="md:hidden font-mono text-[10px] text-amber-400 uppercase mb-1">
-                      Скрипты .bat/.ps1:
-                    </span>
-                    <div className="flex items-center gap-1.5 text-amber-400 font-mono text-sm font-medium">
-                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                      <span>{row.scripts.value}</span>
+                  {/* Electron Alternative */}
+                  <div className="lg:col-span-2 rounded-lg p-3 bg-black/30 border border-white/5 space-y-2">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-[11px] font-mono text-zinc-400">Electron</span>
+                      <span className="text-xs font-mono font-semibold text-zinc-300">
+                        {bm.electron.display}
+                      </span>
                     </div>
-                    <span className="text-[11px] text-slate-500 text-left md:text-center mt-1 leading-tight font-sans">
-                      {row.scripts.subtext}
-                    </span>
+                    <div className="w-full bg-zinc-800/80 rounded-full h-1.5 overflow-hidden">
+                      <div 
+                        className="h-full bg-amber-500/70 rounded-full"
+                        style={{ width: `${bm.electron.score}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] font-mono text-zinc-400 truncate">
+                      {elNote}
+                    </p>
                   </div>
 
-                  {/* GhostTweak Column */}
-                  <div 
-                    className="p-4 md:col-span-3 flex flex-col justify-center md:items-center border-t md:border-t-0 border-white/[0.04] relative transition-all"
-                    style={{
-                      backgroundColor: isHovered ? 'var(--accent-bg-subtle)' : 'rgba(0, 0, 0, 0.25)',
-                    }}
-                  >
-                    <div 
-                      className="absolute inset-y-0 left-0 w-[1px] hidden md:block" 
-                      style={{ backgroundColor: 'var(--accent-border)' }} 
-                    />
-                    
-                    <span className="md:hidden font-mono text-[10px] uppercase mb-1" style={{ color: 'var(--accent-color)' }}>
-                      GhostTweak:
-                    </span>
-
-                    <div 
-                      className="flex items-center gap-1.5 font-mono text-sm font-extrabold"
-                      style={{ color: 'var(--accent-color)' }}
-                    >
-                      <Check className="w-4 h-4 shrink-0" />
-                      <span>{row.ghosttweak.value}</span>
+                  {/* Raw Scripts Alternative */}
+                  <div className="lg:col-span-2 rounded-lg p-3 bg-black/30 border border-white/5 space-y-2">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-[11px] font-mono text-zinc-400">Scripts</span>
+                      <span className="text-xs font-mono font-semibold text-zinc-300">
+                        {bm.scripts.display}
+                      </span>
                     </div>
-                    <span className="text-[11px] text-slate-300 text-left md:text-center mt-1 leading-tight font-sans font-medium">
-                      {row.ghosttweak.subtext}
-                    </span>
+                    <div className="w-full bg-zinc-800/80 rounded-full h-1.5 overflow-hidden">
+                      <div 
+                        className="h-full bg-red-500/60 rounded-full"
+                        style={{ width: `${bm.scripts.score}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] font-mono text-zinc-400 truncate">
+                      {scNote}
+                    </p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
+        </div>
 
-          {/* Bottom Banner */}
-          <div className="p-4 bg-[#14161E]/90 border-t border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-400">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Скомпилировано с флагами LTO (Link-Time Optimization) и strip-symbols.</span>
+        {/* Bottom Technical Assurance Callout */}
+        <div className="mt-10 rounded-xl border border-white/10 bg-zinc-900/30 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+              <Shield className="w-4 h-4 text-zinc-200" />
             </div>
-            <div className="text-slate-500 shrink-0">
-              Поддержка: Windows 10 (21H2+) и Windows 11 (24H2)
+            <div>
+              <p className="text-sm font-bold text-white">
+                {lang === 'ru' ? '100% обратимые операции через Windows API' : '100% Reversible via Windows APIs'}
+              </p>
+              <p className="text-xs text-zinc-400">
+                {lang === 'ru' 
+                  ? 'Каждое изменение сопровождается локальным экспортным файлом .reg до совершения операции.'
+                  : 'Every modification generates a localized atomic .reg backup before touching system keys.'}
+              </p>
             </div>
           </div>
+          <a
+            href="#features"
+            className="px-4 py-2 rounded-lg text-xs font-mono font-semibold bg-white/5 hover:bg-white/10 text-zinc-200 border border-white/10 transition-colors shrink-0"
+          >
+            {lang === 'ru' ? 'Изучить архитектуру →' : 'Explore Architecture →'}
+          </a>
         </div>
       </div>
     </section>

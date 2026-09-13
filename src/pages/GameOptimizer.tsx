@@ -9,7 +9,7 @@ import { invoke } from '../lib/tauri';
 import { MemoryStatus, FlushResult, TweakInfo, SystemInfo, MatchTurboResult, ProcessThrottleResult } from '../lib/types';
 import { getPreferences } from '../lib/theme';
 import { useI18n } from '../lib/i18n';
-import { getStoredLicense, isProLicense } from '../lib/license';
+import { getStoredLicense, isProLicense, LicenseData } from '../lib/license';
 import UpgradeModal from '../components/UpgradeModal';
 
 type SupportedGame = 'cs2' | 'valorant' | 'apex' | 'dota2';
@@ -95,7 +95,11 @@ echo "GhostTweak Dota 2 Profile Loaded"`
   }
 };
 
-export default function GameOptimizer() {
+interface GameOptimizerProps {
+  license?: LicenseData | null;
+}
+
+export default function GameOptimizer({ license: propLicense }: GameOptimizerProps = {}) {
   const { t, lang } = useI18n();
   const [selectedGame, setSelectedGame] = useState<SupportedGame>('cs2');
   const [loading, setLoading] = useState(true);
@@ -115,7 +119,9 @@ export default function GameOptimizer() {
   const [throttleResult, setThrottleResult] = useState<ProcessThrottleResult | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState('');
-  const [isPro, setIsPro] = useState<boolean>(() => isProLicense(getStoredLicense()));
+  
+  // Directly and reactively derive isPro so it's impossible to be out-of-sync
+  const isPro = isProLicense(propLicense || getStoredLicense());
 
   const activeGame = GAME_PROFILES[selectedGame];
   const launchOptions = activeGame.launchOptionsTemplate(threads);
@@ -123,12 +129,11 @@ export default function GameOptimizer() {
 
   useEffect(() => {
     loadData();
-  }, [threads, selectedGame]);
+  }, [threads, selectedGame, propLicense]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      setIsPro(isProLicense(getStoredLicense()));
       const [boosted, mem, twk, sys] = await Promise.all([
         invoke<boolean>('is_cs2_boosted').catch(() => false),
         invoke<MemoryStatus>('get_memory_status').catch(() => null),

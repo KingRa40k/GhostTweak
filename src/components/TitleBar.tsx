@@ -61,7 +61,6 @@ export default function TitleBar({ license, onOpenLicense }: TitleBarProps) {
         <div data-tauri-drag-region className="flex items-center font-extrabold tracking-tight text-xs text-white pointer-events-none">
           <span className="w-2 h-2 rounded-full bg-ghost-cyan shadow-cyan-glow mr-2" />
           <span>GhostTweak</span>
-          <span className="px-1.5 py-0.2 text-[9px] font-mono font-bold bg-ghost-neon/20 border border-ghost-neon/40 text-ghost-neon rounded ml-2">BETA</span>
         </div>
 
         {license && (

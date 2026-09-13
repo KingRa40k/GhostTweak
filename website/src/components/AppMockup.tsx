@@ -1,311 +1,445 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Zap, RotateCw, Monitor, Cpu, HardDrive, Shield, 
-  Trash2, Sliders, Crosshair, History, Settings, Minus, 
-  Square, X, Check, Flame, Ghost, Crown, Activity
+  Activity, 
+  Cpu, 
+  Clock, 
+  Zap, 
+  ShieldCheck, 
+  Terminal, 
+  Minus, 
+  Square, 
+  X, 
+  RotateCw, 
+  Flame, 
+  CheckCircle2, 
+  Layers, 
+  Wifi, 
+  HardDrive,
+  Sliders
 } from 'lucide-react';
-import { useTheme, THEMES, ThemeId } from '@/lib/themeContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useI18n } from '@/lib/i18n';
 
+type CalibratorMode = 'competitive' | 'stream' | 'native';
+
+interface ModeTelemetry {
+  id: CalibratorMode;
+  name: string;
+  nameRu: string;
+  timerMs: string;
+  dpcMicroseconds: number;
+  dpcJitter: string;
+  frameP99: string;
+  standbyState: string;
+  standbyStateRu: string;
+  coreAffinity: string;
+  qosState: string;
+  wavePoints: number[];
+  accentColor: string;
+}
+
+const MODES: Record<CalibratorMode, ModeTelemetry> = {
+  competitive: {
+    id: 'competitive',
+    name: 'Competitive (Esports)',
+    nameRu: 'Киберспорт (Match Turbo)',
+    timerMs: '0.500 ms',
+    dpcMicroseconds: 42,
+    dpcJitter: '±0.03 ms',
+    frameP99: '0.41 ms',
+    standbyState: '0 MB (Purged)',
+    standbyStateRu: '0 МБ (Кэш выгружен)',
+    coreAffinity: '16/16 Unparked (100%)',
+    qosState: 'Realtime IFEO Lock',
+    wavePoints: [42, 44, 41, 45, 42, 43, 41, 42, 44, 43, 42, 41, 43, 42, 42, 44, 41, 43, 42, 42],
+    accentColor: '#10b981', // emerald
+  },
+  stream: {
+    id: 'stream',
+    name: 'Studio & Stream',
+    nameRu: 'Стриминг и Студия',
+    timerMs: '1.000 ms',
+    dpcMicroseconds: 88,
+    dpcJitter: '±0.12 ms',
+    frameP99: '0.84 ms',
+    standbyState: '420 MB (Buffered)',
+    standbyStateRu: '420 МБ (OBS Buffer)',
+    coreAffinity: '14/16 Dedicated OBS',
+    qosState: 'DSCP 46 High Priority',
+    wavePoints: [85, 88, 92, 86, 94, 88, 86, 91, 88, 89, 93, 87, 89, 88, 92, 88, 86, 90, 88, 87],
+    accentColor: '#6366f1', // indigo
+  },
+  native: {
+    id: 'native',
+    name: 'Native Windows',
+    nameRu: 'Штатный Windows 11',
+    timerMs: '15.625 ms',
+    dpcMicroseconds: 2450,
+    dpcJitter: '±4.80 ms',
+    frameP99: '3.80 ms',
+    standbyState: '14 820 MB (Fragmented)',
+    standbyStateRu: '14 820 МБ (Фрагментирован)',
+    coreAffinity: 'Dynamic Core Parking',
+    qosState: 'Standard Best Effort',
+    wavePoints: [450, 1200, 340, 2450, 480, 1800, 310, 890, 3400, 620, 1500, 410, 2200, 520, 1900, 780, 2800, 390, 1600, 450],
+    accentColor: '#f59e0b', // amber
+  },
+};
+
 export default function AppMockup() {
-  const { activeTheme, setTheme } = useTheme();
   const { lang } = useI18n();
   const isEn = lang === 'en';
 
-  const [ramUsed, setRamUsed] = useState(68);
+  const [activeMode, setActiveMode] = useState<CalibratorMode>('competitive');
   const [isPurging, setIsPurging] = useState(false);
-  const [purgedNotice, setPurgedNotice] = useState<string | null>(null);
-  const [tweaksApplied, setTweaksApplied] = useState(8);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'tweaks' | 'profiles'>('dashboard');
+  const [ramValue, setRamValue] = useState(0);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [liveTicks, setLiveTicks] = useState(0);
+
+  const current = MODES[activeMode];
+
+  // Subtle real-time telemetry pulse tick
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveTicks((t) => (t + 1) % 1000);
+    }, 1200);
+    return () => clearInterval(interval);
+  }, []);
 
   const handlePurgeRam = () => {
     if (isPurging) return;
     setIsPurging(true);
+    setRamValue(14800);
 
     setTimeout(() => {
-      setRamUsed(24);
+      setRamValue(0);
       setIsPurging(false);
-      setPurgedNotice(isEn ? 'Freed 14.1 GB memory cache' : 'Освобождено 14.1 ГБ кэша памяти');
-      setTimeout(() => setPurgedNotice(null), 4000);
-    }, 600);
+      setActionNotice(isEn ? 'Standby List purged via NtSetSystemInformation (0 KB)' : 'Кэш памяти сброшен через NtSetSystemInformation (0 КБ)');
+      setTimeout(() => setActionNotice(null), 3500);
+    }, 700);
   };
 
-  const handleOptimizeAll = () => {
-    setTweaksApplied(10);
-    handlePurgeRam();
+  const handleEngageTurbo = () => {
+    setActiveMode('competitive');
+    setActionNotice(isEn ? '0.500 ms Hardware Clock engaged • DPC Latency minimized' : 'Таймер 0.500 мс зафиксирован • DPC задержки минимизированы');
+    setTimeout(() => setActionNotice(null), 3500);
   };
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto group">
+    <div className="relative w-full max-w-5xl mx-auto font-sans">
       
-      {/* Subtle background ambient */}
+      {/* Subtle Dark Industrial Ambient */}
       <div 
-        className="absolute -inset-1 rounded-3xl opacity-20 blur-2xl transition-all duration-700 pointer-events-none"
-        style={{ background: `radial-gradient(ellipse at center, ${activeTheme.hex} 0%, transparent 70%)` }}
+        className="absolute -inset-2 rounded-3xl opacity-30 blur-3xl pointer-events-none transition-colors duration-700"
+        style={{
+          background: `radial-gradient(ellipse at 50% 20%, ${current.accentColor}20 0%, transparent 70%)`
+        }}
       />
 
-      {/* Frame */}
-      <div className="relative titanium-card border-white/[0.12] rounded-2xl overflow-hidden shadow-2xl bg-obsidian-950/95">
+      {/* Main Window Frame */}
+      <div className="relative rounded-2xl border border-white/[0.1] bg-zinc-950/95 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden backdrop-blur-xl">
         
-        {/* TitleBar */}
-        <div className="h-10 bg-obsidian-900/90 border-b border-white/[0.08] px-4 flex items-center justify-between select-none">
+        {/* Windows 11 Native Fluent Titlebar */}
+        <div className="h-11 bg-zinc-900/80 border-b border-white/[0.08] px-4 flex items-center justify-between select-none">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <span 
-                className="w-2.5 h-2.5 rounded-full transition-colors shadow-sm"
-                style={{ backgroundColor: activeTheme.hex }}
+                className="w-2.5 h-2.5 rounded-full transition-colors duration-500 shadow-[0_0_8px_currentColor]"
+                style={{ backgroundColor: current.accentColor, color: current.accentColor }}
               />
-              <span className="font-sans font-extrabold text-xs text-white tracking-tight">GhostTweak</span>
+              <span className="font-mono text-xs font-bold text-white tracking-tight">
+                GhostTweak.exe
+              </span>
+              <span className="text-[10px] font-mono text-zinc-500 hidden sm:inline-block">
+                [PID: 4180 • 4.8 MB • x86_64]
+              </span>
             </div>
-            <span className="text-[10px] font-mono text-zinc-500 hidden sm:inline-block">v1.0.0</span>
+
+            <div className="hidden md:flex items-center gap-2 pl-3 border-l border-white/[0.08]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[11px] font-mono text-zinc-400">
+                NtSetTimerResolution: <span className="text-white font-semibold">{current.timerMs}</span>
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 text-zinc-400">
-            <Minus size={13} className="hover:text-white cursor-default" />
-            <Square size={11} className="hover:text-white cursor-default" />
-            <X size={13} className="hover:text-rose-400 cursor-default" />
+          <div className="flex items-center gap-4 text-zinc-400">
+            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider hidden sm:inline-block">
+              WinAPI Native
+            </span>
+            <div className="flex items-center gap-3">
+              <Minus size={13} className="hover:text-white cursor-default" />
+              <Square size={11} className="hover:text-white cursor-default" />
+              <X size={13} className="hover:text-rose-400 cursor-default" />
+            </div>
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="flex flex-col md:flex-row h-auto min-h-[460px]">
+        {/* Action Notice Toast */}
+        <AnimatePresence>
+          {actionNotice && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="bg-emerald-500/10 border-b border-emerald-500/20 px-4 py-2 flex items-center gap-2.5 text-emerald-400 text-xs font-mono select-none"
+            >
+              <CheckCircle2 size={14} className="shrink-0" />
+              <span>{actionNotice}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Dashboard Content */}
+        <div className="p-5 sm:p-7 flex flex-col gap-6">
           
-          {/* Sidebar */}
-          <div className="w-full md:w-52 bg-obsidian-900/50 border-b md:border-b-0 md:border-r border-white/[0.06] p-3 flex flex-col justify-between shrink-0">
-            <div className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible">
-              {[
-                { id: 'dashboard', label: isEn ? 'Dashboard' : 'Панель', icon: Activity },
-                { id: 'tweaks', label: isEn ? 'Registry Tweaks' : 'Твики реестра', icon: Sliders },
-                { id: 'profiles', label: isEn ? 'Profiles' : 'Профили', icon: Crosshair },
-              ].map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
+          {/* Top Bar: Mode Switcher & Quick Actions */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <Terminal size={14} className="text-zinc-400" />
+                <span className="font-mono text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">
+                  {isEn ? 'Latency Mode Calibration' : 'Режим калибровки ядра'}
+                </span>
+              </div>
+              <h3 className="text-lg font-bold text-white tracking-tight">
+                {isEn ? current.name : current.nameRu}
+              </h3>
+            </div>
+
+            {/* Interactive Mode Pills */}
+            <div className="inline-flex p-1 rounded-xl bg-zinc-900/90 border border-white/[0.08] self-start sm:self-auto">
+              {(['competitive', 'stream', 'native'] as CalibratorMode[]).map((mKey) => {
+                const isSel = activeMode === mKey;
+                const mDef = MODES[mKey];
                 return (
                   <button
-                    key={tab.id}
-                    onClick={() => {
-                      setActiveTab(tab.id as typeof activeTab);
-                    }}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                      isActive 
-                        ? 'bg-white/[0.08] text-white border border-white/[0.12] shadow-sm' 
-                        : 'text-zinc-400 hover:text-white hover:bg-white/[0.03]'
+                    key={mKey}
+                    onClick={() => setActiveMode(mKey)}
+                    className={`relative px-3.5 py-1.5 rounded-lg font-mono text-xs font-medium transition-all duration-200 cursor-pointer ${
+                      isSel 
+                        ? 'text-white font-bold' 
+                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]'
                     }`}
                   >
-                    <Icon size={14} style={{ color: isActive ? activeTheme.hex : undefined }} />
-                    <span className="truncate">{tab.label}</span>
+                    {isSel && (
+                      <motion.span 
+                        layoutId="active-pill"
+                        className="absolute inset-0 rounded-lg bg-white/[0.12] border border-white/[0.15] shadow-sm"
+                        transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-1.5">
+                      <span 
+                        className="w-1.5 h-1.5 rounded-full" 
+                        style={{ backgroundColor: mDef.accentColor }} 
+                      />
+                      {mKey === 'competitive' ? 'Competitive' : mKey === 'stream' ? 'Studio' : 'Native Win'}
+                    </span>
                   </button>
                 );
               })}
             </div>
-
-            {/* Operator info */}
-            <div className="hidden md:flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-              <div 
-                className="w-7 h-7 rounded-lg flex items-center justify-center border"
-                style={{ borderColor: activeTheme.border, backgroundColor: activeTheme.bgSubtle }}
-              >
-                <Ghost size={14} style={{ color: activeTheme.hex }} />
-              </div>
-              <div className="flex flex-col overflow-hidden">
-                <span className="text-xs font-bold text-white leading-tight">Ghost-1</span>
-                <span className="text-[9px] font-mono text-emerald-400">
-                  {isEn ? 'License Active' : 'Лицензия активна'}
-                </span>
-              </div>
-            </div>
           </div>
 
-          {/* Center Workspace */}
-          <div className="flex-1 p-5 md:p-6 flex flex-col justify-between gap-5 bg-obsidian-950">
-            
-            {/* Top Stat Pills */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
-              <div>
-                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">
-                  {isEn ? 'Current Mode' : 'Текущий режим'}
-                </span>
-                <span className="text-sm font-bold text-white flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  Esports Competitive
-                </span>
-              </div>
-
+          {/* Centerpiece: Real-time DPC Latency Waveform Graph */}
+          <div className="rounded-xl border border-white/[0.08] bg-zinc-900/50 p-5 relative overflow-hidden">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="px-3 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06] text-right font-mono">
-                  <span className="text-[9px] text-zinc-500 block">Frame Time</span>
-                  <span className="text-xs font-bold text-emerald-400">5.56 ms</span>
-                </div>
-                <div className="px-3 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06] text-right font-mono">
-                  <span className="text-[9px] text-zinc-500 block">{isEn ? 'Timer' : 'Таймер'}</span>
-                  <span className="text-xs font-bold" style={{ color: activeTheme.hex }}>0.500 ms</span>
-                </div>
+                <Activity size={15} style={{ color: current.accentColor }} />
+                <span className="font-mono text-xs text-zinc-300 font-semibold tracking-wide">
+                  {isEn ? 'Hardware DPC Latency & ISR Interrupt Waveform' : 'Осциллограмма задержек DPC и аппаратных прерываний (ISR)'}
+                </span>
               </div>
-            </div>
-
-            {/* 3 Metrics Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
-                  <Trash2 size={16} />
-                </div>
-                <div>
-                  <div className="text-sm font-bold text-white font-mono">{isEn ? '14.1 GB' : '14.1 ГБ'}</div>
-                  <div className="text-[10px] text-zinc-500 font-mono uppercase">
-                    {isEn ? 'Cache & Temp' : 'Кэш и Temp'}
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400">
-                  <Shield size={16} />
-                </div>
-                <div>
-                  <div className="text-sm font-bold text-white font-mono">{tweaksApplied} / 10</div>
-                  <div className="text-[10px] text-zinc-500 font-mono uppercase">
-                    {isEn ? 'Registry Tweaks' : 'Твики реестра'}
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
-                  <Activity size={16} />
-                </div>
-                <div>
-                  <div className="text-sm font-bold text-white font-mono">
-                    {tweaksApplied === 10 ? '98%' : '78%'}
-                  </div>
-                  <div className="text-[10px] text-zinc-500 font-mono uppercase">
-                    {isEn ? 'Optimization' : 'Оптимизация'}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Interactive Memory Card */}
-            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.08] flex flex-col gap-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-lg bg-white/[0.04] text-white">
-                    <HardDrive size={15} />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-white">
-                      {isEn ? 'Memory (RAM) Standby Purge' : 'Память (RAM) Standby Purge'}
-                    </div>
-                    <div className="text-[10px] font-mono text-zinc-500">
-                      {isEn ? 'Used:' : 'Использовано:'} {ramUsed}%
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handlePurgeRam}
-                    disabled={isPurging}
-                    className="px-3 py-1.5 rounded-lg border border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/[0.25] text-white text-xs font-mono font-medium flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
-                  >
-                    <RotateCw size={12} className={isPurging ? "animate-spin text-accent" : "text-zinc-400"} />
-                    <span>{isPurging ? (isEn ? 'Purging...' : 'Сброс...') : (isEn ? 'Purge RAM' : 'Освободить RAM')}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="w-full h-2 bg-obsidian-950 rounded-full overflow-hidden border border-white/[0.06] relative">
-                <div 
-                  className="h-full rounded-full transition-all duration-700 ease-out"
-                  style={{ 
-                    width: `${ramUsed}%`,
-                    backgroundColor: ramUsed > 50 ? '#f59e0b' : '#10b981',
+              <div className="flex items-center gap-3 font-mono text-xs">
+                <span className="text-zinc-500">Peak:</span>
+                <span className="font-bold text-white">
+                  {activeMode === 'competitive' ? '45 μs' : activeMode === 'stream' ? '94 μs' : '3 400 μs'}
+                </span>
+                <span className="text-zinc-500 ml-2">Jitter:</span>
+                <span 
+                  className="font-bold px-1.5 py-0.5 rounded text-[10px]"
+                  style={{
+                    backgroundColor: `${current.accentColor}18`,
+                    color: current.accentColor,
                   }}
-                />
-              </div>
-
-              {purgedNotice && (
-                <div className="text-[11px] font-mono text-emerald-400 animate-fade-in">
-                  ✓ {purgedNotice}
-                </div>
-              )}
-            </div>
-
-            {/* Main Action Button */}
-            <button
-              onClick={handleOptimizeAll}
-              className="w-full py-3 rounded-xl font-mono text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg"
-              style={{
-                backgroundColor: activeTheme.hex,
-                color: '#060708',
-              }}
-            >
-              <Zap size={14} />
-              <span>{isEn ? 'Apply Recommended Settings' : 'Применить рекомендованные настройки'}</span>
-            </button>
-
-            {/* Hardware Info Panel */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-              <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-2.5">
-                <Cpu size={14} style={{ color: activeTheme.hex }} />
-                <div className="overflow-hidden">
-                  <div className="text-[9px] font-mono text-zinc-500 uppercase">
-                    {isEn ? 'Processor' : 'Процессор'}
-                  </div>
-                  <div className="text-xs font-semibold text-white truncate">Intel Core i5-13600K</div>
-                </div>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-2.5">
-                <Monitor size={14} style={{ color: activeTheme.hex }} />
-                <div className="overflow-hidden">
-                  <div className="text-[9px] font-mono text-zinc-500 uppercase">
-                    {isEn ? 'GPU & Display' : 'Видеокарта & Дисплей'}
-                  </div>
-                  <div className="text-xs font-semibold text-white truncate">
-                    RTX 4070 SUPER • 3440x1440 @ 180Hz
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Theme Palette Bar */}
-        <div className="bg-obsidian-900/90 border-t border-white/[0.06] p-3 px-5 flex flex-wrap items-center justify-between gap-3 select-none">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
-              {isEn ? 'Color Theme:' : 'Цветовая тема:'}
-            </span>
-            <span className="text-xs font-bold text-white">
-              {activeTheme.name}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {(Object.keys(THEMES) as ThemeId[]).map((tId) => {
-              const theme = THEMES[tId];
-              const isSelected = activeTheme.id === tId;
-              return (
-                <button
-                  key={tId}
-                  onClick={() => setTheme(tId)}
-                  title={theme.name}
-                  className={`w-6 h-6 rounded-full border transition-all flex items-center justify-center ${
-                    isSelected ? 'ring-2 ring-white scale-110 border-white' : 'border-white/20 opacity-70 hover:opacity-100'
-                  }`}
-                  style={{ backgroundColor: theme.hex }}
                 >
-                  {isSelected && <Check size={11} className="text-black stroke-[3]" />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+                  {current.dpcJitter}
+                </span>
+              </div>
+            </div>
 
+            {/* SVG Latency Graph */}
+            <div className="h-32 w-full relative flex items-end">
+              {/* Background gridlines */}
+              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
+                <div className="w-full border-b border-dashed border-white/40" />
+                <div className="w-full border-b border-dashed border-white/40" />
+                <div className="w-full border-b border-dashed border-white/40" />
+              </div>
+
+              {/* Dynamic Bars & Points */}
+              <div className="w-full h-full flex items-end justify-between gap-1 sm:gap-1.5 relative z-10 pt-4">
+                {current.wavePoints.map((val, idx) => {
+                  const maxRef = activeMode === 'native' ? 3600 : 100;
+                  const normalizedHeight = Math.min(100, Math.max(12, (val / maxRef) * 100));
+                  const isPeak = val > (activeMode === 'native' ? 2000 : 90);
+
+                  return (
+                    <div 
+                      key={idx} 
+                      className="flex-1 flex flex-col items-center justify-end h-full group relative"
+                    >
+                      {/* Tooltip on hover */}
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 px-2 py-0.5 rounded bg-zinc-800 border border-white/10 text-[10px] font-mono text-white whitespace-nowrap pointer-events-none z-30 shadow-lg">
+                        {val} μs {isPeak ? '(Interrupt Peak)' : ''}
+                      </div>
+
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${normalizedHeight}%` }}
+                        transition={{ duration: 0.35, delay: idx * 0.015 }}
+                        className="w-full rounded-t-sm transition-colors duration-300"
+                        style={{
+                          backgroundColor: isPeak && activeMode === 'native' 
+                            ? '#f43f5e' 
+                            : current.accentColor,
+                          opacity: isPeak && activeMode === 'native' ? 0.9 : 0.65,
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Legend Footer */}
+            <div className="mt-3 pt-3 border-t border-white/[0.06] flex flex-wrap items-center justify-between text-[11px] font-mono text-zinc-500 gap-2">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: current.accentColor }} />
+                  {isEn ? 'Hardware Thread Interrupts' : 'Аппаратные прерывания ядер'}
+                </span>
+                {activeMode === 'native' && (
+                  <span className="flex items-center gap-1.5 text-rose-400">
+                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                    {isEn ? 'Micro-stutter Driver Spikes' : 'Пиковые задержки драйверов (статтеры)'}
+                  </span>
+                )}
+              </div>
+              <span>Kernel Sampling: 1000 Hz</span>
+            </div>
+          </div>
+
+          {/* 4 Bento Telemetry Tiles */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            
+            {/* Tile 1: Kernel Timer */}
+            <div className="p-3.5 rounded-xl border border-white/[0.08] bg-zinc-900/60 flex flex-col justify-between">
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+                System Timer
+              </span>
+              <div className="my-1.5">
+                <div className="font-mono text-lg font-black text-white">
+                  {current.timerMs}
+                </div>
+                <div className="text-[11px] text-zinc-400 font-mono">
+                  {activeMode === 'competitive' ? 'NtSetTimer (Max)' : 'Default RTC'}
+                </div>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                {activeMode === 'competitive' ? 'Hardware Locked' : 'Dynamic Tick'}
+              </span>
+            </div>
+
+            {/* Tile 2: Standby Memory */}
+            <div className="p-3.5 rounded-xl border border-white/[0.08] bg-zinc-900/60 flex flex-col justify-between">
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+                Standby Cache
+              </span>
+              <div className="my-1.5">
+                <div className="font-mono text-lg font-black text-white">
+                  {ramValue > 0 ? `${(ramValue / 1024).toFixed(1)} GB` : current.standbyState.split(' ')[0]}
+                </div>
+                <div className="text-[11px] text-zinc-400 font-mono truncate">
+                  {isEn ? current.standbyState : current.standbyStateRu}
+                </div>
+              </div>
+              <span className="text-[10px] font-mono text-zinc-400">
+                Working Set Clean
+              </span>
+            </div>
+
+            {/* Tile 3: Core Affinity */}
+            <div className="p-3.5 rounded-xl border border-white/[0.08] bg-zinc-900/60 flex flex-col justify-between">
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+                Core Unparking
+              </span>
+              <div className="my-1.5">
+                <div className="font-mono text-lg font-black text-white">
+                  {current.coreAffinity.split(' ')[0]}
+                </div>
+                <div className="text-[11px] text-zinc-400 font-mono truncate">
+                  {activeMode === 'competitive' ? 'Zero Core Sleeping' : 'Power Saving Mode'}
+                </div>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-400">
+                BCD Latency 0.0ms
+              </span>
+            </div>
+
+            {/* Tile 4: IFEO Policy */}
+            <div className="p-3.5 rounded-xl border border-white/[0.08] bg-zinc-900/60 flex flex-col justify-between">
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+                Process Priority
+              </span>
+              <div className="my-1.5">
+                <div className="font-mono text-lg font-black text-white">
+                  {current.qosState.split(' ')[0]}
+                </div>
+                <div className="text-[11px] text-zinc-400 font-mono truncate">
+                  {current.qosState}
+                </div>
+              </div>
+              <span className="text-[10px] font-mono text-zinc-400">
+                Win32 Priority 128
+              </span>
+            </div>
+          </div>
+
+          {/* Quick Interactive Tool Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+            <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
+              <ShieldCheck size={15} className="text-emerald-400" />
+              <span>{isEn ? 'Direct WinAPI execution without registry corruption or background daemons.' : 'Прямое исполнение WinAPI без риска повреждения реестра и фоновых демонов.'}</span>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={handlePurgeRam}
+                disabled={isPurging}
+                className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-mono font-medium border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-white flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <RotateCw size={13} className={isPurging ? 'animate-spin' : ''} />
+                <span>{isEn ? 'Flush RAM Cache' : 'Сбросить кэш памяти'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleEngageTurbo}
+                className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-mono font-bold bg-white text-zinc-950 hover:bg-zinc-200 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
+              >
+                <Flame size={13} className="text-zinc-950" />
+                <span>{isEn ? 'Lock 0.5ms Timer' : 'Зафиксировать 0.5 мс'}</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );

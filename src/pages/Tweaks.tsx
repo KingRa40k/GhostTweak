@@ -6,10 +6,14 @@ import {
 import { invoke } from '../lib/tauri';
 import { TweakInfo, ApplyResult, HardwareTierInfo } from '../lib/types';
 import { useI18n } from '../lib/i18n';
-import { getStoredLicense, isProLicense } from '../lib/license';
+import { getStoredLicense, isProLicense, LicenseData } from '../lib/license';
 import UpgradeModal from '../components/UpgradeModal';
 
-export default function Tweaks() {
+interface TweaksProps {
+  license?: LicenseData | null;
+}
+
+export default function Tweaks({ license: propLicense }: TweaksProps = {}) {
   const { t, lang } = useI18n();
   const [loading, setLoading] = useState(true);
   const [tweaks, setTweaks] = useState<TweakInfo[]>([]);
@@ -20,7 +24,7 @@ export default function Tweaks() {
   const [notification, setNotification] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState('');
-  const [isPro, setIsPro] = useState<boolean>(() => isProLicense(getStoredLicense()));
+  const isPro = isProLicense(propLicense || getStoredLicense());
 
   const PRO_TWEAK_CATEGORIES = new Set(['network', 'latency', 'kernel']);
   const PRO_TWEAK_IDS = new Set([
@@ -45,7 +49,6 @@ export default function Tweaks() {
   const fetchTweaks = async () => {
     try {
       setLoading(true);
-      setIsPro(isProLicense(getStoredLicense()));
       const [tweaksData, tierData] = await Promise.all([
         invoke<TweakInfo[]>('get_tweaks_status'),
         invoke<HardwareTierInfo>('detect_hardware_tier').catch(() => null)

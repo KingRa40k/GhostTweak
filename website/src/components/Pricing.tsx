@@ -6,9 +6,15 @@ import {
   ShieldCheck, 
   Zap, 
   Crown, 
-  ExternalLink,
-  Coins
+  Coins,
+  Sparkles,
+  Trophy,
+  Building2,
+  Lock,
+  ArrowRight,
+  Info
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useI18n } from '@/lib/i18n';
 import { CheckoutModal, CheckoutTierInfo } from './CheckoutModal';
 
@@ -36,170 +42,175 @@ interface TierDefinition {
   ctaAction: string;
 }
 
-const TIERS_DATA: TierDefinition[] = [
+// Group 1: Permanent Licenses (3 wide cards)
+const LIFETIME_TIERS: TierDefinition[] = [
   {
     id: 'free',
     name: 'Community Edition',
+    badgeRu: 'OPEN SOURCE BASE',
+    badgeEn: 'OPEN SOURCE BASE',
     prices: {
       RUB: { amount: '0 ₽', periodRu: 'бесплатно навсегда', periodEn: 'free forever' },
       USD: { amount: '$0', periodRu: 'бесплатно навсегда', periodEn: 'free forever' },
       EUR: { amount: '0 €', periodRu: 'бесплатно навсегда', periodEn: 'free forever' },
     },
-    descriptionRu: 'Базовые инструменты для очистки временных файлов и ручного сброса кэша памяти.',
+    descriptionRu: 'Базовый набор инструментов для очистки временных файлов и ручного сброса кэша памяти.',
     descriptionEn: 'Essential tools for temporary file cleaning and manual RAM working-set purging.',
     featuresRu: [
       { text: 'Очистка пользовательских и системных Temp файлов', included: true },
-      { text: 'Сброс кэша оперативной памяти (RAM)', included: true },
+      { text: 'Ручной сброс рабочего набора RAM', included: true },
       { text: 'Отключение фоновой записи GameDVR', included: true },
       { text: 'Локальные .reg бэкапы перед изменениями', included: true },
-      { text: 'Настройка системного таймера (0.5 мс)', included: false },
-      { text: 'Очистка кэша шейдеров DirectX и видеокарт', included: false },
-      { text: 'Готовые сценарные профили', included: false },
-      { text: 'Приоритетные обновления', included: false },
+      { text: 'Аппаратный таймер ядра (0.5 мс)', included: false },
+      { text: 'Глубокая очистка кэша шейдеров DirectX/GPU', included: false },
+      { text: 'Киберспортивные сценарии (CS2, Valorant)', included: false },
+      { text: 'DPC-приоритизация процессов', included: false },
     ],
     featuresEn: [
       { text: 'Clean user and system Temp files', included: true },
       { text: 'RAM standby list working-set flush', included: true },
       { text: 'Disable background GameDVR recording', included: true },
       { text: 'Local atomic .reg backups before modifications', included: true },
-      { text: 'System kernel timer tuning (0.5 ms)', included: false },
+      { text: 'High-precision 0.5ms kernel timer', included: false },
       { text: 'DirectX, NVIDIA & AMD shader cache flush', included: false },
-      { text: 'Pre-configured scenario profiles', included: false },
-      { text: 'Priority technical updates', included: false },
+      { text: 'Esports competitive profiles (CS2, Valorant)', included: false },
+      { text: 'Process DPC priority optimization', included: false },
     ],
-    ctaTextRu: 'Скачать бесплатно',
-    ctaTextEn: 'Download Free',
+    ctaTextRu: 'Скачать бинарник',
+    ctaTextEn: 'Download Binary',
     ctaAction: '#download',
   },
   {
-    id: 'daypass',
-    name: '24h Esports Pass',
-    badgeRu: 'ДЛЯ ТУРНИРОВ',
-    badgeEn: 'FOR TOURNAMENTS',
+    id: 'pro',
+    name: 'VIP Lifetime',
+    badgeRu: 'ФЛАГМАН • ВЕЧНЫЙ ДОСТУП',
+    badgeEn: 'FLAGSHIP • LIFETIME',
+    isPopular: true,
     prices: {
-      RUB: { amount: '490 ₽', periodRu: 'разовый доступ • 24 часа с момента активации', periodEn: 'one-time pass • 24 hours after activation' },
-      USD: { amount: '$5', periodRu: 'разовый доступ • 24 часа с момента активации', periodEn: 'one-time pass • 24 hours after activation' },
-      EUR: { amount: '4.5 €', periodRu: 'разовый доступ • 24 часа с момента активации', periodEn: 'one-time pass • 24 hours after activation' },
+      RUB: { amount: '1 490 ₽', periodRu: 'разовый платеж • навсегда', periodEn: 'one-time payment • forever' },
+      USD: { amount: '$19', periodRu: 'one-time payment • lifetime', periodEn: 'one-time payment • lifetime' },
+      EUR: { amount: '18 €', periodRu: 'one-time payment • lifetime', periodEn: 'one-time payment • lifetime' },
     },
-    descriptionRu: 'Быстрый пропуск на соревновательный вечер или турнир. Все функции Pro без переплаты.',
-    descriptionEn: 'Quick access pass for competitive tournaments and game nights. Full Pro power without commitment.',
+    descriptionRu: 'Полный инженерный арсенал GhostTweak. Максимальное снижение инпут-лага и стабильный фреймтайм.',
+    descriptionEn: 'Complete GhostTweak engineering suite. Lowest input latency, peak 1% low FPS and zero bloat.',
     featuresRu: [
-      { text: 'Все возможности Pro на 24 часа', included: true },
-      { text: 'Таймер ядра 0.5 мс и DPC-приоритизация', included: true, highlight: true },
-      { text: 'CS2 Esports & Valorant оптимизация', included: true, highlight: true },
-      { text: 'Очистка кэша шейдеров и сброс RAM', included: true },
-      { text: 'Моментальная выдача ключа сразу после оплаты', included: true },
+      { text: 'Все возможности Community Edition', included: true },
+      { text: 'Аппаратный системный таймер 0.500 мс (NT Lock)', included: true, highlight: true },
+      { text: 'Очистка шейдеров DirectX, NVIDIA GLCache & AMD DxCache', included: true, highlight: true },
+      { text: 'Киберспортивный профиль для CS2, Apex & Valorant', included: true, highlight: true },
+      { text: 'DPC-приоритизация очередей процессора', included: true, highlight: true },
+      { text: 'Синхронизация с частотой экрана (EDID Refresh)', included: true },
+      { text: 'Лицензия на 3 персональных ПК', included: true },
+      { text: 'Все будущие обновления включены навсегда', included: true },
     ],
     featuresEn: [
-      { text: 'Full Pro features unlocked for 24 hours', included: true },
-      { text: '0.5ms kernel timer & DPC priority tuning', included: true, highlight: true },
-      { text: 'CS2 Esports & Valorant optimization engine', included: true, highlight: true },
-      { text: 'Shader purge and Standby RAM cache flush', included: true },
-      { text: 'Instant digital license delivery after checkout', included: true },
+      { text: 'All Community Edition capabilities', included: true },
+      { text: 'Hardware 0.500ms kernel timer (NT Lock)', included: true, highlight: true },
+      { text: 'DirectX, NVIDIA GLCache & AMD DxCache flush', included: true, highlight: true },
+      { text: 'Esports profile for CS2, Apex & Valorant', included: true, highlight: true },
+      { text: 'Process DPC interrupt queue optimization', included: true, highlight: true },
+      { text: 'Hardware EDID refresh rate sync', included: true },
+      { text: 'Personal license for up to 3 PCs', included: true },
+      { text: 'All future updates included forever', included: true },
     ],
-    ctaTextRu: 'Купить на 24 часа',
-    ctaTextEn: 'Buy 24h Pass',
+    ctaTextRu: 'Получить VIP навсегда',
+    ctaTextEn: 'Get VIP Lifetime',
+    ctaAction: 'checkout',
+  },
+  {
+    id: 'club',
+    name: 'Cyber Arena & LAN',
+    badgeRu: 'ДЛЯ КЛУБОВ И B2B',
+    badgeEn: 'FOR ARENAS & B2B',
+    prices: {
+      RUB: { amount: '19 900 ₽', periodRu: 'разовый платеж • весь клуб', periodEn: 'one-time payment • full venue' },
+      USD: { amount: '$199', periodRu: 'one-time payment • full venue', periodEn: 'one-time payment • full venue' },
+      EUR: { amount: '189 €', periodRu: 'one-time payment • full venue', periodEn: 'one-time payment • full venue' },
+    },
+    descriptionRu: 'Инфраструктурная лицензия для компьютерных клубов, буткемпов и киберспортивных площадок.',
+    descriptionEn: 'Enterprise venue license for cyber cafes, esports arenas, and tournament bootcamps.',
+    featuresRu: [
+      { text: 'Все возможности VIP для парка компьютеров клуба', included: true },
+      { text: 'Тихая установка: --silent --preset=esports', included: true, highlight: true },
+      { text: 'Поддержка бездисковых систем (PXE / CCBoot / Senmo)', included: true, highlight: true },
+      { text: 'Защита настроек мастер-паролем администратора', included: true },
+      { text: 'Прямой контакт с инженерами ядра', included: true },
+      { text: 'Предоставление закрывающих бухгалтерских документов', included: true },
+    ],
+    featuresEn: [
+      { text: 'All VIP capabilities for your entire PC fleet', included: true },
+      { text: 'Silent CLI deploy: --silent --preset=esports', included: true, highlight: true },
+      { text: 'Diskless boot support (PXE / CCBoot / Senmo)', included: true, highlight: true },
+      { text: 'Master admin password tamper protection', included: true },
+      { text: 'Direct line to core kernel engineers', included: true },
+      { text: 'Official corporate accounting invoices', included: true },
+    ],
+    ctaTextRu: 'Запросить B2B доступ',
+    ctaTextEn: 'Request B2B License',
+    ctaAction: 'checkout',
+  },
+];
+
+// Group 2: Passes & Subscriptions (2 wide cards)
+const TOURNAMENT_TIERS: TierDefinition[] = [
+  {
+    id: 'daypass',
+    name: '24h Esports Pass',
+    badgeRu: 'НА ТУРНИР ИЛИ ВЕЧЕР',
+    badgeEn: 'FOR TOURNAMENT NIGHT',
+    prices: {
+      RUB: { amount: '490 ₽', periodRu: 'разовый пропуск • 24 часа с момента запуска', periodEn: '24 hours from activation' },
+      USD: { amount: '$5', periodRu: 'one-time pass • 24 hours', periodEn: 'one-time pass • 24 hours' },
+      EUR: { amount: '4.5 €', periodRu: 'one-time pass • 24 hours', periodEn: 'one-time pass • 24 hours' },
+    },
+    descriptionRu: 'Мгновенный доступ ко всем Pro-модулям на соревновательный вечер или турнир. Без подписок и автопродлений.',
+    descriptionEn: 'Instant access to all Pro modules for tournament nights and scrims. No recurring subscriptions.',
+    featuresRu: [
+      { text: 'Полный доступ ко всем возможностям VIP на 24 часа', included: true, highlight: true },
+      { text: 'Аппаратный таймер ядра 0.5 мс и DPC-приоритизация', included: true, highlight: true },
+      { text: 'Оптимизация фреймтайма CS2, Valorant & Apex', included: true },
+      { text: 'Моментальная генерация ключа в личном сообщении', included: true },
+      { text: 'Идеально для LAN-турниров и интернет-кафе', included: true },
+    ],
+    featuresEn: [
+      { text: 'Full VIP functionality unlocked for 24 hours', included: true, highlight: true },
+      { text: '0.5ms hardware timer & DPC queue prioritization', included: true, highlight: true },
+      { text: 'CS2, Valorant & Apex frame time stabilizer', included: true },
+      { text: 'Instant key delivery right after checkout', included: true },
+      { text: 'Perfect for LAN events and cyber cafes', included: true },
+    ],
+    ctaTextRu: 'Активировать на 24 часа',
+    ctaTextEn: 'Activate 24h Pass',
     ctaAction: 'checkout',
   },
   {
     id: 'monthly',
     name: 'Pro Monthly',
-    badgeRu: 'ПОДПИСКА 30 ДНЕЙ',
-    badgeEn: '30-DAY PASS',
+    badgeRu: 'СЕЗОН РЕЙТИНГА • 30 ДНЕЙ',
+    badgeEn: 'RANKED SEASON • 30 DAYS',
     prices: {
       RUB: { amount: '790 ₽', periodRu: 'в месяц • доступ на 30 дней', periodEn: 'per month • 30 days access' },
-      USD: { amount: '$9.99', periodRu: 'в месяц • доступ на 30 дней', periodEn: 'per month • 30 days access' },
-      EUR: { amount: '9.5 €', periodRu: 'в месяц • доступ на 30 дней', periodEn: 'per month • 30 days access' },
+      USD: { amount: '$9.99', periodRu: 'per month • 30 days', periodEn: 'per month • 30 days' },
+      EUR: { amount: '9.5 €', periodRu: 'per month • 30 days', periodEn: 'per month • 30 days' },
     },
-    descriptionRu: 'Полная Pro функциональность на 30 дней для регулярных рейтинговых сезонов и турниров.',
-    descriptionEn: 'Full Pro power for 30 days. Ideal for competitive ranked seasons and grinding.',
+    descriptionRu: 'Полная Pro функциональность на 30 дней для регулярных рейтинговых сезонов, стримов и соревнований.',
+    descriptionEn: 'Full Pro performance for 30 days. Perfect for competitive ranked seasons and streaming.',
     featuresRu: [
-      { text: 'Все возможности Pro на 30 дней', included: true },
-      { text: 'Таймер ядра 0.5 мс и DPC-приоритизация', included: true, highlight: true },
-      { text: 'CS2 Esports & Valorant оптимизация', included: true, highlight: true },
-      { text: 'Очистка кэша шейдеров и сброс RAM', included: true },
-      { text: 'Все сценарные профили (Esports, Streamer, AAA)', included: true },
-      { text: 'Поддержка обновлений в течение месяца', included: true },
+      { text: 'Все Pro возможности без ограничений на 30 дней', included: true, highlight: true },
+      { text: 'Таймер ядра 0.5 мс + DPC приоритизация', included: true, highlight: true },
+      { text: 'Все сценарные пресеты (Esports, Streamer, AAA)', included: true },
+      { text: 'Очистка кэша шейдеров и сброс RAM в 1 клик', included: true },
+      { text: 'Техническая поддержка обновлений в течение месяца', included: true },
     ],
     featuresEn: [
-      { text: 'Full Pro features unlocked for 30 days', included: true },
-      { text: '0.5ms kernel timer & DPC priority tuning', included: true, highlight: true },
-      { text: 'CS2 Esports & Valorant optimization engine', included: true, highlight: true },
-      { text: 'Shader purge and Standby RAM cache flush', included: true },
+      { text: 'All Pro capabilities without limits for 30 days', included: true, highlight: true },
+      { text: '0.5ms kernel timer + DPC prioritization', included: true, highlight: true },
       { text: 'All scenario presets (Esports, Streamer, AAA)', included: true },
-      { text: 'Active priority updates during month', included: true },
+      { text: '1-click shader cache purge and RAM flush', included: true },
+      { text: 'Active technical update coverage during the month', included: true },
     ],
-    ctaTextRu: 'Оформить на месяц',
-    ctaTextEn: 'Get Pro Monthly',
-    ctaAction: 'checkout',
-  },
-  {
-    id: 'pro',
-    name: 'VIP Lifetime',
-    badgeRu: 'ХИТ ПРОДАЖ',
-    badgeEn: 'BEST VALUE',
-    isPopular: true,
-    prices: {
-      RUB: { amount: '1 490 ₽', periodRu: 'разовый платеж • вечная лицензия', periodEn: 'one-time payment • lifetime license' },
-      USD: { amount: '$19', periodRu: 'разовый платеж • вечная лицензия', periodEn: 'one-time payment • lifetime license' },
-      EUR: { amount: '18 €', periodRu: 'разовый платеж • вечная лицензия', periodEn: 'one-time payment • lifetime license' },
-    },
-    descriptionRu: 'Полный доступ ко всем модулям оптимизации, таймерам ядра и сценарным профилям навсегда.',
-    descriptionEn: 'Full access to all optimization modules, kernel timers, and scenario tuning presets forever.',
-    featuresRu: [
-      { text: 'Все возможности Community Edition', included: true },
-      { text: 'Настройка системного таймера (0.5 мс)', included: true, highlight: true },
-      { text: 'Очистка кэша шейдеров DirectX, NVIDIA и AMD', included: true, highlight: true },
-      { text: '4 готовых сценарных профиля', included: true },
-      { text: 'Создание и восстановление .reg бэкапов в 1 клик', included: true },
-      { text: 'Синхронизация с частотой экрана (EDID)', included: true },
-      { text: 'Лицензия на 3 личных компьютера', included: true },
-      { text: 'Все будущие обновления включены навсегда', included: true },
-    ],
-    featuresEn: [
-      { text: 'All Community Edition capabilities', included: true },
-      { text: 'High-resolution kernel timer (0.5 ms)', included: true, highlight: true },
-      { text: 'DirectX, NVIDIA & AMD shader cache purge', included: true, highlight: true },
-      { text: '4 ready-to-use scenario profiles', included: true },
-      { text: '1-click .reg backup creation and restore', included: true },
-      { text: 'Hardware EDID refresh rate sync', included: true },
-      { text: 'Personal license for up to 3 PCs', included: true },
-      { text: 'All future updates included forever', included: true },
-    ],
-    ctaTextRu: 'Купить VIP Навсегда',
-    ctaTextEn: 'Buy VIP Lifetime',
-    ctaAction: 'checkout',
-  },
-  {
-    id: 'club',
-    name: 'Cyber Club & LAN',
-    badgeRu: 'ДЛЯ КЛУБОВ И АРЕН',
-    badgeEn: 'FOR CLUBS & ARENAS',
-    prices: {
-      RUB: { amount: '19 900 ₽', periodRu: 'разовый платеж • без ограничений', periodEn: 'one-time payment • unlimited access' },
-      USD: { amount: '$199', periodRu: 'разовый платеж • без ограничений', periodEn: 'one-time payment • unlimited access' },
-      EUR: { amount: '189 €', periodRu: 'разовый платеж • без ограничений', periodEn: 'one-time payment • unlimited access' },
-    },
-    descriptionRu: 'Лицензия для компьютерных клубов, киберарен и локальных сетей с поддержкой тихой установки.',
-    descriptionEn: 'License for cyber cafes, esports arenas, and LAN centers with silent installer support.',
-    featuresRu: [
-      { text: 'Все возможности Pro для парка ПК клуба', included: true },
-      { text: 'Тихая установка (--silent --preset=esports)', included: true, highlight: true },
-      { text: 'Поддержка бездисковых систем и PXE-образов', included: true },
-      { text: 'Защита настроек мастер-паролем администратора', included: true },
-      { text: 'Прямой контакт с инженерами поддержки', included: true },
-      { text: 'Предоставление закрывающих документов', included: true },
-    ],
-    featuresEn: [
-      { text: 'All Pro capabilities for your venue PC fleet', included: true },
-      { text: 'Silent installation (--silent --preset=esports)', included: true, highlight: true },
-      { text: 'Diskless boot & PXE netboot image support', included: true },
-      { text: 'Master administrator password protection', included: true },
-      { text: 'Direct line to technical support engineers', included: true },
-      { text: 'Official commercial billing & invoices', included: true },
-    ],
-    ctaTextRu: 'Запросить для клуба',
-    ctaTextEn: 'Request for Club',
+    ctaTextRu: 'Оформить на 30 дней',
+    ctaTextEn: 'Get 30-Day Access',
     ctaAction: 'checkout',
   },
 ];
@@ -207,20 +218,13 @@ const TIERS_DATA: TierDefinition[] = [
 export const Pricing: React.FC = () => {
   const { t, lang } = useI18n();
   const [currency, setCurrency] = useState<Currency>(lang === 'ru' ? 'RUB' : 'USD');
-  const [isPriceAnimating, setIsPriceAnimating] = useState(false);
+  const [activeTab, setActiveTab] = useState<'lifetime' | 'tournament'>('lifetime');
   const [checkoutTier, setCheckoutTier] = useState<CheckoutTierInfo | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   useEffect(() => {
     setCurrency(lang === 'ru' ? 'RUB' : 'USD');
   }, [lang]);
-
-  const handleCurrencyChange = (newCurr: Currency) => {
-    if (newCurr === currency) return;
-    setIsPriceAnimating(true);
-    setCurrency(newCurr);
-    setTimeout(() => setIsPriceAnimating(false), 300);
-  };
 
   const handleOpenCheckout = (tier: TierDefinition) => {
     const priceData = tier.prices[currency];
@@ -233,19 +237,19 @@ export const Pricing: React.FC = () => {
     setIsCheckoutOpen(true);
   };
 
+  const currentTiers = activeTab === 'lifetime' ? LIFETIME_TIERS : TOURNAMENT_TIERS;
+
   return (
-    <section id="pricing" className="relative py-28 border-t border-white/[0.06] overflow-hidden">
-      <div 
-        className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] pointer-events-none rounded-full blur-[160px] opacity-10"
-        style={{ backgroundColor: 'var(--accent-color)' }}
-      />
+    <section id="pricing" className="relative py-28 border-t border-white/[0.08] bg-zinc-950 overflow-hidden">
+      {/* Subtle Background Glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[350px] pointer-events-none rounded-full blur-[160px] opacity-[0.07] bg-white" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-white/10 bg-white/[0.03] backdrop-blur-md mb-4">
-            <Crown className="w-3.5 h-3.5" style={{ color: 'var(--accent-color)' }} />
-            <span className="font-mono text-xs uppercase tracking-widest text-slate-300">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md border border-white/10 bg-white/[0.03] backdrop-blur-md mb-4">
+            <Crown className="w-3.5 h-3.5 text-zinc-300" />
+            <span className="font-mono text-xs uppercase tracking-widest text-zinc-400">
               {t.pricing.tag}
             </span>
           </div>
@@ -254,160 +258,136 @@ export const Pricing: React.FC = () => {
             {t.pricing.title}
           </h2>
 
-          <p className="mt-4 text-base sm:text-lg text-slate-400 font-sans">
+          <p className="mt-4 text-base sm:text-lg text-zinc-400 font-sans">
             {t.pricing.subtitle}
           </p>
 
-          {/* Interactive Currency Switcher */}
-          <div className="mt-8 inline-flex items-center gap-1.5 p-1 rounded-xl bg-white/[0.04] border border-white/10 backdrop-blur-xl shadow-inner">
-            <span className="text-[11px] font-mono text-slate-400 px-2.5 flex items-center gap-1.5 uppercase font-medium">
-              <Coins className="w-3.5 h-3.5 text-accent" />
-              {lang === 'ru' ? 'Валюта:' : 'Currency:'}
-            </span>
-            {(['RUB', 'USD', 'EUR'] as Currency[]).map((curr) => {
-              const active = currency === curr;
-              const symbols: Record<Currency, string> = { RUB: '₽ RUB', USD: '$ USD', EUR: '€ EUR' };
-              return (
-                <button
-                  key={curr}
-                  onClick={() => handleCurrencyChange(curr)}
-                  className={`px-3 py-1 rounded-lg text-xs font-mono font-bold tracking-wider transition-all duration-200 ${
-                    active
-                      ? 'bg-white text-black shadow-md scale-[1.02]'
-                      : 'text-slate-400 hover:text-white hover:bg-white/[0.06]'
-                  }`}
-                >
-                  {symbols[curr]}
-                </button>
-              );
-            })}
+          {/* Tab Switcher & Currency Row */}
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* Plan Category Tabs */}
+            <div className="inline-flex p-1 rounded-xl bg-zinc-900 border border-white/10 shadow-inner">
+              <button
+                onClick={() => setActiveTab('lifetime')}
+                className={`relative px-4 py-2 rounded-lg text-xs font-mono font-bold tracking-wide transition-all ${
+                  activeTab === 'lifetime'
+                    ? 'text-white'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                {activeTab === 'lifetime' && (
+                  <motion.div
+                    layoutId="pricingTabHighlight"
+                    className="absolute inset-0 rounded-lg bg-zinc-800 border border-white/15 shadow-sm"
+                    transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-zinc-300" />
+                  {lang === 'ru' ? 'Постоянные лицензии' : 'Permanent Licenses'}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('tournament')}
+                className={`relative px-4 py-2 rounded-lg text-xs font-mono font-bold tracking-wide transition-all ${
+                  activeTab === 'tournament'
+                    ? 'text-white'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                {activeTab === 'tournament' && (
+                  <motion.div
+                    layoutId="pricingTabHighlight"
+                    className="absolute inset-0 rounded-lg bg-zinc-800 border border-white/15 shadow-sm"
+                    transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                  {lang === 'ru' ? 'Турнирные пропуски' : 'Tournament Passes'}
+                </span>
+              </button>
+            </div>
+
+            {/* Currency Selector */}
+            <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-zinc-900 border border-white/10">
+              <span className="text-[11px] font-mono text-zinc-400 px-2 flex items-center gap-1.5 uppercase font-medium">
+                <Coins className="w-3.5 h-3.5 text-zinc-400" />
+                {lang === 'ru' ? 'Валюта:' : 'Currency:'}
+              </span>
+              {(['RUB', 'USD', 'EUR'] as Currency[]).map((curr) => {
+                const active = currency === curr;
+                const symbols: Record<Currency, string> = { RUB: '₽ RUB', USD: '$ USD', EUR: '€ EUR' };
+                return (
+                  <button
+                    key={curr}
+                    onClick={() => setCurrency(curr)}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all ${
+                      active
+                        ? 'bg-zinc-800 text-white border border-white/15 shadow-sm'
+                        : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    {symbols[curr]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Pricing Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 items-stretch">
-          {TIERS_DATA.map((tier) => {
-            const priceData = tier.prices[currency];
-            const badge = lang === 'ru' ? tier.badgeRu : tier.badgeEn;
-            const description = lang === 'ru' ? tier.descriptionRu : tier.descriptionEn;
-            const period = lang === 'ru' ? priceData.periodRu : priceData.periodEn;
-            const features = lang === 'ru' ? tier.featuresRu : tier.featuresEn;
-            const ctaText = lang === 'ru' ? tier.ctaTextRu : tier.ctaTextEn;
+        {/* Pricing Cards Container with Smooth Transitions */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'lifetime' ? (
+            <motion.div
+              key="lifetime-grid"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25 }}
+              className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch"
+            >
+              {LIFETIME_TIERS.map((tier) => renderPricingCard(tier))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="tournament-grid"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25 }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch"
+            >
+              {TOURNAMENT_TIERS.map((tier) => renderPricingCard(tier))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            return (
-              <div
-                key={tier.id}
-                className={`rounded-2xl flex flex-col justify-between p-7 sm:p-8 transition-all relative overflow-hidden border ${
-                  tier.isPopular
-                    ? 'border-white/30 bg-[#10131C] shadow-2xl scale-[1.02] z-20'
-                    : 'border-white/[0.08] bg-[#0C0E14] hover:border-white/15'
-                }`}
-                style={{
-                  borderColor: tier.isPopular ? 'var(--accent-border)' : undefined,
-                }}
-              >
-                {/* Popular Badge */}
-                {badge && (
-                  <div 
-                    className="absolute top-0 right-0 px-3 py-1 font-mono text-[10px] uppercase font-bold tracking-widest rounded-bl-lg border-l border-b"
-                    style={{
-                      backgroundColor: 'var(--accent-bg-subtle)',
-                      borderColor: 'var(--accent-border)',
-                      color: 'var(--accent-color)',
-                    }}
-                  >
-                    {badge}
-                  </div>
-                )}
-
-                <div>
-                  <h3 className="text-xl font-extrabold text-white tracking-tight mb-2">
-                    {tier.name}
-                  </h3>
-                  <p className="text-xs text-slate-400 font-sans min-h-[36px] mb-6">
-                    {description}
-                  </p>
-
-                  <div className="mb-6 pb-6 border-b border-white/[0.08]">
-                    <div className="flex items-baseline gap-2">
-                      <span className={`font-mono text-3xl sm:text-4xl font-black text-white transition-all duration-300 ${
-                        isPriceAnimating ? 'opacity-30 scale-95' : 'opacity-100 scale-100'
-                      }`}>
-                        {priceData.amount}
-                      </span>
-                    </div>
-                    <span className="font-mono text-xs text-slate-500 uppercase tracking-wider block mt-1">
-                      {period}
-                    </span>
-                  </div>
-
-                  {/* Features list */}
-                  <div className="space-y-3 mb-8">
-                    {features.map((feat, fIdx) => (
-                      <div key={fIdx} className="flex items-start gap-3 text-xs">
-                        <div className="mt-0.5 shrink-0">
-                          {feat.included ? (
-                            <Check 
-                              className="w-4 h-4" 
-                              style={{ color: feat.highlight ? 'var(--accent-color)' : '#10B981' }} 
-                            />
-                          ) : (
-                            <div className="w-3.5 h-3.5 rounded-full border border-slate-700 mx-auto mt-0.5" />
-                          )}
-                        </div>
-                        <span 
-                          className={`font-sans leading-tight ${
-                            feat.included 
-                              ? feat.highlight 
-                                ? 'text-white font-semibold' 
-                                : 'text-slate-300' 
-                              : 'text-slate-600 line-through'
-                          }`}
-                        >
-                          {feat.text}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (tier.id === 'free') {
-                        const el = document.getElementById('download');
-                        if (el) el.scrollIntoView({ behavior: 'smooth' });
-                        else window.location.hash = '#download';
-                        return;
-                      }
-                      handleOpenCheckout(tier);
-                    }}
-                    className={`w-full py-3.5 px-6 rounded-lg font-mono text-xs uppercase tracking-widest font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                      tier.isPopular
-                        ? 'btn-accent'
-                        : 'bg-white/[0.05] hover:bg-white/10 text-white border border-white/10 active:scale-[0.98]'
-                    }`}
-                  >
-                    <span>{ctaText}</span>
-                    {tier.id === 'club' ? (
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    ) : (
-                      <Zap className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-
-                  <div className="flex items-center justify-center gap-2 mt-4 text-[11px] font-mono text-slate-500">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>{lang === 'ru' ? '30 дней на возврат средств' : '30-day money-back guarantee'}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        {/* Bottom Reassurance Banner */}
+        <div className="mt-14 max-w-3xl mx-auto rounded-xl border border-white/10 bg-zinc-900/40 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div className="text-xs text-zinc-400 font-sans">
+              <p className="font-semibold text-zinc-200">
+                {lang === 'ru' ? 'Прозрачные условия и моментальная выдача' : 'Clear Terms & Instant Key Generation'}
+              </p>
+              <p>
+                {lang === 'ru'
+                  ? 'Ключ генерируется сразу после подтверждения. Никаких скрытых списаний и навязанных подписок.'
+                  : 'Keys generated immediately upon verification. No hidden charges or forced recurring billing.'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-400 shrink-0">
+            <Info className="w-3.5 h-3.5" />
+            <span>Win 10/11 x86_64</span>
+          </div>
         </div>
       </div>
 
+      {/* Checkout Modal */}
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
@@ -415,4 +395,121 @@ export const Pricing: React.FC = () => {
       />
     </section>
   );
+
+  function renderPricingCard(tier: TierDefinition) {
+    const priceData = tier.prices[currency];
+    const badge = lang === 'ru' ? tier.badgeRu : tier.badgeEn;
+    const description = lang === 'ru' ? tier.descriptionRu : tier.descriptionEn;
+    const period = lang === 'ru' ? priceData.periodRu : priceData.periodEn;
+    const features = lang === 'ru' ? tier.featuresRu : tier.featuresEn;
+    const ctaText = lang === 'ru' ? tier.ctaTextRu : tier.ctaTextEn;
+
+    return (
+      <div
+        key={tier.id}
+        className={`rounded-2xl flex flex-col justify-between p-8 sm:p-9 transition-all relative overflow-hidden border ${
+          tier.isPopular
+            ? 'border-white/25 bg-gradient-to-b from-zinc-900/90 to-zinc-950 shadow-2xl shadow-black/80 lg:-translate-y-2'
+            : 'border-white/[0.08] bg-zinc-900/40 hover:border-white/15'
+        }`}
+      >
+        {/* Subtle Top Highlight for Popular Card */}
+        {tier.isPopular && (
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+        )}
+
+        <div>
+          {/* Card Badge */}
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              {tier.name}
+            </h3>
+            {badge && (
+              <span className={`px-2.5 py-0.5 font-mono text-[10px] uppercase font-bold tracking-wider rounded-md border ${
+                tier.isPopular
+                  ? 'bg-white/10 text-white border-white/20'
+                  : 'bg-zinc-800/80 text-zinc-400 border-white/5'
+              }`}>
+                {badge}
+              </span>
+            )}
+          </div>
+
+          <p className="text-xs text-zinc-400 font-sans min-h-[36px] mb-6">
+            {description}
+          </p>
+
+          {/* Price Display */}
+          <div className="p-4 rounded-xl bg-black/40 border border-white/5 mb-6">
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl sm:text-4xl font-mono font-black text-white">
+                {priceData.amount}
+              </span>
+            </div>
+            <div className="text-[11px] font-mono text-zinc-400 mt-1">
+              {period}
+            </div>
+          </div>
+
+          {/* Feature List */}
+          <div className="space-y-3 mb-8">
+            <p className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
+              {lang === 'ru' ? 'Возможности тарифа:' : 'Included Features:'}
+            </p>
+            {features.map((feat, idx) => (
+              <div key={idx} className="flex items-start gap-3 text-xs">
+                {feat.included ? (
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                    feat.highlight 
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                      : 'bg-white/5 text-zinc-300 border border-white/10'
+                  }`}>
+                    <Check className="w-2.5 h-2.5" />
+                  </div>
+                ) : (
+                  <div className="w-4 h-4 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center shrink-0 mt-0.5 text-zinc-600">
+                    <span className="w-1.5 h-px bg-zinc-600"></span>
+                  </div>
+                )}
+                <span className={`${
+                  feat.included 
+                    ? feat.highlight 
+                      ? 'text-white font-semibold' 
+                      : 'text-zinc-300'
+                    : 'text-zinc-600 line-through'
+                }`}>
+                  {feat.text}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA Action */}
+        <div>
+          {tier.ctaAction === 'checkout' ? (
+            <button
+              onClick={() => handleOpenCheckout(tier)}
+              className={`w-full py-3.5 px-6 rounded-xl font-mono text-xs uppercase font-bold tracking-wider transition-all flex items-center justify-center gap-2 ${
+                tier.isPopular
+                  ? 'bg-white hover:bg-zinc-200 text-black shadow-lg shadow-white/10 scale-[1.01]'
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10'
+              }`}
+            >
+              <span>{ctaText}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <a
+              href={tier.ctaAction}
+              className="w-full py-3.5 px-6 rounded-xl font-mono text-xs uppercase font-bold tracking-wider transition-all flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10 text-center"
+            >
+              <span>{ctaText}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  }
 };

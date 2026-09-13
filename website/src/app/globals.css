@@ -24,11 +24,11 @@
   --ring: 240 4.9% 83.9%;
   --radius: 0.5rem;
 
-  --accent-color: #00f0ff;
-  --accent-rgb: 0 240 255;
-  --accent-glow: 0 0 28px rgba(0, 240, 255, 0.35);
-  --accent-border: rgba(0, 240, 255, 0.4);
-  --accent-bg-subtle: rgba(0, 240, 255, 0.08);
+  --accent-color: #f4f4f5;
+  --accent-rgb: 244 244 245;
+  --accent-glow: 0 0 20px rgba(255, 255, 255, 0.12);
+  --accent-border: rgba(255, 255, 255, 0.15);
+  --accent-bg-subtle: rgba(255, 255, 255, 0.05);
 }
 
 @keyframes fade-in {
@@ -65,18 +65,16 @@
   }
 
   body {
-    background-color: #060708;
-    color: #f1f5f9;
+    background-color: #09090b;
+    color: #f4f4f5;
     font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
-    selection-background-color: var(--accent-color);
-    selection-color: #060708;
   }
 
   ::selection {
-    background-color: var(--accent-color);
-    color: #060708;
+    background-color: #27272a;
+    color: #ffffff;
   }
 
   ::-webkit-scrollbar {
@@ -85,35 +83,35 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: #08090a;
+    background: #09090b;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #1e222b;
+    background: #27272a;
     border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #3a4154;
+    background: #3f3f46;
   }
 }
 
 @layer components {
   .titanium-card {
-    background: rgba(13, 14, 17, 0.85);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(18, 18, 23, 0.75);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 1rem;
-    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .titanium-card-hover {
-    @apply titanium-card hover:border-white/[0.18] hover:bg-obsidian-850/95;
+    @apply titanium-card hover:border-white/[0.16] hover:bg-zinc-900/85;
   }
 
   .hardware-well {
-    background: #08090b;
+    background: #0d0d11;
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 0.75rem;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(0, 0, 0, 0.8);
@@ -133,19 +131,19 @@
   .btn-accent {
     position: relative;
     overflow: hidden;
-    background-color: var(--accent-color, #00f0ff);
-    color: #060708;
+    background-color: #ffffff;
+    color: #09090b;
     font-weight: 700;
     padding: 0.75rem 1.5rem;
     border-radius: 0.75rem;
-    box-shadow: var(--accent-glow, 0 0 24px rgba(0, 240, 255, 0.35));
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.1);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .btn-accent:hover {
-    filter: brightness(1.15);
+    background-color: #f4f4f5;
     transform: translateY(-1px);
-    box-shadow: var(--accent-glow, 0 0 32px rgba(0, 240, 255, 0.5));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 24px rgba(255, 255, 255, 0.18);
   }
 
   .btn-accent:active {

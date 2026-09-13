@@ -6,7 +6,7 @@ import {
 import { invoke } from '../lib/tauri';
 import { getPreferences, savePreferences } from '../lib/theme';
 import { useI18n } from '../lib/i18n';
-import { getStoredLicense, isProLicense } from '../lib/license';
+import { getStoredLicense, isProLicense, LicenseData } from '../lib/license';
 import UpgradeModal from '../components/UpgradeModal';
 
 interface ProfileDef {
@@ -22,14 +22,18 @@ interface ProfileDef {
   features: string[];
 }
 
-export default function Profiles() {
+interface ProfilesProps {
+  license?: LicenseData | null;
+}
+
+export default function Profiles({ license: propLicense }: ProfilesProps = {}) {
   const { t, lang } = useI18n();
   const [prefs, setPrefs] = useState(getPreferences());
   const [applying, setApplying] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState('');
-  const [isPro, setIsPro] = useState<boolean>(() => isProLicense(getStoredLicense()));
+  const isPro = isProLicense(propLicense || getStoredLicense());
 
   const PROFILES: ProfileDef[] = [
     {
