@@ -5,11 +5,11 @@
 Настольное приложение для Windows, предназначенное для оптимизации системы под соревновательные игры и ПК с ограниченной производительностью.
 
 > **Документация и руководство владельца:**
-> * [START HERE (Быстрый старт)](START_HERE.md) | [Инструкция владельца](docs/01_BUYER_GUIDE_RU.md) | [English Owner Guide](docs/01_BUYER_GUIDE_EN.md)
-> * [01. Архитектура](docs/01_ARCHITECTURE.md) • [02. Сборка](docs/02_BUILD_AND_RELEASE.md) • [03. Лицензии](docs/03_LICENSING_AND_MONETIZATION.md) • [04. Контакты](docs/04_CUSTOMIZATION_AND_CONTACTS.md) • [05. Деплой Vercel](docs/05_DEPLOYMENT_VERCEL.md) • [06. FAQ](docs/06_FAQ_AND_TROUBLESHOOTING.md) • [07. Бета-тест](docs/07_BETA_TESTING.md)
+> * [Руководство владельца (HANDOVER GUIDE)](HANDOVER_GUIDE.md) | [English Owner Guide](docs/01_BUYER_GUIDE_EN.md)
+> * [01. Архитектура](docs/01_ARCHITECTURE.md) • [02. Сборка](docs/02_BUILD_AND_RELEASE.md) • [03. Лицензии](docs/03_LICENSING_AND_MONETIZATION.md) • [04. Контакты](docs/04_CUSTOMIZATION_AND_CONTACTS.md) • [05. Деплой Vercel](docs/05_DEPLOYMENT_VERCEL.md) • [06. FAQ](docs/06_FAQ_AND_TROUBLESHOOTING.md)
 
 Стек: **Tauri v2, Rust, React 19, TypeScript, Tailwind CSS**.  
-Размер исполняемого файла: **4.8 МБ** (инсталлятор NSIS: **1.58 МБ**). Приложение работает без веб-серверов в фоне и без платформы Electron.
+Размер исполняемого файла: **~12 МБ** (в 15 раз легче Electron). Приложение работает без веб-серверов в фоне и без платформы Electron.
 
 ---
 
