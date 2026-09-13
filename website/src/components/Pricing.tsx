@@ -9,8 +9,6 @@ import {
   Coins,
   Sparkles,
   Trophy,
-  Building2,
-  Lock,
   ArrowRight,
   Info
 } from 'lucide-react';
@@ -237,19 +235,27 @@ export const Pricing: React.FC = () => {
     setIsCheckoutOpen(true);
   };
 
-  const currentTiers = activeTab === 'lifetime' ? LIFETIME_TIERS : TOURNAMENT_TIERS;
-
   return (
-    <section id="pricing" className="relative py-28 border-t border-white/[0.08] bg-zinc-950 overflow-hidden">
-      {/* Subtle Background Glow */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[350px] pointer-events-none rounded-full blur-[160px] opacity-[0.07] bg-white" />
+    <section id="pricing" className="relative py-28 border-t border-white/[0.08] bg-[#07090e] overflow-hidden">
+      {/* Subtle Background Glow using theme accent */}
+      <div 
+        className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[350px] pointer-events-none rounded-full blur-[160px] opacity-15"
+        style={{ backgroundColor: 'var(--accent-color)' }}
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md border border-white/10 bg-white/[0.03] backdrop-blur-md mb-4">
-            <Crown className="w-3.5 h-3.5 text-zinc-300" />
-            <span className="font-mono text-xs uppercase tracking-widest text-zinc-400">
+          <div 
+            className="inline-flex items-center gap-2 px-3 py-1 rounded border mb-4 backdrop-blur-md"
+            style={{
+              backgroundColor: 'var(--accent-bg-subtle)',
+              borderColor: 'var(--accent-border)',
+              color: 'var(--accent-color)',
+            }}
+          >
+            <Crown className="w-3.5 h-3.5" style={{ color: 'var(--accent-color)' }} />
+            <span className="font-mono text-xs uppercase tracking-widest font-bold">
               {t.pricing.tag}
             </span>
           </div>
@@ -258,31 +264,38 @@ export const Pricing: React.FC = () => {
             {t.pricing.title}
           </h2>
 
-          <p className="mt-4 text-base sm:text-lg text-zinc-400 font-sans">
+          <p className="mt-4 text-base sm:text-lg text-slate-400 font-sans">
             {t.pricing.subtitle}
           </p>
 
           {/* Tab Switcher & Currency Row */}
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             {/* Plan Category Tabs */}
-            <div className="inline-flex p-1 rounded-xl bg-zinc-900 border border-white/10 shadow-inner">
+            <div className="inline-flex p-1 rounded-xl bg-[#0d1017] border border-white/10 shadow-inner">
               <button
                 onClick={() => setActiveTab('lifetime')}
                 className={`relative px-4 py-2 rounded-lg text-xs font-mono font-bold tracking-wide transition-all ${
                   activeTab === 'lifetime'
                     ? 'text-white'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 {activeTab === 'lifetime' && (
                   <motion.div
                     layoutId="pricingTabHighlight"
-                    className="absolute inset-0 rounded-lg bg-zinc-800 border border-white/15 shadow-sm"
+                    className="absolute inset-0 rounded-lg border shadow-sm"
+                    style={{
+                      backgroundColor: 'var(--accent-bg-subtle)',
+                      borderColor: 'var(--accent-border)',
+                    }}
                     transition={{ type: 'spring', stiffness: 450, damping: 35 }}
                   />
                 )}
-                <span className="relative z-10 flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-zinc-300" />
+                <span 
+                  className="relative z-10 flex items-center gap-2"
+                  style={{ color: activeTab === 'lifetime' ? 'var(--accent-color)' : undefined }}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
                   {lang === 'ru' ? 'Постоянные лицензии' : 'Permanent Licenses'}
                 </span>
               </button>
@@ -292,27 +305,34 @@ export const Pricing: React.FC = () => {
                 className={`relative px-4 py-2 rounded-lg text-xs font-mono font-bold tracking-wide transition-all ${
                   activeTab === 'tournament'
                     ? 'text-white'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 {activeTab === 'tournament' && (
                   <motion.div
                     layoutId="pricingTabHighlight"
-                    className="absolute inset-0 rounded-lg bg-zinc-800 border border-white/15 shadow-sm"
+                    className="absolute inset-0 rounded-lg border shadow-sm"
+                    style={{
+                      backgroundColor: 'var(--accent-bg-subtle)',
+                      borderColor: 'var(--accent-border)',
+                    }}
                     transition={{ type: 'spring', stiffness: 450, damping: 35 }}
                   />
                 )}
-                <span className="relative z-10 flex items-center gap-2">
-                  <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                <span 
+                  className="relative z-10 flex items-center gap-2"
+                  style={{ color: activeTab === 'tournament' ? 'var(--accent-color)' : undefined }}
+                >
+                  <Trophy className="w-3.5 h-3.5" />
                   {lang === 'ru' ? 'Турнирные пропуски' : 'Tournament Passes'}
                 </span>
               </button>
             </div>
 
             {/* Currency Selector */}
-            <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-zinc-900 border border-white/10">
-              <span className="text-[11px] font-mono text-zinc-400 px-2 flex items-center gap-1.5 uppercase font-medium">
-                <Coins className="w-3.5 h-3.5 text-zinc-400" />
+            <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-[#0d1017] border border-white/10">
+              <span className="text-[11px] font-mono text-slate-400 px-2 flex items-center gap-1.5 uppercase font-medium">
+                <Coins className="w-3.5 h-3.5" style={{ color: 'var(--accent-color)' }} />
                 {lang === 'ru' ? 'Валюта:' : 'Currency:'}
               </span>
               {(['RUB', 'USD', 'EUR'] as Currency[]).map((curr) => {
@@ -324,9 +344,14 @@ export const Pricing: React.FC = () => {
                     onClick={() => setCurrency(curr)}
                     className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all ${
                       active
-                        ? 'bg-zinc-800 text-white border border-white/15 shadow-sm'
-                        : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                        ? 'font-bold shadow-md'
+                        : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
                     }`}
+                    style={active ? {
+                      backgroundColor: 'var(--accent-color)',
+                      color: '#060708',
+                      boxShadow: 'var(--accent-glow)',
+                    } : {}}
                   >
                     {symbols[curr]}
                   </button>
@@ -364,13 +389,19 @@ export const Pricing: React.FC = () => {
         </AnimatePresence>
 
         {/* Bottom Reassurance Banner */}
-        <div className="mt-14 max-w-3xl mx-auto rounded-xl border border-white/10 bg-zinc-900/40 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+        <div className="mt-14 max-w-3xl mx-auto rounded-2xl border border-white/10 bg-[#0d1018]/90 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <div 
+              className="w-9 h-9 rounded-xl border flex items-center justify-center shrink-0"
+              style={{
+                backgroundColor: 'var(--accent-bg-subtle)',
+                borderColor: 'var(--accent-border)',
+              }}
+            >
+              <ShieldCheck className="w-4 h-4" style={{ color: 'var(--accent-color)' }} />
             </div>
-            <div className="text-xs text-zinc-400 font-sans">
-              <p className="font-semibold text-zinc-200">
+            <div className="text-xs text-slate-400 font-sans">
+              <p className="font-semibold text-slate-200">
                 {lang === 'ru' ? 'Прозрачные условия и моментальная выдача' : 'Clear Terms & Instant Key Generation'}
               </p>
               <p>
@@ -380,8 +411,8 @@ export const Pricing: React.FC = () => {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-[11px] font-mono text-zinc-400 shrink-0">
-            <Info className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400 shrink-0">
+            <Info className="w-3.5 h-3.5" style={{ color: 'var(--accent-color)' }} />
             <span>Win 10/11 x86_64</span>
           </div>
         </div>
@@ -409,13 +440,20 @@ export const Pricing: React.FC = () => {
         key={tier.id}
         className={`rounded-2xl flex flex-col justify-between p-8 sm:p-9 transition-all relative overflow-hidden border ${
           tier.isPopular
-            ? 'border-white/25 bg-gradient-to-b from-zinc-900/90 to-zinc-950 shadow-2xl shadow-black/80 lg:-translate-y-2'
-            : 'border-white/[0.08] bg-zinc-900/40 hover:border-white/15'
+            ? 'bg-[#10141f] shadow-2xl lg:-translate-y-2 z-10'
+            : 'border-white/[0.08] bg-[#0c0e16]/80 hover:border-white/15'
         }`}
+        style={{
+          borderColor: tier.isPopular ? 'var(--accent-border)' : undefined,
+          boxShadow: tier.isPopular ? '0 0 45px -12px var(--accent-color)' : undefined,
+        }}
       >
-        {/* Subtle Top Highlight for Popular Card */}
+        {/* Subtle Top Accent Line for Popular Card */}
         {tier.isPopular && (
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+          <div 
+            className="absolute top-0 inset-x-0 h-0.5"
+            style={{ backgroundColor: 'var(--accent-color)' }}
+          />
         )}
 
         <div>
@@ -425,45 +463,62 @@ export const Pricing: React.FC = () => {
               {tier.name}
             </h3>
             {badge && (
-              <span className={`px-2.5 py-0.5 font-mono text-[10px] uppercase font-bold tracking-wider rounded-md border ${
-                tier.isPopular
-                  ? 'bg-white/10 text-white border-white/20'
-                  : 'bg-zinc-800/80 text-zinc-400 border-white/5'
-              }`}>
+              <span 
+                className="px-2.5 py-0.5 font-mono text-[10px] uppercase font-bold tracking-wider rounded-md border"
+                style={tier.isPopular ? {
+                  backgroundColor: 'var(--accent-bg-subtle)',
+                  borderColor: 'var(--accent-border)',
+                  color: 'var(--accent-color)',
+                } : {
+                  backgroundColor: 'rgba(255,255,255,0.04)',
+                  borderColor: 'rgba(255,255,255,0.08)',
+                  color: '#94a3b8',
+                }}
+              >
                 {badge}
               </span>
             )}
           </div>
 
-          <p className="text-xs text-zinc-400 font-sans min-h-[36px] mb-6">
+          <p className="text-xs text-slate-400 font-sans min-h-[36px] mb-6">
             {description}
           </p>
 
           {/* Price Display */}
           <div className="p-4 rounded-xl bg-black/40 border border-white/5 mb-6">
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl sm:text-4xl font-mono font-black text-white">
+              <span 
+                className="text-3xl sm:text-4xl font-mono font-black text-white"
+                style={tier.isPopular ? { color: 'var(--accent-color)' } : {}}
+              >
                 {priceData.amount}
               </span>
             </div>
-            <div className="text-[11px] font-mono text-zinc-400 mt-1">
+            <div className="text-[11px] font-mono text-slate-400 mt-1">
               {period}
             </div>
           </div>
 
           {/* Feature List */}
           <div className="space-y-3 mb-8">
-            <p className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
+            <p className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
               {lang === 'ru' ? 'Возможности тарифа:' : 'Included Features:'}
             </p>
             {features.map((feat, idx) => (
               <div key={idx} className="flex items-start gap-3 text-xs">
                 {feat.included ? (
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                    feat.highlight 
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                      : 'bg-white/5 text-zinc-300 border border-white/10'
-                  }`}>
+                  <div 
+                    className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 border"
+                    style={feat.highlight ? {
+                      backgroundColor: 'var(--accent-bg-subtle)',
+                      borderColor: 'var(--accent-border)',
+                      color: 'var(--accent-color)',
+                    } : {
+                      backgroundColor: 'rgba(255,255,255,0.05)',
+                      borderColor: 'rgba(255,255,255,0.1)',
+                      color: '#cbd5e1',
+                    }}
+                  >
                     <Check className="w-2.5 h-2.5" />
                   </div>
                 ) : (
@@ -475,7 +530,7 @@ export const Pricing: React.FC = () => {
                   feat.included 
                     ? feat.highlight 
                       ? 'text-white font-semibold' 
-                      : 'text-zinc-300'
+                      : 'text-slate-300'
                     : 'text-zinc-600 line-through'
                 }`}>
                   {feat.text}
@@ -492,7 +547,7 @@ export const Pricing: React.FC = () => {
               onClick={() => handleOpenCheckout(tier)}
               className={`w-full py-3.5 px-6 rounded-xl font-mono text-xs uppercase font-bold tracking-wider transition-all flex items-center justify-center gap-2 ${
                 tier.isPopular
-                  ? 'bg-white hover:bg-zinc-200 text-black shadow-lg shadow-white/10 scale-[1.01]'
+                  ? 'btn-accent shadow-accent-glow'
                   : 'bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10'
               }`}
             >

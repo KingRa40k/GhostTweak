@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import { ChevronRight, Download } from "lucide-react";
@@ -15,7 +15,7 @@ interface HeroProps {
 }
 
 export function Hero({
-  eyebrow = "Без Chromium • 4.8 МБ • Прямой доступ к WinAPI",
+  eyebrow = "",
   title,
   subtitle,
   ctaLabel = "Скачать GhostTweak",

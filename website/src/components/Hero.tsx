@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import { Hero as HeroOne } from "@/components/ui/hero-1";
@@ -11,7 +11,6 @@ export default function Hero() {
   return (
     <div className="relative">
       <HeroOne
-        eyebrow={t.hero.eyebrow}
         title={t.hero.title}
         subtitle={t.hero.subtitle}
         ctaLabel={t.hero.ctaButton}

@@ -175,8 +175,8 @@ export const FAQ: React.FC = () => {
             <Mail className="w-4 h-4 shrink-0" style={{ color: 'var(--accent-color)' }} />
             <span>
               {lang === 'ru' 
-                ? 'Вопросы по совместимости или покупке лицензии напрямую у владельца?' 
-                : 'Questions about compatibility or direct license purchase from the owner?'}
+                ? 'Вопросы по совместимости или покупке лицензии напрямую у администратора?' 
+                : 'Questions about compatibility or direct license purchase from the administrator?'}
             </span>
           </div>
           <a 

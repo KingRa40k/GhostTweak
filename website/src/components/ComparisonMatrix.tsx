@@ -225,22 +225,34 @@ export const ComparisonMatrix: React.FC = () => {
   });
 
   return (
-    <section id="benchmark" className="relative py-24 sm:py-32 border-t border-white/[0.08] bg-zinc-950/80">
-      {/* Background Subtle Gradient */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.03)_0%,transparent_70%)] pointer-events-none" />
+    <section id="architecture" className="relative py-24 sm:py-32 border-t border-white/[0.08] bg-[#090b10]">
+      {/* Background Accent Glow */}
+      <div 
+        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[300px] pointer-events-none rounded-full blur-[160px] opacity-15"
+        style={{ backgroundColor: 'var(--accent-color)' }}
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md border border-white/10 bg-white/[0.03] text-zinc-400 font-mono text-[11px] uppercase tracking-wider mb-3">
-              <Activity className="w-3.5 h-3.5 text-zinc-300" />
-              <span>{lang === 'ru' ? 'Архитектурный бенчмарк' : 'Architectural Benchmark'}</span>
+            <div 
+              className="inline-flex items-center gap-2 px-3 py-1 rounded border mb-4 backdrop-blur-md"
+              style={{
+                backgroundColor: 'var(--accent-bg-subtle)',
+                borderColor: 'var(--accent-border)',
+                color: 'var(--accent-color)',
+              }}
+            >
+              <Activity className="w-3.5 h-3.5" style={{ color: 'var(--accent-color)' }} />
+              <span className="font-mono text-xs uppercase tracking-widest font-bold">
+                {lang === 'ru' ? 'Архитектурный бенчмарк' : 'Architectural Benchmark'}
+              </span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
               {lang === 'ru' ? 'Инженерия против раздутого софта' : 'Engineering vs. Bloated Software'}
             </h2>
-            <p className="mt-2 text-sm sm:text-base text-zinc-400 max-w-2xl font-sans">
+            <p className="mt-2 text-sm sm:text-base text-slate-400 max-w-2xl font-sans">
               {lang === 'ru' 
                 ? 'Сравнение GhostTweak с типичными Electron-твикерами и случайными PowerShell-скриптами из GitHub.'
                 : 'Direct comparison of GhostTweak against heavy Electron tweakers and untrusted GitHub scripts.'}
@@ -248,32 +260,40 @@ export const ComparisonMatrix: React.FC = () => {
           </div>
 
           {/* Filter Pills */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-zinc-900/80 border border-white/10 self-start md:self-auto">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all ${
-                  activeCategory === cat.id
-                    ? 'bg-zinc-800 text-white shadow-sm font-semibold'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]'
-                }`}
-              >
-                {lang === 'ru' ? cat.labelRu : cat.labelEn}
-              </button>
-            ))}
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#0e111a] border border-white/10 self-start md:self-auto">
+            {categories.map((cat) => {
+              const active = activeCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-all ${
+                    active
+                      ? 'font-bold shadow-md'
+                      : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                  style={active ? {
+                    backgroundColor: 'var(--accent-color)',
+                    color: '#060708',
+                    boxShadow: 'var(--accent-glow)',
+                  } : {}}
+                >
+                  {lang === 'ru' ? cat.labelRu : cat.labelEn}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Competitor Column Headers */}
-        <div className="hidden lg:grid grid-cols-12 gap-4 pb-4 px-6 border-b border-white/[0.06] text-[11px] font-mono uppercase tracking-wider text-zinc-400">
+        <div className="hidden lg:grid grid-cols-12 gap-4 pb-4 px-6 border-b border-white/[0.06] text-[11px] font-mono uppercase tracking-wider text-slate-400">
           <div className="col-span-5">{lang === 'ru' ? 'Метрика / Параметр' : 'Metric & Purpose'}</div>
-          <div className="col-span-3 flex items-center gap-2 text-white font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <div className="col-span-3 flex items-center gap-2 font-bold" style={{ color: 'var(--accent-color)' }}>
+            <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--accent-color)' }}></span>
             GhostTweak (Rust Native)
           </div>
-          <div className="col-span-2 text-zinc-400">Electron Tweakers</div>
-          <div className="col-span-2 text-zinc-400">CMD / PS1 Scripts</div>
+          <div className="col-span-2 text-slate-400">Electron Tweakers</div>
+          <div className="col-span-2 text-slate-400">CMD / PS1 Scripts</div>
         </div>
 
         {/* Benchmark Bento Rows */}
@@ -288,81 +308,93 @@ export const ComparisonMatrix: React.FC = () => {
             return (
               <div
                 key={bm.id}
-                className="group rounded-xl border border-white/[0.07] bg-zinc-900/40 hover:bg-zinc-900/70 hover:border-white/15 p-5 sm:p-6 transition-all duration-200"
+                className="group rounded-xl border border-white/[0.08] bg-[#0d1018]/90 hover:bg-[#111520] hover:border-white/20 p-5 sm:p-6 transition-all duration-200 shadow-sm"
               >
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
                   {/* Metric Info */}
                   <div className="lg:col-span-5 space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-300 bg-white/[0.04] px-2 py-0.5 rounded border border-white/5">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 bg-white/[0.04] px-2 py-0.5 rounded border border-white/5">
                         {bm.category}
                       </span>
                     </div>
-                    <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-zinc-100">
+                    <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-slate-100">
                       {name}
                     </h3>
-                    <p className="text-xs text-zinc-400 font-sans">
+                    <p className="text-xs text-slate-400 font-sans">
                       {desc}
                     </p>
                   </div>
 
-                  {/* GhostTweak (Champion) */}
-                  <div className="lg:col-span-3 rounded-lg p-3.5 bg-white/[0.03] border border-white/10 space-y-2">
+                  {/* GhostTweak (Champion with Theme Accent Color) */}
+                  <div 
+                    className="lg:col-span-3 rounded-xl p-3.5 space-y-2 border transition-all"
+                    style={{
+                      backgroundColor: 'var(--accent-bg-subtle)',
+                      borderColor: 'var(--accent-border)',
+                    }}
+                  >
                     <div className="flex items-baseline justify-between gap-2">
                       <div className="flex items-center gap-1.5">
-                        <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                        <span className="text-xs font-mono font-bold text-zinc-300">GhostTweak</span>
+                        <Check className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--accent-color)' }} />
+                        <span className="text-xs font-mono font-bold" style={{ color: 'var(--accent-color)' }}>
+                          GhostTweak
+                        </span>
                       </div>
                       <span className="text-sm sm:text-base font-mono font-black text-white">
                         {bm.ghosttweak.display}
                       </span>
                     </div>
-                    {/* Micro Progress Bar */}
-                    <div className="w-full bg-zinc-800/80 rounded-full h-1.5 overflow-hidden">
+                    {/* Micro Progress Bar with Signature Accent Color */}
+                    <div className="w-full bg-black/60 rounded-full h-1.5 overflow-hidden border border-white/10">
                       <div 
-                        className="h-full bg-gradient-to-r from-zinc-200 to-white rounded-full"
-                        style={{ width: `${bm.ghosttweak.score}%` }}
+                        className="h-full rounded-full transition-all duration-500 shadow-sm"
+                        style={{ 
+                          width: `${bm.ghosttweak.score}%`,
+                          backgroundColor: 'var(--accent-color)',
+                          boxShadow: 'var(--accent-glow)',
+                        }}
                       />
                     </div>
-                    <p className="text-[10px] font-mono text-zinc-400 truncate">
+                    <p className="text-[10px] font-mono text-slate-300 truncate">
                       {gtNote}
                     </p>
                   </div>
 
                   {/* Electron Alternative */}
-                  <div className="lg:col-span-2 rounded-lg p-3 bg-black/30 border border-white/5 space-y-2">
+                  <div className="lg:col-span-2 rounded-xl p-3 bg-black/40 border border-white/5 space-y-2">
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="text-[11px] font-mono text-zinc-400">Electron</span>
-                      <span className="text-xs font-mono font-semibold text-zinc-300">
+                      <span className="text-[11px] font-mono text-slate-400">Electron</span>
+                      <span className="text-xs font-mono font-semibold text-slate-300">
                         {bm.electron.display}
                       </span>
                     </div>
                     <div className="w-full bg-zinc-800/80 rounded-full h-1.5 overflow-hidden">
                       <div 
-                        className="h-full bg-amber-500/70 rounded-full"
+                        className="h-full bg-amber-500/80 rounded-full"
                         style={{ width: `${bm.electron.score}%` }}
                       />
                     </div>
-                    <p className="text-[10px] font-mono text-zinc-400 truncate">
+                    <p className="text-[10px] font-mono text-slate-500 truncate">
                       {elNote}
                     </p>
                   </div>
 
                   {/* Raw Scripts Alternative */}
-                  <div className="lg:col-span-2 rounded-lg p-3 bg-black/30 border border-white/5 space-y-2">
+                  <div className="lg:col-span-2 rounded-xl p-3 bg-black/40 border border-white/5 space-y-2">
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="text-[11px] font-mono text-zinc-400">Scripts</span>
-                      <span className="text-xs font-mono font-semibold text-zinc-300">
+                      <span className="text-[11px] font-mono text-slate-400">Scripts</span>
+                      <span className="text-xs font-mono font-semibold text-slate-300">
                         {bm.scripts.display}
                       </span>
                     </div>
                     <div className="w-full bg-zinc-800/80 rounded-full h-1.5 overflow-hidden">
                       <div 
-                        className="h-full bg-red-500/60 rounded-full"
+                        className="h-full bg-red-500/70 rounded-full"
                         style={{ width: `${bm.scripts.score}%` }}
                       />
                     </div>
-                    <p className="text-[10px] font-mono text-zinc-400 truncate">
+                    <p className="text-[10px] font-mono text-slate-500 truncate">
                       {scNote}
                     </p>
                   </div>
@@ -373,16 +405,22 @@ export const ComparisonMatrix: React.FC = () => {
         </div>
 
         {/* Bottom Technical Assurance Callout */}
-        <div className="mt-10 rounded-xl border border-white/10 bg-zinc-900/30 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="mt-10 rounded-2xl border border-white/10 bg-[#0d1018]/90 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-              <Shield className="w-4 h-4 text-zinc-200" />
+            <div 
+              className="w-10 h-10 rounded-xl border flex items-center justify-center shrink-0"
+              style={{
+                backgroundColor: 'var(--accent-bg-subtle)',
+                borderColor: 'var(--accent-border)',
+              }}
+            >
+              <Shield className="w-4 h-4" style={{ color: 'var(--accent-color)' }} />
             </div>
             <div>
               <p className="text-sm font-bold text-white">
                 {lang === 'ru' ? '100% обратимые операции через Windows API' : '100% Reversible via Windows APIs'}
               </p>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-slate-400">
                 {lang === 'ru' 
                   ? 'Каждое изменение сопровождается локальным экспортным файлом .reg до совершения операции.'
                   : 'Every modification generates a localized atomic .reg backup before touching system keys.'}
@@ -391,7 +429,12 @@ export const ComparisonMatrix: React.FC = () => {
           </div>
           <a
             href="#features"
-            className="px-4 py-2 rounded-lg text-xs font-mono font-semibold bg-white/5 hover:bg-white/10 text-zinc-200 border border-white/10 transition-colors shrink-0"
+            className="px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all shrink-0 border"
+            style={{
+              backgroundColor: 'var(--accent-bg-subtle)',
+              borderColor: 'var(--accent-border)',
+              color: 'var(--accent-color)',
+            }}
           >
             {lang === 'ru' ? 'Изучить архитектуру →' : 'Explore Architecture →'}
           </a>

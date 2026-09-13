@@ -24,11 +24,11 @@
   --ring: 240 4.9% 83.9%;
   --radius: 0.5rem;
 
-  --accent-color: #f4f4f5;
-  --accent-rgb: 244 244 245;
-  --accent-glow: 0 0 20px rgba(255, 255, 255, 0.12);
-  --accent-border: rgba(255, 255, 255, 0.15);
-  --accent-bg-subtle: rgba(255, 255, 255, 0.05);
+  --accent-color: #00F0FF;
+  --accent-rgb: 0 240 255;
+  --accent-glow: 0 0 28px rgba(0, 240, 255, 0.4);
+  --accent-border: rgba(0, 240, 255, 0.45);
+  --accent-bg-subtle: rgba(0, 240, 255, 0.1);
 }
 
 @keyframes fade-in {
@@ -131,19 +131,19 @@
   .btn-accent {
     position: relative;
     overflow: hidden;
-    background-color: #ffffff;
-    color: #09090b;
+    background-color: var(--accent-color);
+    color: #060708;
     font-weight: 700;
     padding: 0.75rem 1.5rem;
     border-radius: 0.75rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.1);
+    box-shadow: var(--accent-glow);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .btn-accent:hover {
-    background-color: #f4f4f5;
+    filter: brightness(1.1);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 24px rgba(255, 255, 255, 0.18);
+    box-shadow: var(--accent-glow);
   }
 
   .btn-accent:active {
