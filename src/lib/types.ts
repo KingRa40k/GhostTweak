@@ -95,3 +95,48 @@ export interface NativeLicenseResult {
   user_name: string;
   message: string;
 }
+
+export interface SuperOptimizeResult {
+  applied_count: number;
+  ram_freed_mb: number;
+  junk_cleaned_bytes: number;
+  cs2_boosted: boolean;
+}
+
+export interface MatchTurboResult {
+  ram_freed_mb: number;
+  boosted_games: string[];
+  background_trimmed: number;
+  timer_resolution_active: boolean;
+}
+
+export interface ProcessThrottleResult {
+  trimmed_count: number;
+  throttled_count: number;
+  target_processes: string[];
+  ram_freed_mb: number;
+}
+
+export interface HardwareTierInfo {
+  tier_code: 'budget' | 'balanced' | 'high_end';
+  tier_label: string;
+  is_weak_pc: boolean;
+  is_laptop: boolean;
+  ram_constrained: boolean;
+  ram_gb: number;
+  gpu_name: string;
+  cpu_name: string;
+  safe_recommendations: string[];
+  restricted_tweaks: string[];
+  recommended_tweaks: string[];
+}
+
+export interface UpdateCheckResult {
+  has_update: boolean;
+  current_version: string;
+  latest_version: string;
+  release_notes: string;
+  download_url: string;
+}
+
+

@@ -10,6 +10,7 @@ import {
   Coins
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { CheckoutModal, CheckoutTierInfo } from './CheckoutModal';
 
 export type Currency = 'RUB' | 'USD' | 'EUR';
 
@@ -71,18 +72,80 @@ const TIERS_DATA: TierDefinition[] = [
     ctaAction: '#download',
   },
   {
+    id: 'daypass',
+    name: '24h Esports Pass',
+    badgeRu: 'ДЛЯ ТУРНИРОВ',
+    badgeEn: 'FOR TOURNAMENTS',
+    prices: {
+      RUB: { amount: '490 ₽', periodRu: 'разовый доступ • 24 часа с момента активации', periodEn: 'one-time pass • 24 hours after activation' },
+      USD: { amount: '$5', periodRu: 'разовый доступ • 24 часа с момента активации', periodEn: 'one-time pass • 24 hours after activation' },
+      EUR: { amount: '4.5 €', periodRu: 'разовый доступ • 24 часа с момента активации', periodEn: 'one-time pass • 24 hours after activation' },
+    },
+    descriptionRu: 'Быстрый пропуск на соревновательный вечер или турнир. Все функции Pro без переплаты.',
+    descriptionEn: 'Quick access pass for competitive tournaments and game nights. Full Pro power without commitment.',
+    featuresRu: [
+      { text: 'Все возможности Pro на 24 часа', included: true },
+      { text: 'Таймер ядра 0.5 мс и DPC-приоритизация', included: true, highlight: true },
+      { text: 'CS2 Esports & Valorant оптимизация', included: true, highlight: true },
+      { text: 'Очистка кэша шейдеров и сброс RAM', included: true },
+      { text: 'Моментальная выдача ключа сразу после оплаты', included: true },
+    ],
+    featuresEn: [
+      { text: 'Full Pro features unlocked for 24 hours', included: true },
+      { text: '0.5ms kernel timer & DPC priority tuning', included: true, highlight: true },
+      { text: 'CS2 Esports & Valorant optimization engine', included: true, highlight: true },
+      { text: 'Shader purge and Standby RAM cache flush', included: true },
+      { text: 'Instant digital license delivery after checkout', included: true },
+    ],
+    ctaTextRu: 'Купить на 24 часа',
+    ctaTextEn: 'Buy 24h Pass',
+    ctaAction: 'checkout',
+  },
+  {
+    id: 'monthly',
+    name: 'Pro Monthly',
+    badgeRu: 'ПОДПИСКА 30 ДНЕЙ',
+    badgeEn: '30-DAY PASS',
+    prices: {
+      RUB: { amount: '790 ₽', periodRu: 'в месяц • доступ на 30 дней', periodEn: 'per month • 30 days access' },
+      USD: { amount: '$9.99', periodRu: 'в месяц • доступ на 30 дней', periodEn: 'per month • 30 days access' },
+      EUR: { amount: '9.5 €', periodRu: 'в месяц • доступ на 30 дней', periodEn: 'per month • 30 days access' },
+    },
+    descriptionRu: 'Полная Pro функциональность на 30 дней для регулярных рейтинговых сезонов и турниров.',
+    descriptionEn: 'Full Pro power for 30 days. Ideal for competitive ranked seasons and grinding.',
+    featuresRu: [
+      { text: 'Все возможности Pro на 30 дней', included: true },
+      { text: 'Таймер ядра 0.5 мс и DPC-приоритизация', included: true, highlight: true },
+      { text: 'CS2 Esports & Valorant оптимизация', included: true, highlight: true },
+      { text: 'Очистка кэша шейдеров и сброс RAM', included: true },
+      { text: 'Все сценарные профили (Esports, Streamer, AAA)', included: true },
+      { text: 'Поддержка обновлений в течение месяца', included: true },
+    ],
+    featuresEn: [
+      { text: 'Full Pro features unlocked for 30 days', included: true },
+      { text: '0.5ms kernel timer & DPC priority tuning', included: true, highlight: true },
+      { text: 'CS2 Esports & Valorant optimization engine', included: true, highlight: true },
+      { text: 'Shader purge and Standby RAM cache flush', included: true },
+      { text: 'All scenario presets (Esports, Streamer, AAA)', included: true },
+      { text: 'Active priority updates during month', included: true },
+    ],
+    ctaTextRu: 'Оформить на месяц',
+    ctaTextEn: 'Get Pro Monthly',
+    ctaAction: 'checkout',
+  },
+  {
     id: 'pro',
-    name: 'Pro Operator',
-    badgeRu: 'ПОЛНАЯ ВЕРСИЯ',
-    badgeEn: 'FULL VERSION',
+    name: 'VIP Lifetime',
+    badgeRu: 'ХИТ ПРОДАЖ',
+    badgeEn: 'BEST VALUE',
     isPopular: true,
     prices: {
       RUB: { amount: '1 490 ₽', periodRu: 'разовый платеж • вечная лицензия', periodEn: 'one-time payment • lifetime license' },
       USD: { amount: '$19', periodRu: 'разовый платеж • вечная лицензия', periodEn: 'one-time payment • lifetime license' },
       EUR: { amount: '18 €', periodRu: 'разовый платеж • вечная лицензия', periodEn: 'one-time payment • lifetime license' },
     },
-    descriptionRu: 'Полный доступ ко всем модулям оптимизации, таймерам ядра и сценарным профилям.',
-    descriptionEn: 'Full access to all optimization modules, kernel timers, and scenario tuning presets.',
+    descriptionRu: 'Полный доступ ко всем модулям оптимизации, таймерам ядра и сценарным профилям навсегда.',
+    descriptionEn: 'Full access to all optimization modules, kernel timers, and scenario tuning presets forever.',
     featuresRu: [
       { text: 'Все возможности Community Edition', included: true },
       { text: 'Настройка системного таймера (0.5 мс)', included: true, highlight: true },
@@ -91,7 +154,7 @@ const TIERS_DATA: TierDefinition[] = [
       { text: 'Создание и восстановление .reg бэкапов в 1 клик', included: true },
       { text: 'Синхронизация с частотой экрана (EDID)', included: true },
       { text: 'Лицензия на 3 личных компьютера', included: true },
-      { text: 'Все будущие обновления включены', included: true },
+      { text: 'Все будущие обновления включены навсегда', included: true },
     ],
     featuresEn: [
       { text: 'All Community Edition capabilities', included: true },
@@ -101,11 +164,11 @@ const TIERS_DATA: TierDefinition[] = [
       { text: '1-click .reg backup creation and restore', included: true },
       { text: 'Hardware EDID refresh rate sync', included: true },
       { text: 'Personal license for up to 3 PCs', included: true },
-      { text: 'All future updates included', included: true },
+      { text: 'All future updates included forever', included: true },
     ],
-    ctaTextRu: 'Купить Pro',
-    ctaTextEn: 'Buy Pro',
-    ctaAction: '#checkout',
+    ctaTextRu: 'Купить VIP Навсегда',
+    ctaTextEn: 'Buy VIP Lifetime',
+    ctaAction: 'checkout',
   },
   {
     id: 'club',
@@ -137,7 +200,7 @@ const TIERS_DATA: TierDefinition[] = [
     ],
     ctaTextRu: 'Запросить для клуба',
     ctaTextEn: 'Request for Club',
-    ctaAction: 'https://t.me/ghosttweak_support',
+    ctaAction: 'checkout',
   },
 ];
 
@@ -145,8 +208,9 @@ export const Pricing: React.FC = () => {
   const { t, lang } = useI18n();
   const [currency, setCurrency] = useState<Currency>(lang === 'ru' ? 'RUB' : 'USD');
   const [isPriceAnimating, setIsPriceAnimating] = useState(false);
+  const [checkoutTier, setCheckoutTier] = useState<CheckoutTierInfo | null>(null);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
-  // Automatically adapt currency when language changes
   useEffect(() => {
     setCurrency(lang === 'ru' ? 'RUB' : 'USD');
   }, [lang]);
@@ -156,6 +220,17 @@ export const Pricing: React.FC = () => {
     setIsPriceAnimating(true);
     setCurrency(newCurr);
     setTimeout(() => setIsPriceAnimating(false), 300);
+  };
+
+  const handleOpenCheckout = (tier: TierDefinition) => {
+    const priceData = tier.prices[currency];
+    setCheckoutTier({
+      id: tier.id,
+      name: tier.name,
+      amount: priceData.amount,
+      period: lang === 'ru' ? priceData.periodRu : priceData.periodEn,
+    });
+    setIsCheckoutOpen(true);
   };
 
   return (
@@ -209,8 +284,8 @@ export const Pricing: React.FC = () => {
           </div>
         </div>
 
-        {/* 3 Columns Pricing Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+        {/* Pricing Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 items-stretch">
           {TIERS_DATA.map((tier) => {
             const priceData = tier.prices[currency];
             const badge = lang === 'ru' ? tier.badgeRu : tier.badgeEn;
@@ -297,9 +372,18 @@ export const Pricing: React.FC = () => {
                 </div>
 
                 <div>
-                  <a
-                    href={tier.ctaAction}
-                    className={`w-full py-3.5 px-6 rounded-lg font-mono text-xs uppercase tracking-widest font-extrabold flex items-center justify-center gap-2 transition-all ${
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (tier.id === 'free') {
+                        const el = document.getElementById('download');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        else window.location.hash = '#download';
+                        return;
+                      }
+                      handleOpenCheckout(tier);
+                    }}
+                    className={`w-full py-3.5 px-6 rounded-lg font-mono text-xs uppercase tracking-widest font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       tier.isPopular
                         ? 'btn-accent'
                         : 'bg-white/[0.05] hover:bg-white/10 text-white border border-white/10 active:scale-[0.98]'
@@ -311,7 +395,7 @@ export const Pricing: React.FC = () => {
                     ) : (
                       <Zap className="w-3.5 h-3.5" />
                     )}
-                  </a>
+                  </button>
 
                   <div className="flex items-center justify-center gap-2 mt-4 text-[11px] font-mono text-slate-500">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
@@ -323,6 +407,12 @@ export const Pricing: React.FC = () => {
           })}
         </div>
       </div>
+
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        tier={checkoutTier}
+      />
     </section>
   );
 };

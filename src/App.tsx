@@ -11,7 +11,7 @@ import Settings from './pages/Settings';
 import AuthScreen from './pages/AuthScreen';
 import LicenseModal from './components/LicenseModal';
 import LanguageSelectModal from './components/LanguageSelectModal';
-import { getStoredLicense, syncStoredLicenseWithNative, removeLicense, LicenseData } from './lib/license';
+import { getStoredLicense, removeLicense, resetLicense, syncStoredLicenseWithNative, LicenseData } from './lib/license';
 import { getPreferences, applyThemeToCss } from './lib/theme';
 import { invoke } from './lib/tauri';
 import { SecurityStatus } from './lib/types';
@@ -31,24 +31,19 @@ export default function App() {
   });
 
   useEffect(() => {
-    // 1. Anti-Tamper & Anti-DevTools Enforcement
     const handleContextMenu = (e: MouseEvent) => {
-      // Prevent browser inspect context menu in production
       e.preventDefault();
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent F12
       if (e.key === 'F12') {
         e.preventDefault();
         return;
       }
-      // Prevent Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
       if (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) {
         e.preventDefault();
         return;
       }
-      // Prevent Ctrl+U (view source) and Ctrl+S (save web page)
       if (e.ctrlKey && ['u', 'U', 's', 'S'].includes(e.key)) {
         e.preventDefault();
         return;
@@ -58,14 +53,12 @@ export default function App() {
     window.addEventListener('contextmenu', handleContextMenu);
     window.addEventListener('keydown', handleKeyDown);
 
-    // 2. Hardware Security & Debugger Status Probe
     invoke<SecurityStatus>('check_security_status')
       .then((status) => {
         setSecurityStatus(status);
       })
       .catch(() => {});
 
-    // 3. Initialize Theme variables
     const prefs = getPreferences();
     applyThemeToCss(prefs.themeId);
 
@@ -76,7 +69,11 @@ export default function App() {
     window.addEventListener('ghosttweak:theme-changed', handleThemeEvent);
     window.addEventListener('ghosttweak:prefs-changed', handleThemeEvent);
 
-    // 4. Check native encrypted license store on disk
+    const handleOpenLicModal = () => {
+      setIsLicenseModalOpen(true);
+    };
+    window.addEventListener('ghosttweak:open-license-modal', handleOpenLicModal);
+
     syncStoredLicenseWithNative().then((lic) => {
       if (lic) {
         setLicense(lic);
@@ -93,11 +90,12 @@ export default function App() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('ghosttweak:theme-changed', handleThemeEvent);
       window.removeEventListener('ghosttweak:prefs-changed', handleThemeEvent);
+      window.removeEventListener('ghosttweak:open-license-modal', handleOpenLicModal);
     };
   }, []);
 
   const handleLogout = () => {
-    removeLicense();
+    resetLicense();
     setLicense(null);
   };
 
@@ -123,7 +121,6 @@ export default function App() {
     );
   }
 
-  // If not authorized yet or terms not agreed, show futuristic activation / key input screen
   if (!license || !isTermsAgreed) {
     return (
       <div className="flex flex-col h-screen overflow-hidden bg-titanium-950 text-ghost-text font-sans">
@@ -164,8 +161,8 @@ export default function App() {
             <div className="mb-4 bg-rose-500/10 border border-rose-500/30 text-rose-400 p-3 rounded-xl flex items-center gap-3 text-xs font-mono">
               <ShieldAlert size={18} className="shrink-0 animate-pulse text-rose-400" />
               <div>
-                <span className="font-bold uppercase tracking-wider block">ПРЕДУПРЕЖДЕНИЕ БЕЗОПАСНОСТИ: ОБНАРУЖЕН ОТЛАДЧИК</span>
-                <span>{securityStatus.detected_threat || 'Обнаружен активный отладчик или инструмент реверс-инжиниринга.'}</span>
+                <span className="font-bold tracking-wider block">Предупреждение: обнаружен отладчик</span>
+                <span>{securityStatus.detected_threat || 'Обнаружен активный отладчик или инструмент анализа.'}</span>
               </div>
             </div>
           )}

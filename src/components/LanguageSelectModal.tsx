@@ -18,7 +18,6 @@ export default function LanguageSelectModal({ onSelect }: LanguageSelectModalPro
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-6 select-none animate-fade-in font-sans">
       <div className="relative w-full max-w-[500px] bg-titanium-900/95 border border-white/[0.1] rounded-2xl shadow-satin p-8 flex flex-col gap-6">
         
-        {/* Glow Header */}
         <div className="flex items-center gap-3 pb-4 border-b border-white/[0.06]">
           <div className="w-10 h-10 rounded-xl bg-titanium-950 border border-white/[0.1] flex items-center justify-center text-ghost-cyan shadow-[0_0_15px_rgba(0,240,255,0.2)]">
             <Globe size={20} />
@@ -34,9 +33,7 @@ export default function LanguageSelectModal({ onSelect }: LanguageSelectModalPro
           </div>
         </div>
 
-        {/* Options */}
         <div className="grid grid-cols-1 gap-3">
-          {/* Russian */}
           <button
             type="button"
             onClick={() => setSelected('ru')}
@@ -52,7 +49,7 @@ export default function LanguageSelectModal({ onSelect }: LanguageSelectModalPro
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/[0.06] text-zinc-400">RU</span>
               </div>
               <p className="text-xs text-zinc-400">
-                Полная русская локализация, киберспортивные профили и документация
+                Полный интерфейс, профили оптимизации и документация
               </p>
             </div>
             <div className={`w-6 h-6 rounded-full border flex items-center justify-center ${
@@ -64,7 +61,6 @@ export default function LanguageSelectModal({ onSelect }: LanguageSelectModalPro
             </div>
           </button>
 
-          {/* English */}
           <button
             type="button"
             onClick={() => setSelected('en')}
@@ -93,7 +89,6 @@ export default function LanguageSelectModal({ onSelect }: LanguageSelectModalPro
           </button>
         </div>
 
-        {/* Footer info & confirm */}
         <div className="pt-2 flex flex-col gap-3">
           <button
             type="button"

@@ -98,7 +98,7 @@ export default function HomePage() {
                 </a>
                 <span>•</span>
                 <a
-                  href="https://github.com/KingRa40k/GhostTweak/releases"
+                  href="https://github.com/GhostTweak/GhostTweak/releases"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-slate-300 hover:text-white hover:underline inline-flex items-center gap-1"

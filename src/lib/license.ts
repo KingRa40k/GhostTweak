@@ -1,9 +1,19 @@
 import { invoke } from './tauri';
 import { NativeLicenseResult } from './types';
 
+export type LicensePlan = 
+  | 'VIP_LIFETIME' 
+  | 'PRO_MONTHLY' 
+  | 'PRO_ANNUAL' 
+  | 'DAY_PASS' 
+  | 'TRIAL' 
+  | 'BETA_TESTER' 
+  | 'CLUB_LAN' 
+  | 'FREE';
+
 export interface LicenseData {
   key: string;
-  plan: 'VIP_LIFETIME' | 'PRO_ANNUAL' | 'TRIAL' | 'DAY_PASS';
+  plan: LicensePlan;
   hwid: string;
   activatedAt: string;
   expiresAt: string;
@@ -13,7 +23,26 @@ export interface LicenseData {
 
 const STORAGE_KEY = 'ghosttweak_license_v1';
 
-// Asynchronously fetches real hardware ID from native Rust kernel
+export function isProLicense(license: LicenseData | null): boolean {
+  if (!license) return false;
+  if (license.plan === 'FREE') return false;
+  if (license.expiresAtTimestamp && Date.now() > license.expiresAtTimestamp) {
+    return false;
+  }
+  return true;
+}
+
+export type ProFeature = 
+  | 'shaders' 
+  | 'kernel_timer' 
+  | 'game_boost' 
+  | 'profiles' 
+  | 'pro_tweaks';
+
+export function isFeatureUnlocked(feature: ProFeature, license: LicenseData | null): boolean {
+  return isProLicense(license);
+}
+
 export async function getSystemHwidAsync(): Promise<string> {
   try {
     const hwid = await invoke<string>('get_hardware_id');
@@ -22,12 +51,10 @@ export async function getSystemHwidAsync(): Promise<string> {
       return hwid;
     }
   } catch {
-    // ignore
   }
   return getSystemHwid();
 }
 
-// Cached or fallback HWID
 export function getSystemHwid(): string {
   let hwid = localStorage.getItem('ghosttweak_hwid');
   if (!hwid) {
@@ -51,18 +78,22 @@ export function getStoredLicense(): LicenseData | null {
   }
 }
 
-// Asynchronously syncs with native encrypted license store on disk
 export async function syncStoredLicenseWithNative(): Promise<LicenseData | null> {
   try {
     const nativeRes = await invoke<NativeLicenseResult>('get_native_license');
     if (nativeRes && nativeRes.valid) {
       const existing = getStoredLicense();
       const isDayPass = nativeRes.plan === 'DAY_PASS';
-      const expiresAtTimestamp = existing?.expiresAtTimestamp || (isDayPass ? Date.now() + 86400000 : undefined);
+      const isMonthly = nativeRes.plan === 'PRO_MONTHLY';
+      const expiresAtTimestamp = existing?.expiresAtTimestamp || (
+        isDayPass ? Date.now() + 86400000 : 
+        isMonthly ? Date.now() + (30 * 86400000) : 
+        undefined
+      );
 
       const license: LicenseData = {
         key: existing?.key || 'GHOST-ACTIVATED',
-        plan: nativeRes.plan as LicenseData['plan'],
+        plan: nativeRes.plan as LicensePlan,
         hwid: nativeRes.hwid,
         activatedAt: existing?.activatedAt || new Date().toLocaleDateString('ru-RU'),
         expiresAt: nativeRes.expires_at,
@@ -76,7 +107,6 @@ export async function syncStoredLicenseWithNative(): Promise<LicenseData | null>
       return null;
     }
   } catch {
-    // ignore
   }
   return getStoredLicense();
 }
@@ -89,41 +119,43 @@ export function removeLicense(): void {
   localStorage.removeItem(STORAGE_KEY);
 }
 
-// Valid keys for testing and activation:
-export const DEMO_KEYS = [
-  { key: 'GHOST-DAY1-PASS-2026', label: '1-Day Access Pass (24 Hours)' },
-  { key: 'GHOST-VIP-PRO-2026', label: 'VIP Lifetime Key' },
-  { key: 'GHOST-FPS-BOOST-9999', label: 'Pro Streamer Key' },
-  { key: 'GHOST-MAX-PERF-ULTRA', label: 'Overclock Edition' },
-  { key: 'GHOST-ESPORTS-CS2-PRO', label: 'CS2 Esports Edition' },
-  { key: 'GHOST-BETA-TESTER-01', label: 'Beta Tester Key' },
-  { key: 'GHOST-TURBO-CORE-777', label: 'Turbo Core Edition' },
-  { key: 'GHOST-STEALTH-VIP-00', label: 'Stealth VIP Edition' },
-  { key: 'GHOST-CYBER-WAR-9999', label: 'Cyber Warfare Edition' },
-];
+export async function resetLicense(): Promise<void> {
+  removeLicense();
+  try {
+    await invoke('reset_native_license');
+  } catch {
+  }
+}
 
 export async function verifyLicenseKey(inputKey: string): Promise<{ success: boolean; data?: LicenseData; error?: string }> {
   const cleanKey = inputKey.trim().toUpperCase();
 
   try {
-    // 1. Native kernel cryptographic verification & machine-binding
     const nativeRes = await invoke<NativeLicenseResult>('verify_native_license', { key: cleanKey });
 
     if (nativeRes.valid) {
       const isDayPass = nativeRes.plan === 'DAY_PASS';
-      const expiresAtTimestamp = isDayPass ? (Date.now() + 86400000) : undefined;
+      const isMonthly = nativeRes.plan === 'PRO_MONTHLY';
+      const expiresAtTimestamp = isDayPass 
+        ? (Date.now() + 86400000) 
+        : isMonthly 
+        ? (Date.now() + 30 * 86400000) 
+        : undefined;
+
       const expiresFormatted = isDayPass
         ? `${new Date(expiresAtTimestamp!).toLocaleDateString('ru-RU')} ${new Date(expiresAtTimestamp!).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })} (24 часа)`
+        : isMonthly
+        ? `${new Date(expiresAtTimestamp!).toLocaleDateString('ru-RU')} (30 дней)`
         : nativeRes.expires_at;
 
       const license: LicenseData = {
         key: cleanKey,
-        plan: nativeRes.plan as LicenseData['plan'],
+        plan: nativeRes.plan as LicensePlan,
         hwid: nativeRes.hwid,
         activatedAt: `${new Date().toLocaleDateString('ru-RU')} ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`,
         expiresAt: expiresFormatted,
         expiresAtTimestamp,
-        userName: nativeRes.user_name || 'Ghost Operator',
+        userName: nativeRes.user_name || 'Пользователь',
       };
       saveLicense(license);
       return { success: true, data: license };
@@ -138,7 +170,7 @@ export async function verifyLicenseKey(inputKey: string): Promise<{ success: boo
 
   return { 
     success: false, 
-    error: 'Неверный лицензионный ключ. Проверьте формат или используйте проверочный ключ.' 
+    error: 'Неверный лицензионный ключ. Проверьте правильность ввода.' 
   };
 }
 
@@ -151,7 +183,7 @@ export async function activateTrial(): Promise<LicenseData> {
       hwid: nativeRes.hwid,
       activatedAt: new Date().toLocaleDateString('ru-RU'),
       expiresAt: nativeRes.expires_at || '3 дня (Пробный доступ)',
-      userName: 'Guest Pilot',
+      userName: 'Пользователь',
     };
     saveLicense(trial);
     return trial;
@@ -163,9 +195,38 @@ export async function activateTrial(): Promise<LicenseData> {
       hwid,
       activatedAt: new Date().toLocaleDateString('ru-RU'),
       expiresAt: '3 дня (Пробный доступ)',
-      userName: 'Guest Pilot',
+      userName: 'Пользователь',
     };
     saveLicense(trial);
     return trial;
   }
 }
+
+export async function activateFreeMode(): Promise<LicenseData> {
+  try {
+    const nativeRes = await invoke<NativeLicenseResult>('verify_native_license', { key: 'COMMUNITYFREEACCESS' });
+    const free: LicenseData = {
+      key: 'COMMUNITY-FREE-EDITION',
+      plan: 'FREE',
+      hwid: nativeRes.hwid,
+      activatedAt: new Date().toLocaleDateString('ru-RU'),
+      expiresAt: 'Бессрочно (Community Edition)',
+      userName: 'Community User',
+    };
+    saveLicense(free);
+    return free;
+  } catch {
+    const hwid = getSystemHwid();
+    const free: LicenseData = {
+      key: 'COMMUNITY-FREE-EDITION',
+      plan: 'FREE',
+      hwid,
+      activatedAt: new Date().toLocaleDateString('ru-RU'),
+      expiresAt: 'Бессрочно (Community Edition)',
+      userName: 'Community User',
+    };
+    saveLicense(free);
+    return free;
+  }
+}
+

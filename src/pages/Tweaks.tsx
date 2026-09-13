@@ -1,20 +1,42 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Loader2, ShieldCheck, AlertTriangle, Search, Zap, 
-  Sliders, CheckCircle2, Shield, Lock, Activity, Globe
+  Sliders, CheckCircle2, Shield, Lock, Activity, Globe, Laptop, Cpu
 } from 'lucide-react';
 import { invoke } from '../lib/tauri';
-import { TweakInfo, ApplyResult } from '../lib/types';
+import { TweakInfo, ApplyResult, HardwareTierInfo } from '../lib/types';
 import { useI18n } from '../lib/i18n';
+import { getStoredLicense, isProLicense } from '../lib/license';
+import UpgradeModal from '../components/UpgradeModal';
 
 export default function Tweaks() {
   const { t, lang } = useI18n();
   const [loading, setLoading] = useState(true);
   const [tweaks, setTweaks] = useState<TweakInfo[]>([]);
+  const [hwTier, setHwTier] = useState<HardwareTierInfo | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [notification, setNotification] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState('');
+  const [isPro, setIsPro] = useState<boolean>(() => isProLicense(getStoredLicense()));
+
+  const PRO_TWEAK_CATEGORIES = new Set(['network', 'latency', 'kernel']);
+  const PRO_TWEAK_IDS = new Set([
+    'optimize_network',
+    'disable_nagle',
+    'network_throttling',
+    'system_responsiveness',
+    'disable_diagtrack',
+    'hpet_disable',
+    'bcd_submillisecond',
+    'kernel_timer_resolution',
+    'gpu_priority_scheduler',
+    'disable_memory_compression',
+    'disable_paging_executive'
+  ]);
+  const isProTweak = (t: TweakInfo) => PRO_TWEAK_CATEGORIES.has(t.category) || PRO_TWEAK_IDS.has(t.id);
 
   useEffect(() => {
     fetchTweaks();
@@ -23,8 +45,15 @@ export default function Tweaks() {
   const fetchTweaks = async () => {
     try {
       setLoading(true);
-      const data = await invoke<TweakInfo[]>('get_tweaks_status');
-      setTweaks(data);
+      setIsPro(isProLicense(getStoredLicense()));
+      const [tweaksData, tierData] = await Promise.all([
+        invoke<TweakInfo[]>('get_tweaks_status'),
+        invoke<HardwareTierInfo>('detect_hardware_tier').catch(() => null)
+      ]);
+      setTweaks(tweaksData);
+      if (tierData) {
+        setHwTier(tierData);
+      }
     } catch {
       showNotification(lang === 'ru' ? 'Не удалось загрузить реестровые твики.' : 'Failed to load registry tweaks.', 'error');
       setTweaks([]);
@@ -40,6 +69,27 @@ export default function Tweaks() {
 
   const handleToggle = async (tweak: TweakInfo) => {
     try {
+      if (!isPro && isProTweak(tweak)) {
+        setUpgradeFeature(tweak.name);
+        setShowUpgradeModal(true);
+        return;
+      }
+
+      const isRestricted = hwTier?.restricted_tweaks.includes(tweak.id);
+      if (isRestricted && !tweak.enabled) {
+        const warnMsg = hwTier?.ram_constrained && (tweak.id === 'disable_memory_compression' || tweak.id === 'disable_paging_executive')
+          ? (lang === 'ru'
+              ? `Внимание: на вашем устройстве установлено ${hwTier.ram_gb.toFixed(1)} ГБ ОЗУ.\n\nОтключение сжатия или кэша ядра Windows перегрузит оперативную память и может привести к зависаниям в играх.\n\nВы действительно хотите включить этот параметр?`
+              : `Warning: your device has ${hwTier.ram_gb.toFixed(1)} GB RAM.\n\nDisabling compression or kernel caching will increase RAM usage and may cause stuttering in games.\n\nAre you sure you want to enable this tweak?`)
+          : (lang === 'ru'
+              ? `Внимание: данный твик не рекомендуется для вашей конфигурации оборудования (${hwTier?.tier_label || 'ноутбук / бюджетный ПК'}).\n\nВы уверены, что хотите включить его?`
+              : `Warning: this tweak is not recommended for your hardware configuration (${hwTier?.tier_label || 'laptop / budget PC'}).\n\nAre you sure you want to enable it?`);
+
+        if (!window.confirm(warnMsg)) {
+          return;
+        }
+      }
+
       setProcessingId(tweak.id);
       const newStatus = !tweak.enabled;
       await invoke<boolean>('apply_tweak', { tweakId: tweak.id, enable: newStatus });
@@ -54,11 +104,35 @@ export default function Tweaks() {
 
   const applyRecommended = async () => {
     try {
+      const isAdmin = await invoke<boolean>('is_admin_elevated').catch(() => true);
+      if (!isAdmin) {
+        const proceed = window.confirm(
+          lang === 'ru'
+            ? 'Для применения всех твиков системы требуются права администратора. Перезапустить приложение от имени администратора прямо сейчас?'
+            : 'Administrator privileges are required to apply all tweaks. Relaunch as administrator now?'
+        );
+        if (proceed) {
+          await invoke('restart_as_admin');
+        }
+        return;
+      }
+
       setLoading(true);
-      const result = await invoke<ApplyResult>('apply_all_tweaks');
-      await fetchTweaks();
-      if (result.applied.length > 0) {
-        showNotification(lang === 'ru' ? `Успешно применено ${result.applied.length} твиков` : `Successfully applied ${result.applied.length} tweaks`, 'success');
+      if (hwTier?.is_weak_pc || hwTier?.ram_constrained) {
+        await invoke('apply_safe_lowspec_profile');
+        await fetchTweaks();
+        showNotification(
+          lang === 'ru'
+            ? 'Применен безопасный профиль: ОЗУ разгружена, опасные твики заблокированы'
+            : 'Safe low-spec profile applied: RAM relieved, dangerous tweaks skipped',
+          'success'
+        );
+      } else {
+        const result = await invoke<ApplyResult>('apply_all_tweaks');
+        await fetchTweaks();
+        if (result.applied.length > 0) {
+          showNotification(lang === 'ru' ? `Успешно применено ${result.applied.length} твиков` : `Successfully applied ${result.applied.length} tweaks`, 'success');
+        }
       }
     } catch {
       showNotification(lang === 'ru' ? 'Ошибка применения пакета твиков' : 'Error applying tweak package', 'error');
@@ -87,11 +161,10 @@ export default function Tweaks() {
   return (
     <div className="flex flex-col gap-5 page-enter pb-16 w-full max-w-6xl mx-auto">
       
-      {/* Header */}
       <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="tech-badge text-zinc-400">{lang === 'ru' ? 'РЕЕСТР И СЛУЖБЫ' : 'REGISTRY & SERVICES'}</span>
+            <span className="tech-badge text-zinc-400">{lang === 'ru' ? 'Реестр и службы' : 'Registry & Services'}</span>
             <span className="flex items-center gap-1.5 text-[11px] font-mono text-ghost-cyan">
               {lang === 'ru' ? `Активно: ${appliedCount} из ${tweaks.length}` : `Active: ${appliedCount} of ${tweaks.length}`}
             </span>
@@ -108,9 +181,38 @@ export default function Tweaks() {
           className="btn-cyan px-4 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-cyan-glow"
         >
           <ShieldCheck size={16} />
-          <span>{t.tweaks.btnApplyRecommended}</span>
+          <span>
+            {hwTier?.is_weak_pc || hwTier?.ram_constrained
+              ? (lang === 'ru' ? 'Безопасный профиль' : 'Safe Low-Spec Profile')
+              : t.tweaks.btnApplyRecommended}
+          </span>
         </button>
       </div>
+
+      {hwTier && (hwTier.is_weak_pc || hwTier.is_laptop || hwTier.ram_constrained) && (
+        <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/[0.04] flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            {hwTier.is_laptop ? (
+              <Laptop size={20} className="text-amber-400 shrink-0 mt-0.5" />
+            ) : (
+              <Cpu size={20} className="text-amber-400 shrink-0 mt-0.5" />
+            )}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold text-white tracking-wide">
+                  {t.dashboard.hwBudgetBannerTitle} ({hwTier.tier_label})
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-400/10 text-amber-300 border border-amber-400/20">
+                  {hwTier.ram_gb.toFixed(1)} GB RAM • {hwTier.gpu_name}
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400 leading-relaxed max-w-3xl">
+                {t.dashboard.hwBudgetBannerDesc}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {notification && (
         <div className={`p-3 rounded-xl border text-xs font-mono animate-fade-in flex items-center gap-2 ${
@@ -123,7 +225,6 @@ export default function Tweaks() {
         </div>
       )}
 
-      {/* Categories Bar & Search Input */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-3">
         <div className="flex gap-1.5 bg-white/[0.02] p-1 rounded-xl border border-white/[0.06] w-full md:w-auto">
           {categories.map(cat => {
@@ -160,30 +261,51 @@ export default function Tweaks() {
         </div>
       </div>
 
-      {/* Tweaks List */}
       <div className="flex flex-col gap-2.5">
         {filteredTweaks.map(tweak => {
           const isProcessing = processingId === tweak.id;
+          const isRestricted = hwTier?.restricted_tweaks.includes(tweak.id);
+          const isRecommended = hwTier?.recommended_tweaks.includes(tweak.id);
+
           return (
             <div 
               key={tweak.id} 
               className={`glass-card p-4 rounded-xl border transition-all flex items-center justify-between ${
                 tweak.enabled 
                   ? 'border-white/[0.14] bg-titanium-850' 
-                  : 'border-white/[0.04] bg-white/[0.01]'
+                  : isRestricted
+                    ? 'border-rose-500/10 bg-rose-950/[0.03]'
+                    : 'border-white/[0.04] bg-white/[0.01]'
               }`}
             >
               <div className="flex items-start gap-3.5 pr-4">
                 <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-white text-xs tracking-wide">{tweak.name}</span>
                     
-                    {/* Category Tag */}
                     <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.06] text-zinc-400">
                       {tweak.category}
                     </span>
 
-                    {tweak.risky && (
+                    {isRestricted && (
+                      <span className="text-[9px] font-mono text-rose-400 flex items-center gap-1 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20" title={t.dashboard.whyRestrictedRamDesc}>
+                        <Lock size={10} /> {t.dashboard.restrictedBadge}
+                      </span>
+                    )}
+
+                    {!isPro && isProTweak(tweak) && (
+                      <span className="text-[9px] font-mono font-bold text-ghost-neon flex items-center gap-1 bg-ghost-neon/15 px-1.5 py-0.5 rounded border border-ghost-neon/30">
+                        <Lock size={10} /> PRO
+                      </span>
+                    )}
+
+                    {!isRestricted && isRecommended && (
+                      <span className="text-[9px] font-mono text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                        <ShieldCheck size={10} /> {t.dashboard.recommendedBadge}
+                      </span>
+                    )}
+
+                    {tweak.risky && !isRestricted && (
                       <span className="text-[9px] font-mono text-amber-400 flex items-center gap-1 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
                         <AlertTriangle size={10} /> {t.tweaks.badgeRisky}
                       </span>
@@ -193,13 +315,14 @@ export default function Tweaks() {
                 </div>
               </div>
 
-              {/* Physical Titanium Toggle Switch */}
               <button
                 onClick={() => handleToggle(tweak)}
                 disabled={isProcessing}
                 className={`relative w-12 h-6 rounded-full transition-all duration-200 border p-0.5 shrink-0 ${
                   tweak.enabled 
                     ? 'bg-ghost-cyan/20 border-ghost-cyan shadow-[0_0_10px_rgba(0,240,255,0.25)]' 
+                    : !isPro && isProTweak(tweak)
+                    ? 'bg-titanium-950 border-ghost-neon/30 opacity-70'
                     : 'bg-titanium-950 border-white/[0.1]'
                 }`}
               >
@@ -221,6 +344,12 @@ export default function Tweaks() {
           </div>
         )}
       </div>
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        featureName={upgradeFeature}
+      />
 
     </div>
   );

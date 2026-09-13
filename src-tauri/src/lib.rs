@@ -1,4 +1,6 @@
 mod commands;
+pub mod error;
+pub mod logging;
 
 use commands::{backup, cleaner, performance, security, system_info, tweaks, window_controls};
 use tauri::{
@@ -9,13 +11,14 @@ use tauri::{
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    logging::init_logging();
+    tracing::info!("Starting GhostTweak v1.0.0");
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
-            // Build Tray Context Menu
             let menu = MenuBuilder::new(app)
                 .text("show", "Открыть GhostTweak")
-                .text("optimize", "🚀 Быстрая оптимизация")
+                .text("optimize", "Быстрая оптимизация")
                 .separator()
                 .text("quit", "Выход из приложения")
                 .build()?;
@@ -79,40 +82,43 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                // Keep running in tray when user clicks [X]
                 api.prevent_close();
                 let _ = window.hide();
             }
         })
         .invoke_handler(tauri::generate_handler![
-            // System info
             system_info::get_system_info,
-            // Cleaner
+            system_info::is_admin_elevated,
+            system_info::restart_as_admin,
+            system_info::detect_hardware_tier,
+            system_info::check_for_updates,
             cleaner::scan_junk,
             cleaner::clean_junk,
-            // Performance & Memory
+            cleaner::scan_shader_cache,
+            cleaner::clean_shader_cache,
             performance::get_memory_status,
             performance::flush_memory,
             performance::set_dns,
-            // Tweaks
+            performance::run_match_turbo,
+            performance::throttle_background_apps,
+            performance::restore_background_apps,
             tweaks::get_tweaks_status,
             tweaks::apply_tweak,
             tweaks::apply_all_tweaks,
-            // CS2 & Low-End Laptop Performance
+            tweaks::super_optimize,
+            tweaks::apply_safe_lowspec_profile,
             tweaks::apply_cs2_boost,
             tweaks::is_cs2_boosted,
             tweaks::get_cs2_launch_options,
             tweaks::generate_cs2_autoexec,
-            // Backup
             backup::list_backups,
             backup::restore_backup,
             backup::delete_backup,
-            // Security & Anti-Reverse Engineering
             security::get_hardware_id,
             security::check_security_status,
             security::verify_native_license,
             security::get_native_license,
-            // Window Controls (Draggability, Minimize, Maximize, Close to Tray)
+            security::reset_native_license,
             window_controls::window_minimize,
             window_controls::window_toggle_maximize,
             window_controls::window_close,

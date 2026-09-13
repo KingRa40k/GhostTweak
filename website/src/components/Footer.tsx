@@ -5,11 +5,13 @@ import {
   Copy, 
   Check, 
   Github, 
-  Download
+  Download,
+  Mail
 } from 'lucide-react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { useI18n } from '@/lib/i18n';
+import { PAYMENT_CONFIG } from '@/lib/paymentConfig';
 
 export const Footer: React.FC = () => {
   const { t } = useI18n();
@@ -51,7 +53,7 @@ export const Footer: React.FC = () => {
               </a>
 
               <a
-                href="https://github.com/KingRa40k/GhostTweak"
+                href="https://github.com/GhostTweak/GhostTweak"
                 target="_blank"
                 rel="noreferrer"
                 className="p-2 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/10 text-slate-300 hover:text-white transition-colors"
@@ -146,6 +148,15 @@ export const Footer: React.FC = () => {
           <Link href="/terms" className="hover:text-slate-300 transition-colors">
             {t.footer.terms}
           </Link>
+          <span className="text-white/10 hidden sm:inline">|</span>
+          <a 
+            href={`mailto:${PAYMENT_CONFIG.adminEmail}?subject=GhostTweak%20Inquiry`}
+            className="hover:text-white transition-colors flex items-center gap-1 font-bold text-slate-300"
+            style={{ color: 'var(--accent-color)' }}
+          >
+            <Mail className="w-3 h-3" />
+            <span>{PAYMENT_CONFIG.adminEmail}</span>
+          </a>
           <span className="text-white/10 hidden sm:inline">|</span>
           <a href="#architecture" className="hover:text-slate-300 transition-colors">{t.header.compare}</a>
           <a href="#arsenal" className="hover:text-slate-300 transition-colors">{t.header.features}</a>

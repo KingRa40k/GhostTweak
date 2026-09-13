@@ -1,4 +1,3 @@
-// Audio disabled per user request (no click / press sounds)
 
 class SoundEngine {
   playHoverTick() {}

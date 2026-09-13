@@ -264,8 +264,8 @@ fn get_win32_display_info() -> (String, u32, u32, u32) {
             }
         }
 
-        let w = GetSystemMetrics(0) as u32; // SM_CXSCREEN
-        let h = GetSystemMetrics(1) as u32; // SM_CYSCREEN
+        let w = GetSystemMetrics(0) as u32;
+        let h = GetSystemMetrics(1) as u32;
         if w > 0 && h > 0 {
             return (format!("{} x {}", w, h), 60, w, h);
         }
@@ -316,3 +316,316 @@ pub fn get_system_info() -> Result<SystemInfo, String> {
         })
     }
 }
+
+#[cfg(windows)]
+pub fn check_is_admin() -> bool {
+    extern "system" {
+        fn IsUserAnAdmin() -> i32;
+    }
+    unsafe { IsUserAnAdmin() != 0 }
+}
+
+#[cfg(not(windows))]
+pub fn check_is_admin() -> bool {
+    true
+}
+
+#[tauri::command]
+pub fn is_admin_elevated() -> Result<bool, String> {
+    Ok(check_is_admin())
+}
+
+#[tauri::command]
+pub fn restart_as_admin() -> Result<(), String> {
+    #[cfg(windows)]
+    {
+        extern "system" {
+            fn ShellExecuteW(
+                hwnd: *mut std::ffi::c_void,
+                lp_operation: *const u16,
+                lp_file: *const u16,
+                lp_parameters: *const u16,
+                lp_directory: *const u16,
+                n_show_cmd: i32,
+            ) -> isize;
+        }
+
+        let current_exe = std::env::current_exe().map_err(|e| e.to_string())?;
+        let exe_str = current_exe.to_str().ok_or("Cannot get current exe path")?;
+
+        let verb: Vec<u16> = "runas\0".encode_utf16().collect();
+        let file: Vec<u16> = exe_str.encode_utf16().chain(std::iter::once(0)).collect();
+
+        unsafe {
+            let res = ShellExecuteW(
+                std::ptr::null_mut(),
+                verb.as_ptr(),
+                file.as_ptr(),
+                std::ptr::null(),
+                std::ptr::null(),
+                1,
+            );
+            if res <= 32 {
+                return Err("UAC elevation was cancelled by the user or failed".to_string());
+            }
+        }
+
+        std::process::exit(0);
+    }
+
+    #[cfg(not(windows))]
+    {
+        Ok(())
+    }
+}
+
+#[derive(Serialize, Clone)]
+pub struct HardwareTierInfo {
+    pub tier_code: String,
+    pub tier_label: String,
+    pub is_weak_pc: bool,
+    pub is_laptop: bool,
+    pub ram_constrained: bool,
+    pub ram_gb: f64,
+    pub gpu_name: String,
+    pub cpu_name: String,
+    pub safe_recommendations: Vec<String>,
+    pub restricted_tweaks: Vec<String>,
+    pub recommended_tweaks: Vec<String>,
+}
+
+#[cfg(windows)]
+#[repr(C)]
+struct SYSTEM_POWER_STATUS {
+    ac_line_status: u8,
+    battery_flag: u8,
+    battery_life_percent: u8,
+    system_status_flag: u8,
+    battery_life_time: u32,
+    battery_full_life_time: u32,
+}
+
+#[cfg(windows)]
+fn check_is_laptop() -> bool {
+    extern "system" {
+        fn GetSystemPowerStatus(lpSystemPowerStatus: *mut SYSTEM_POWER_STATUS) -> i32;
+    }
+    unsafe {
+        let mut status: SYSTEM_POWER_STATUS = std::mem::zeroed();
+        if GetSystemPowerStatus(&mut status) != 0 {
+            return status.battery_flag != 128 && status.battery_flag != 255;
+        }
+    }
+    false
+}
+
+#[tauri::command]
+pub fn detect_hardware_tier() -> Result<HardwareTierInfo, String> {
+    #[cfg(windows)]
+    {
+        let ram_gb = get_win32_ram_gb();
+        let cpu_name = get_win32_cpu_name();
+        let gpu_name = get_win32_gpu_name();
+        let is_laptop = check_is_laptop();
+
+        let ram_constrained = ram_gb <= 12.5;
+
+        let gpu_lower = gpu_name.to_lowercase();
+        let is_budget_gpu = gpu_lower.contains("1050")
+            || gpu_lower.contains("1060")
+            || gpu_lower.contains("1650")
+            || gpu_lower.contains("1660")
+            || gpu_lower.contains("gtx")
+            || gpu_lower.contains("rx 5")
+            || gpu_lower.contains("rx 4")
+            || gpu_lower.contains("uhd")
+            || gpu_lower.contains("hd graphics")
+            || gpu_lower.contains("iris")
+            || gpu_lower.contains("vega")
+            || gpu_lower.contains("mx1")
+            || gpu_lower.contains("mx2")
+            || gpu_lower.contains("mx3")
+            || gpu_lower.contains("mx4")
+            || gpu_lower.contains("mx5");
+
+        let is_weak_pc = ram_constrained || is_budget_gpu || (is_laptop && ram_gb <= 16.0);
+
+        let (tier_code, tier_label) = if ram_constrained || is_weak_pc {
+            (
+                "budget".to_string(),
+                if is_laptop {
+                    format!("Ноутбук / Бюджетный ПК ({:.0} ГБ ОЗУ)", ram_gb)
+                } else {
+                    format!("Бюджетная конфигурация ({:.0} ГБ ОЗУ)", ram_gb)
+                },
+            )
+        } else if ram_gb <= 20.0 {
+            (
+                "balanced".to_string(),
+                if is_laptop {
+                    "Игровой ноутбук (16 ГБ ОЗУ)".to_string()
+                } else {
+                    "Сбалансированный игровой ПК (16 ГБ ОЗУ)".to_string()
+                },
+            )
+        } else {
+            (
+                "high_end".to_string(),
+                "Высокопроизводительный ПК (32+ ГБ ОЗУ)".to_string(),
+            )
+        };
+
+        let mut restricted_tweaks = Vec::new();
+        let mut safe_recommendations = Vec::new();
+
+        if ram_constrained {
+            restricted_tweaks.push("disable_memory_compression".to_string());
+            restricted_tweaks.push("disable_paging_executive".to_string());
+
+            safe_recommendations.push(
+                "ОЗУ <= 12 ГБ: сжатие памяти (Memory Compression) сохранено включенным для предотвращения просадок FPS при нехватке памяти."
+                    .to_string(),
+            );
+            safe_recommendations.push(
+                "Блокировка ядра в RAM отключена для высвобождения оперативной памяти под игры."
+                    .to_string(),
+            );
+        }
+
+        if is_laptop {
+            restricted_tweaks.push("ultimate_perf_power".to_string());
+            safe_recommendations.push(
+                "Ноутбук: активировано ограничение 99% CPU для снижения нагрева и предотвращения троттлинга."
+                    .to_string(),
+            );
+        }
+
+        safe_recommendations.push(
+            "Применены безопасные параметры: оптимизация фоновых служб, отключение телеметрии, оптимизация сети (TCP No Delay)."
+                .to_string(),
+        );
+
+        let mut recommended_tweaks = vec![
+            "cs2_priority".to_string(),
+            "system_responsiveness".to_string(),
+            "game_gpu_priority".to_string(),
+            "cs2_fullscreen_opt".to_string(),
+            "high_perf_power".to_string(),
+            "unpark_cpu_cores".to_string(),
+            "bcd_low_latency".to_string(),
+            "disable_telemetry".to_string(),
+            "disable_cortana".to_string(),
+            "disable_tips".to_string(),
+            "disable_diagtrack".to_string(),
+            "disable_transparency".to_string(),
+            "disable_animations".to_string(),
+            "network_throttling_disable".to_string(),
+            "optimize_network".to_string(),
+            "hags_gpu_scheduling".to_string(),
+            "gpu_msi_mode".to_string(),
+            "disable_sysmain".to_string(),
+            "disable_wsearch".to_string(),
+            "usb_selective_suspend".to_string(),
+        ];
+
+        if is_laptop {
+            recommended_tweaks.push("laptop_anti_throttle".to_string());
+        }
+
+        Ok(HardwareTierInfo {
+            tier_code,
+            tier_label,
+            is_weak_pc,
+            is_laptop,
+            ram_constrained,
+            ram_gb,
+            gpu_name,
+            cpu_name,
+            safe_recommendations,
+            restricted_tweaks,
+            recommended_tweaks,
+        })
+    }
+
+    #[cfg(not(windows))]
+    {
+        Ok(HardwareTierInfo {
+            tier_code: "balanced".to_string(),
+            tier_label: "Universal Rig".to_string(),
+            is_weak_pc: false,
+            is_laptop: false,
+            ram_constrained: false,
+            ram_gb: 16.0,
+            gpu_name: "Mock GPU".to_string(),
+            cpu_name: "Mock CPU".to_string(),
+            safe_recommendations: vec![],
+            restricted_tweaks: vec![],
+            recommended_tweaks: vec![],
+        })
+    }
+}
+
+#[derive(Serialize, Clone)]
+pub struct UpdateCheckResult {
+    pub has_update: bool,
+    pub current_version: String,
+    pub latest_version: String,
+    pub release_notes: String,
+    pub download_url: String,
+}
+
+#[tauri::command]
+pub fn check_for_updates() -> Result<UpdateCheckResult, String> {
+    let current_version = "1.0.0".to_string();
+
+    #[cfg(windows)]
+    {
+        use std::process::Command;
+        #[allow(unused_imports)]
+        use std::os::windows::process::CommandExt;
+
+        let ps_cmd = r#"
+            $ProgressPreference = 'SilentlyContinue'
+            try {
+                $r = Invoke-RestMethod -Uri 'https://ghosttweak.com/api/version.json' -TimeoutSec 3 -ErrorAction Stop
+                Write-Output "$($r.version)|$($r.notes)|$($r.download_url)"
+            } catch {
+                Write-Output "UPTODATE"
+            }
+        "#;
+
+        let mut cmd = Command::new("powershell");
+        cmd.args(["-NoProfile", "-NonInteractive", "-Command", ps_cmd]);
+        #[cfg(windows)]
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+
+        if let Ok(out) = cmd.output() {
+            let text = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            if !text.is_empty() && text != "UPTODATE" {
+                let parts: Vec<&str> = text.split('|').collect();
+                if parts.len() >= 3 {
+                    let remote_ver = parts[0].trim().to_string();
+                    let notes = parts[1].trim().to_string();
+                    let url = parts[2].trim().to_string();
+                    let has_update = remote_ver != current_version && !remote_ver.is_empty();
+                    return Ok(UpdateCheckResult {
+                        has_update,
+                        current_version: current_version.clone(),
+                        latest_version: remote_ver,
+                        release_notes: notes,
+                        download_url: if url.is_empty() { "https://ghosttweak.com#download".to_string() } else { url },
+                    });
+                }
+            }
+        }
+    }
+
+    Ok(UpdateCheckResult {
+        has_update: false,
+        current_version: current_version.clone(),
+        latest_version: current_version,
+        release_notes: "У вас установлена актуальная релизная версия GhostTweak v1.0.0.".to_string(),
+        download_url: "https://ghosttweak.com#download".to_string(),
+    })
+}
+

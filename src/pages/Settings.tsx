@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { 
   Palette, User, Monitor, Globe, Check, 
   Sparkles, Shield, Cpu, Zap, Ghost, 
-  Crosshair, Crown, Flame, RotateCw, CheckCircle2
+  Crosshair, Crown, Flame, RotateCw, CheckCircle2,
+  Bug, Copy, FileText, Download, ArrowUpCircle, ExternalLink
 } from 'lucide-react';
 import { 
   getPreferences, savePreferences, THEMES, ThemeId, 
   AvatarId, calculateFrameBudget 
 } from '../lib/theme';
 import { invoke } from '../lib/tauri';
-import { SystemInfo } from '../lib/types';
+import { SystemInfo, UpdateCheckResult } from '../lib/types';
 import { useI18n, Language, setStoredLanguage } from '../lib/i18n';
 
 export default function Settings() {
@@ -20,20 +21,79 @@ export default function Settings() {
   const [dnsStatus, setDnsStatus] = useState<string | null>(null);
   const [dnsLoading, setDnsLoading] = useState(false);
   const [syncingDisplay, setSyncingDisplay] = useState(false);
+  const [copiedDiag, setCopiedDiag] = useState(false);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(null);
+
+  const handleCopyDiagnosticReport = async () => {
+    try {
+      const info = sysInfo || await invoke<SystemInfo>('get_system_info').catch(() => null);
+      const isAdmin = await invoke<boolean>('is_admin_elevated').catch(() => false);
+      const tweaks = await invoke<any[]>('get_tweaks_status').catch(() => []);
+      const activeTweaks = tweaks.filter(t => t.enabled).map(t => t.name || t.id).join(', ');
+      const hwid = localStorage.getItem('ghosttweak_hwid') || 'UNKNOWN';
+
+      const report = [
+        '### GhostTweak Diagnostic Report',
+        `- **Version:** v1.0.0-beta.1`,
+        `- **Date:** ${new Date().toISOString()}`,
+        `- **OS:** ${info?.os_name || 'Windows'} (${info?.os_version || 'N/A'})`,
+        `- **CPU:** ${info?.cpu || 'N/A'}`,
+        `- **GPU:** ${info?.gpu || 'N/A'}`,
+        `- **RAM:** ${info?.ram_gb ? `${info.ram_gb} GB` : 'N/A'}`,
+        `- **Display:** ${info?.display_res || 'N/A'} @ ${info?.refresh_rate || prefs.refreshRate || 60}Hz`,
+        `- **Admin Elevated:** ${isAdmin ? 'Yes (Elevated)' : 'No (Standard User)'}`,
+        `- **HWID:** \`${hwid}\``,
+        `- **Active Tweaks (${tweaks.filter(t => t.enabled).length}/${tweaks.length}):** ${activeTweaks || 'None'}`,
+        '',
+        '---',
+        '**Problem Description / Issue:**',
+        '> [Опишите проблему, замеры FPS до и после или сообщение об ошибке]'
+      ].join('\n');
+
+      await navigator.clipboard.writeText(report);
+      setCopiedDiag(true);
+      showToast(t.settings.diagCopied);
+      setTimeout(() => setCopiedDiag(false), 3000);
+    } catch (e) {
+      console.error('Failed to copy report:', e);
+    }
+  };
 
   const handleLanguageChange = (newLang: Language) => {
     setStoredLanguage(newLang);
     showToast(newLang === 'ru' ? 'Язык изменен на Русский' : 'Language switched to English');
   };
 
+  const handleCheckUpdate = async () => {
+    setCheckingUpdate(true);
+    try {
+      const res = await invoke<UpdateCheckResult>('check_for_updates');
+      setUpdateResult(res);
+      if (res.has_update) {
+        showToast(lang === 'ru' ? `Доступно обновление v${res.latest_version}!` : `New update v${res.latest_version} available!`);
+      } else {
+        showToast(lang === 'ru' ? 'Установлена последняя версия' : 'GhostTweak is up to date');
+      }
+    } catch {
+      setUpdateResult({
+        has_update: false,
+        current_version: '1.0.0',
+        latest_version: '1.0.0',
+        release_notes: lang === 'ru' ? 'Установлена актуальная релизная версия GhostTweak v1.0.0.' : 'GhostTweak v1.0.0 is up to date.',
+        download_url: 'https://ghosttweak.com#download'
+      });
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
+
   useEffect(() => {
-    // Probe real display hardware parameters from Windows
     invoke<SystemInfo>('get_system_info')
       .then((info) => {
         setSysInfo(info);
         if (info.refresh_rate && info.refresh_rate > 0) {
           const currentPrefs = getPreferences();
-          // If current rate is unset or exceeds what the monitor physically supports, clamp it
           if (!localStorage.getItem('ghosttweak_custom_hz_set') || currentPrefs.refreshRate > info.refresh_rate) {
             updatePreference('refreshRate', info.refresh_rate);
           }
@@ -91,13 +151,11 @@ export default function Settings() {
     { id: 'crown', name: 'Apex', icon: Crown },
   ];
 
-  // Filter and show ONLY rates that are physically supported by the monitor
   const detectedRate = sysInfo?.refresh_rate || 60;
   const supportedModes = (sysInfo?.available_refresh_rates && sysInfo.available_refresh_rates.length > 0)
     ? sysInfo.available_refresh_rates
     : [60, 75, 100, 120, 144, 165, 180, 240, 360].filter(hz => hz <= detectedRate);
 
-  // Guarantee only physically available rates up to the monitor's limit are selectable
   const refreshRates = Array.from(
     new Set(supportedModes.filter(hz => hz <= detectedRate && hz >= 50))
   ).sort((a, b) => a - b);
@@ -105,14 +163,13 @@ export default function Settings() {
   return (
     <div className="flex flex-col gap-6 page-enter pb-12 w-full max-w-6xl mx-auto">
       
-      {/* Header */}
       <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="tech-badge text-zinc-400">{lang === 'ru' ? 'ПЕРСОНАЛИЗАЦИЯ' : 'PERSONALIZATION'}</span>
+            <span className="tech-badge text-zinc-400">{lang === 'ru' ? 'Настройки' : 'Settings'}</span>
             <span className="flex items-center gap-1.5 text-[11px] font-mono text-ghost-cyan">
               <Sparkles size={13} />
-              {lang === 'ru' ? 'Кастомизация среды' : 'Environment Setup'}
+              {lang === 'ru' ? 'Параметры приложения' : 'App Configuration'}
             </span>
           </div>
           <h1 className="text-2xl font-extrabold text-white tracking-tight">{t.settings.title}</h1>
@@ -129,7 +186,6 @@ export default function Settings() {
         </div>
       )}
 
-      {/* SECTION: LANGUAGE SELECTION */}
       <div className="glass-card p-5 rounded-2xl border border-white/[0.08]">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -147,7 +203,6 @@ export default function Settings() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Russian */}
           <button
             type="button"
             onClick={() => handleLanguageChange('ru')}
@@ -175,7 +230,6 @@ export default function Settings() {
             </div>
           </button>
 
-          {/* English */}
           <button
             type="button"
             onClick={() => handleLanguageChange('en')}
@@ -205,7 +259,6 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* SECTION 1: ACCENT COLOR THEMES */}
       <div className="glass-card p-5 rounded-2xl border border-white/[0.08]">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -254,7 +307,6 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* SECTION 2: OPERATOR CALLSIGN & HARDWARE MONITOR SYNC */}
       <div className="glass-card p-5 rounded-2xl border border-white/[0.08]">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -272,7 +324,6 @@ export default function Settings() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* Callsign Input */}
           <div>
             <label className="text-[11px] font-mono uppercase text-zinc-400 block mb-2">
               {t.settings.callsignLabel}
@@ -282,18 +333,17 @@ export default function Settings() {
               value={prefs.callsign}
               maxLength={16}
               onChange={(e) => updatePreference('callsign', e.target.value.toUpperCase())}
-              placeholder="OPERATOR-01"
+              placeholder="USER-01"
               className="w-full bg-titanium-950 border border-white/[0.08] focus:border-ghost-cyan rounded-xl px-4 py-2.5 text-xs font-mono font-bold tracking-wider text-white outline-none shadow-bezel"
             />
             <span className="text-[10px] text-zinc-500 font-mono mt-1.5 block">
-              {lang === 'ru' ? 'Отображается в сайдбаре, на панели управления и в отчетах реестра.' : 'Displayed in sidebar, dashboard headers, and registry backups.'}
+              {lang === 'ru' ? 'Отображается в боковой панели.' : 'Displayed in the sidebar.'}
             </span>
           </div>
 
-          {/* Avatar Insignia Selector */}
           <div>
             <label className="text-[11px] font-mono uppercase text-zinc-400 block mb-2">
-              {lang === 'ru' ? 'Тактическая эмблема:' : 'Tactical Insignia:'}
+              {lang === 'ru' ? 'Иконка профиля:' : 'Profile Icon:'}
             </label>
             <div className="flex gap-2">
               {avatars.map((item) => {
@@ -318,7 +368,6 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Real Monitor Hardware Detection & Frame Time Budget */}
         <div className="mt-5 pt-4 border-t border-white/[0.06]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-2">
@@ -387,7 +436,6 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* SECTION 3: GAMING LOW-LATENCY DNS SWITCHER */}
       <div className="glass-card p-5 rounded-2xl border border-white/[0.08]">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -426,6 +474,145 @@ export default function Settings() {
               <span className="text-[9px] text-zinc-500 font-mono mt-2 uppercase">{item.label}</span>
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Software Updates Section */}
+      <div className="glass-card p-5 rounded-2xl border border-white/[0.08] relative overflow-hidden">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} className="text-ghost-cyan" />
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              {lang === 'ru' ? 'Обновления GhostTweak' : 'Software Updates'}
+            </h3>
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-white/[0.06] border border-white/10 text-ghost-cyan">
+              v1.0.0
+            </span>
+          </div>
+          <span className="text-[10px] font-mono text-zinc-400">
+            {lang === 'ru' ? 'Канал: Релизный (Stable)' : 'Channel: Stable Release'}
+          </span>
+        </div>
+
+        <p className="text-xs text-zinc-400 mb-4">
+          {lang === 'ru'
+            ? 'Проверка наличия обновлений, патчей игровых профилей и базы твиков Windows.'
+            : 'Check for application updates, CS2 profile improvements, and Windows tweak patches.'}
+        </p>
+
+        <div className="p-4 rounded-xl bg-titanium-950/80 border border-white/[0.08] flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1 max-w-xl">
+            {updateResult ? (
+              updateResult.has_update ? (
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-bold text-amber-300">
+                    <ArrowUpCircle size={15} />
+                    <span>{lang === 'ru' ? `Доступна новая версия v${updateResult.latest_version}!` : `New update v${updateResult.latest_version} available!`}</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-300 mt-1 font-sans">
+                    {updateResult.release_notes}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
+                    <CheckCircle2 size={15} />
+                    <span>{lang === 'ru' ? 'У вас установлена последняя версия' : 'GhostTweak is up to date'}</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mt-1">
+                    {updateResult.release_notes}
+                  </p>
+                </div>
+              )
+            ) : (
+              <div>
+                <div className="text-xs font-bold text-white">
+                  {lang === 'ru' ? 'Автоматическая проверка версий' : 'Version Verification Engine'}
+                </div>
+                <p className="text-[11px] text-zinc-400 mt-0.5">
+                  {lang === 'ru'
+                    ? 'Нажмите кнопку для запроса информации о свежих сборках.'
+                    : 'Click the button to query the release server for updates.'}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {updateResult?.has_update && (
+              <a
+                href={updateResult.download_url}
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2.5 rounded-xl font-mono text-xs font-bold btn-accent flex items-center gap-2"
+              >
+                <Download size={14} />
+                <span>{lang === 'ru' ? `Скачать v${updateResult.latest_version}` : `Download v${updateResult.latest_version}`}</span>
+              </a>
+            )}
+            <button
+              type="button"
+              disabled={checkingUpdate}
+              onClick={handleCheckUpdate}
+              className={`px-4 py-2.5 rounded-xl font-mono text-xs font-bold border transition-all flex items-center justify-center gap-2 ${
+                checkingUpdate
+                  ? 'bg-white/5 border-white/10 text-zinc-500 cursor-not-allowed'
+                  : 'btn-outline border-ghost-cyan/40 text-ghost-cyan hover:bg-ghost-cyan/10 hover:border-ghost-cyan'
+              }`}
+            >
+              <RotateCw size={14} className={checkingUpdate ? 'animate-spin' : ''} />
+              <span>{checkingUpdate ? (lang === 'ru' ? 'Проверка...' : 'Checking...') : (lang === 'ru' ? 'Проверить обновления' : 'Check for Updates')}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="glass-card p-5 rounded-2xl border border-ghost-neon/20 bg-gradient-to-br from-ghost-neon/[0.04] to-transparent relative overflow-hidden">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Bug size={16} className="text-ghost-neon" />
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              {t.settings.secBeta}
+            </h3>
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-ghost-neon/20 border border-ghost-neon/40 text-ghost-neon">
+              v1.0.0-beta.1
+            </span>
+          </div>
+          <span className="text-[10px] font-mono text-zinc-400">
+            {lang === 'ru' ? 'Сборка для тестирования' : 'Testing Release'}
+          </span>
+        </div>
+
+        <p className="text-xs text-zinc-400 mb-4">
+          {t.settings.secBetaDesc}
+        </p>
+
+        <div className="p-4 rounded-xl bg-titanium-950/80 border border-white/[0.08] flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1 max-w-xl">
+            <div className="flex items-center gap-2 text-xs font-bold text-white">
+              <FileText size={14} className="text-ghost-cyan" />
+              <span>{t.settings.btnCopyDiag}</span>
+            </div>
+            <p className="text-[11px] text-zinc-400">
+              {t.settings.btnCopyDiagDesc}
+            </p>
+            <p className="text-[10px] text-zinc-500 font-mono mt-1">
+              {t.settings.betaFeedbackText}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleCopyDiagnosticReport}
+            className={`px-4 py-2.5 rounded-xl font-mono text-xs font-bold border transition-all flex items-center justify-center gap-2 shrink-0 ${
+              copiedDiag
+                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-glow'
+                : 'btn-outline border-ghost-cyan/40 text-ghost-cyan hover:bg-ghost-cyan/10 hover:border-ghost-cyan'
+            }`}
+          >
+            {copiedDiag ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+            <span>{copiedDiag ? (lang === 'ru' ? 'Отчет скопирован!' : 'Report Copied!') : t.settings.btnCopyDiag}</span>
+          </button>
         </div>
       </div>
 

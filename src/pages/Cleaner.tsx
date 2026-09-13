@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Loader2, RefreshCw, Trash2, CheckSquare, Square, 
-  CheckCircle2, Sparkles, Filter, AlertCircle, HardDrive, Zap
+  CheckCircle2, Sparkles, Filter, AlertCircle, HardDrive, Zap, Lock
 } from 'lucide-react';
 import { invoke } from '../lib/tauri';
 import { ScanResult, CleanResult, FlushResult } from '../lib/types';
 import { useI18n } from '../lib/i18n';
+import { getStoredLicense, isProLicense } from '../lib/license';
+import UpgradeModal from '../components/UpgradeModal';
 
 const formatBytes = (bytes: number) => {
   if (bytes === 0) return '0 B';
@@ -26,6 +28,11 @@ export default function Cleaner() {
   const [ramResult, setRamResult] = useState<FlushResult | null>(null);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState('');
+  const [isPro, setIsPro] = useState<boolean>(() => isProLicense(getStoredLicense()));
+
+  const PRO_CATEGORIES = new Set(['nvidia_shader', 'amd_shader', 'dx_shader', 'windows_update']);
 
   const getCategoryInfo = (id: string, defaultName: string, defaultDesc: string) => {
     switch (id) {
@@ -45,9 +52,15 @@ export default function Cleaner() {
       setLoading(true);
       setError('');
       setCleanResult(null);
+      const currentPro = isProLicense(getStoredLicense());
+      setIsPro(currentPro);
       const res = await invoke<ScanResult>('scan_junk');
       setScanResult(res);
-      setSelectedIds(new Set(res.categories.map(c => c.id)));
+      if (currentPro) {
+        setSelectedIds(new Set(res.categories.map(c => c.id)));
+      } else {
+        setSelectedIds(new Set(res.categories.filter(c => !PRO_CATEGORIES.has(c.id)).map(c => c.id)));
+      }
     } catch {
       setError(lang === 'ru' ? 'Не удалось просканировать системные накопители.' : 'Failed to scan system drives.');
       setScanResult({ categories: [], total_size_bytes: 0 });
@@ -60,7 +73,13 @@ export default function Cleaner() {
     fetchScan();
   }, []);
 
-  const toggleCategory = (id: string) => {
+  const toggleCategory = (id: string, name?: string) => {
+    if (!isPro && PRO_CATEGORIES.has(id)) {
+      setUpgradeFeature(name || t.cleaner.catNvShader);
+      setShowUpgradeModal(true);
+      return;
+    }
+
     const newSelected = new Set(selectedIds);
     if (newSelected.has(id)) {
       newSelected.delete(id);
@@ -72,10 +91,14 @@ export default function Cleaner() {
 
   const handleSelectAll = () => {
     if (!scanResult) return;
-    if (selectedIds.size === scanResult.categories.length) {
+    const availableCategories = isPro
+      ? scanResult.categories
+      : scanResult.categories.filter(c => !PRO_CATEGORIES.has(c.id));
+
+    if (selectedIds.size === availableCategories.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(scanResult.categories.map(c => c.id)));
+      setSelectedIds(new Set(availableCategories.map(c => c.id)));
     }
   };
 
@@ -102,7 +125,6 @@ export default function Cleaner() {
       setRamResult(res);
       setTimeout(() => setRamResult(null), 4000);
     } catch {
-      // ignore
     } finally {
       setFlushingRam(false);
     }
@@ -120,13 +142,12 @@ export default function Cleaner() {
   return (
     <div className="flex flex-col gap-5 page-enter pb-24 w-full max-w-6xl mx-auto">
       
-      {/* Header */}
       <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="tech-badge text-zinc-400">{lang === 'ru' ? 'АНАЛИЗАТОР НАКОПИТЕЛЕЙ' : 'STORAGE ANALYZER'}</span>
+            <span className="tech-badge text-zinc-400">{lang === 'ru' ? 'Анализ диска' : 'Disk Analysis'}</span>
             <span className="flex items-center gap-1 text-[11px] font-mono text-ghost-cyan">
-              {lang === 'ru' ? 'Кэши драйверов & шейдеров' : 'Driver & Shader Caches'}
+              {lang === 'ru' ? 'Кэш драйверов и системы' : 'Driver & System Caches'}
             </span>
           </div>
           <h1 className="text-2xl font-extrabold text-white tracking-tight">{t.cleaner.title}</h1>
@@ -179,7 +200,6 @@ export default function Cleaner() {
         </div>
       )}
 
-      {/* Filter and Select Bar */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <button
@@ -204,27 +224,38 @@ export default function Cleaner() {
         </div>
       </div>
 
-      {/* Categories List */}
       <div className="flex flex-col gap-2.5">
         {filteredCategories.map(category => {
           const isSelected = selectedIds.has(category.id);
           const catInfo = getCategoryInfo(category.id, category.name, category.description);
+          const isProLocked = !isPro && PRO_CATEGORIES.has(category.id);
           return (
             <div 
               key={category.id} 
-              onClick={() => toggleCategory(category.id)}
+              onClick={() => toggleCategory(category.id, catInfo.name)}
               className={`glass-card p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                isSelected 
-                  ? 'border-white/[0.2] bg-titanium-850 shadow-sm' 
-                  : 'border-white/[0.04] bg-white/[0.01] hover:border-white/[0.1]'
+                isProLocked
+                  ? 'border-white/[0.04] bg-white/[0.005] opacity-80 hover:border-ghost-neon/30'
+                  : isSelected 
+                    ? 'border-white/[0.2] bg-titanium-850 shadow-sm' 
+                    : 'border-white/[0.04] bg-white/[0.01] hover:border-white/[0.1]'
               }`}
             >
               <div className="flex items-center gap-3.5">
-                <div className={`transition-colors ${isSelected ? 'text-ghost-cyan' : 'text-zinc-600'}`}>
-                  {isSelected ? <CheckSquare size={18} /> : <Square size={18} />}
+                <div className={`transition-colors ${
+                  isProLocked ? 'text-zinc-500' : isSelected ? 'text-ghost-cyan' : 'text-zinc-600'
+                }`}>
+                  {isProLocked ? <Lock size={16} className="text-ghost-neon" /> : isSelected ? <CheckSquare size={18} /> : <Square size={18} />}
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-xs tracking-wide">{catInfo.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-white text-xs tracking-wide">{catInfo.name}</h3>
+                    {isProLocked && (
+                      <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold uppercase rounded bg-ghost-neon/15 text-ghost-neon border border-ghost-neon/30 flex items-center gap-1">
+                        <Lock size={10} /> PRO
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[11px] text-zinc-400 mt-0.5">{catInfo.desc}</p>
                 </div>
               </div>
@@ -244,7 +275,49 @@ export default function Cleaner() {
         )}
       </div>
 
-      {/* Fixed Sticky Footer Bottom Bar */}
+      <div className="mt-4 p-5 rounded-2xl border border-amber-500/20 bg-amber-500/[0.03] backdrop-blur-xl flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              {lang === 'ru' ? 'Служебная функция GPU' : 'GPU Utility'}
+            </span>
+            <h3 className="text-xs font-bold text-white">
+              {lang === 'ru' ? 'Сброс шейдерного кэша (DirectX / NVIDIA / AMD)' : 'GPU Shader Cache Reset (DirectX / NVIDIA / AMD)'}
+            </h3>
+          </div>
+          <button
+            onClick={async () => {
+              if (!isPro) {
+                setUpgradeFeature(lang === 'ru' ? 'Сброс шейдерного кэша' : 'Shader Cache Reset');
+                setShowUpgradeModal(true);
+                return;
+              }
+              try {
+                setCleaning(true);
+                const res = await invoke<CleanResult>('clean_shader_cache');
+                setCleanResult(res);
+                await fetchScan();
+              } catch {
+                setError('Ошибка при сбросе шейдерного кэша.');
+              } finally {
+                setCleaning(false);
+              }
+            }}
+            disabled={cleaning}
+            className="px-4 py-2 rounded-xl text-xs font-bold font-mono bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 transition-all flex items-center gap-2 cursor-pointer"
+          >
+            {!isPro ? <Lock size={14} className="text-amber-400" /> : <Sparkles size={14} />}
+            <span>{lang === 'ru' ? 'Сбросить кэш шейдеров' : 'Reset Shader Cache'}</span>
+            {!isPro && <span className="px-1.5 py-0.5 text-[9px] bg-amber-400/20 rounded font-bold">PRO</span>}
+          </button>
+        </div>
+        <p className="text-[11px] text-zinc-400 leading-relaxed">
+          {lang === 'ru' 
+            ? 'Очистка кэша шейдеров не входит в стандартный пресет, чтобы предотвратить начальную перекомпиляцию в играх. Применяйте при графических артефактах после обновления видеодрайвера.' 
+            : 'Shader cache cleanup is excluded from standard presets to prevent initial compilation pauses. Use if encountering visual artifacts after GPU driver updates.'}
+        </p>
+      </div>
+
       <div className="fixed bottom-0 left-[230px] right-0 bg-titanium-950/95 backdrop-blur-xl border-t border-white/[0.08] p-4 flex justify-between items-center z-30 px-8 shadow-2xl">
         <div className="flex items-center gap-3">
           <HardDrive size={18} className="text-zinc-400" />
@@ -272,6 +345,12 @@ export default function Cleaner() {
           )}
         </button>
       </div>
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        featureName={upgradeFeature}
+      />
 
     </div>
   );

@@ -4,10 +4,12 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   HelpCircle, 
-  ChevronDown
+  ChevronDown,
+  Mail
 } from 'lucide-react';
 
 import { useI18n } from '@/lib/i18n';
+import { PAYMENT_CONFIG } from '@/lib/paymentConfig';
 
 interface FAQItem {
   id: string;
@@ -63,7 +65,7 @@ const FAQS: FAQItem[] = [
 ];
 
 export const FAQ: React.FC = () => {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [openId, setOpenId] = useState<string | null>('anti-cheat');
 
   const toggle = (id: string) => {
@@ -167,19 +169,22 @@ export const FAQ: React.FC = () => {
           })}
         </div>
 
-        {/* Support Note */}
-        <div className="mt-10 p-4 rounded-xl border border-white/[0.06] bg-[#121520] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-400">
+        {/* Support & Admin Contact Note */}
+        <div className="mt-10 p-4 rounded-xl border border-white/[0.08] bg-[#121520] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-300">
           <div className="flex items-center gap-2">
-            <span>Остались вопросы по совместимости с вашей конфигурацией?</span>
+            <Mail className="w-4 h-4 shrink-0" style={{ color: 'var(--accent-color)' }} />
+            <span>
+              {lang === 'ru' 
+                ? 'Вопросы по совместимости или покупке лицензии напрямую у владельца?' 
+                : 'Questions about compatibility or direct license purchase from the owner?'}
+            </span>
           </div>
           <a 
-            href="https://t.me/ghosttweak_support" 
-            target="_blank" 
-            rel="noreferrer"
-            className="text-white hover:underline shrink-0 font-bold"
+            href={`mailto:${PAYMENT_CONFIG.adminEmail}?subject=${encodeURIComponent(lang === 'ru' ? 'Вопрос / Покупка лицензии GhostTweak' : 'Question / GhostTweak License Inquiry')}`}
+            className="text-white hover:underline shrink-0 font-bold flex items-center gap-1.5"
             style={{ color: 'var(--accent-color)' }}
           >
-            Связаться в Telegram &rarr;
+            <span>{lang === 'ru' ? `Связаться с администратором (${PAYMENT_CONFIG.adminEmail}) \u2192` : `Contact Administrator (${PAYMENT_CONFIG.adminEmail}) \u2192`}</span>
           </a>
         </div>
       </div>

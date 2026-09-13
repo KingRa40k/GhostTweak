@@ -1,6 +1,3 @@
-// Personalization & Customization Manager for GhostTweak
-// Stores preferences in localStorage and applies dynamic CSS variables
-
 export type ThemeId = 'cyan' | 'emerald' | 'amber' | 'violet' | 'monochrome';
 export type AvatarId = 'ghost' | 'falcon' | 'vortex' | 'crosshair' | 'crown';
 export type SoundStyle = 'mechanical' | 'soft' | 'scifi' | 'mute';
@@ -26,7 +23,7 @@ export const THEMES: Record<ThemeId, ThemePreset> = {
     glow: '0 0 24px rgba(0, 240, 255, 0.35)',
     border: 'rgba(0, 240, 255, 0.4)',
     bgSubtle: 'rgba(0, 240, 255, 0.12)',
-    tag: 'Аэрокосмический титан',
+    tag: 'Неоновый синий',
   },
   emerald: {
     id: 'emerald',
@@ -36,7 +33,7 @@ export const THEMES: Record<ThemeId, ThemePreset> = {
     glow: '0 0 24px rgba(16, 185, 129, 0.35)',
     border: 'rgba(16, 185, 129, 0.4)',
     bgSubtle: 'rgba(16, 185, 129, 0.12)',
-    tag: 'Тактический зеленый',
+    tag: 'Изумрудный',
   },
   amber: {
     id: 'amber',
@@ -46,7 +43,7 @@ export const THEMES: Record<ThemeId, ThemePreset> = {
     glow: '0 0 24px rgba(245, 158, 11, 0.35)',
     border: 'rgba(245, 158, 11, 0.4)',
     bgSubtle: 'rgba(245, 158, 11, 0.12)',
-    tag: 'Автоспорт GT',
+    tag: 'Янтарный',
   },
   violet: {
     id: 'violet',
@@ -56,7 +53,7 @@ export const THEMES: Record<ThemeId, ThemePreset> = {
     glow: '0 0 24px rgba(168, 85, 247, 0.35)',
     border: 'rgba(168, 85, 247, 0.4)',
     bgSubtle: 'rgba(168, 85, 247, 0.12)',
-    tag: 'Киберпанк',
+    tag: 'Фиолетовый',
   },
   monochrome: {
     id: 'monochrome',
@@ -66,7 +63,7 @@ export const THEMES: Record<ThemeId, ThemePreset> = {
     glow: '0 0 24px rgba(255, 255, 255, 0.25)',
     border: 'rgba(255, 255, 255, 0.35)',
     bgSubtle: 'rgba(255, 255, 255, 0.12)',
-    tag: 'Матовый монохром',
+    tag: 'Монохром',
   },
 };
 
@@ -85,9 +82,9 @@ const STORAGE_KEY = 'ghosttweak_user_prefs_v2';
 
 const DEFAULT_PREFERENCES: UserPreferences = {
   themeId: 'cyan',
-  callsign: 'OPERATOR-01',
+  callsign: 'USER-01',
   avatar: 'ghost',
-  refreshRate: 60, // Universal baseline until real display hardware probe completes
+  refreshRate: 60, 
   soundStyle: 'mechanical',
   soundVolume: 80,
   lang: 'ru',
@@ -112,7 +109,7 @@ export function savePreferences(prefs: UserPreferences): void {
   } catch {}
 }
 
-// Applies active theme colors as CSS root variables and dispatches event
+
 export function applyThemeToCss(themeId: ThemeId): void {
   const theme = THEMES[themeId] || THEMES.cyan;
   const root = document.documentElement;
@@ -122,13 +119,13 @@ export function applyThemeToCss(themeId: ThemeId): void {
   root.style.setProperty('--accent-border', theme.border);
   root.style.setProperty('--accent-bg-subtle', theme.bgSubtle);
 
-  // Notify any active React listener
+  
   try {
     window.dispatchEvent(new CustomEvent('ghosttweak:theme-changed', { detail: theme }));
   } catch {}
 }
 
-// Calculate frame budget based on monitor Hz
+
 export function calculateFrameBudget(hz: number): string {
   if (hz <= 0) return '16.6ms';
   const ms = (1000 / hz).toFixed(2);

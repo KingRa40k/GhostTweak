@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { X, Shield, Lock, FileText, CheckCircle2, ExternalLink } from 'lucide-react';
 import { useI18n } from '../lib/i18n';
 import { openUrl } from '../lib/tauri';
@@ -20,7 +20,6 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy', on
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-scale-in select-none font-sans">
       <div className="relative w-full max-w-xl bg-titanium-900/95 border border-white/[0.12] rounded-2xl shadow-satin p-6 flex flex-col max-h-[85vh]">
         
-        {/* Header */}
         <div className="flex justify-between items-center pb-4 border-b border-white/[0.08] shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-ghost-cyan/10 text-ghost-cyan border border-ghost-cyan/30">
@@ -43,7 +42,6 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy', on
           </button>
         </div>
 
-        {/* Tab Switcher */}
         <div className="flex gap-2 pt-4 pb-2 shrink-0">
           <button
             onClick={() => setActiveTab('privacy')}
@@ -53,7 +51,7 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy', on
                 : 'bg-white/[0.03] text-zinc-400 hover:text-white border border-white/[0.06]'
             }`}
           >
-            {lang === 'ru' ? '🔒 Конфиденциальность' : '🔒 Privacy Policy'}
+            {lang === 'ru' ? 'Конфиденциальность' : 'Privacy Policy'}
           </button>
           <button
             onClick={() => setActiveTab('terms')}
@@ -63,11 +61,10 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy', on
                 : 'bg-white/[0.03] text-zinc-400 hover:text-white border border-white/[0.06]'
             }`}
           >
-            {lang === 'ru' ? '📜 Условия использования' : '📜 Terms of Service'}
+            {lang === 'ru' ? 'Условия использования' : 'Terms of Service'}
           </button>
         </div>
 
-        {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar my-3 pr-2 text-xs text-zinc-300 leading-relaxed space-y-4 font-sans select-text">
           {activeTab === 'privacy' ? (
             lang === 'ru' ? (
@@ -160,7 +157,6 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy', on
           )}
         </div>
 
-        {/* Footer Actions */}
         <div className="pt-3 border-t border-white/[0.08] flex items-center justify-between gap-3 shrink-0">
           <button
             type="button"

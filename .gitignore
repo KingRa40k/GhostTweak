@@ -49,3 +49,13 @@ Thumbs.db
 # Temporary scratch files
 imports.txt
 new_imports.txt
+
+# Bot credentials & database
+tools/bot_config.json
+tools/*.db
+*.db
+
+# Certificates & secrets
+*.pfx
+*.p12
+

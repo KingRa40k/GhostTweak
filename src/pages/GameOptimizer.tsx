@@ -3,12 +3,14 @@ import {
   Crosshair, Zap, RotateCw, Check, Copy, Download, Flame, 
   ShieldCheck, Cpu, Layers, Wifi, Clock, AlertTriangle, 
   CheckCircle2, HardDrive, Terminal, Sliders, ChevronRight,
-  Gamepad2
+  Gamepad2, Lock
 } from 'lucide-react';
 import { invoke } from '../lib/tauri';
-import { MemoryStatus, FlushResult, TweakInfo, SystemInfo } from '../lib/types';
+import { MemoryStatus, FlushResult, TweakInfo, SystemInfo, MatchTurboResult, ProcessThrottleResult } from '../lib/types';
 import { getPreferences } from '../lib/theme';
 import { useI18n } from '../lib/i18n';
+import { getStoredLicense, isProLicense } from '../lib/license';
+import UpgradeModal from '../components/UpgradeModal';
 
 type SupportedGame = 'cs2' | 'valorant' | 'apex' | 'dota2';
 
@@ -31,7 +33,7 @@ const GAME_PROFILES: Record<SupportedGame, GameProfile> = {
     recommendedThreads: 8,
     launchOptionsTemplate: (t) => 
       `-novid -nojoy -high -threads ${t} +engine_low_latency_sleep_after_client_tick true +fps_max 0 +cl_updaterate 128 +rate 786432 +cl_interp_ratio 1`,
-    autoexecTemplate: `// GhostTweak Competitive Config for CS2
+    autoexecTemplate: `// GhostTweak Config for CS2
 fps_max 0
 fps_max_ui 120
 r_drawtracers_firstperson 0
@@ -47,7 +49,7 @@ engine_no_focus_sleep 0
 vprof_off
 cl_autohelp 0
 gameinstructor_enable 0
-echo ">>> GhostTweak Competitive Config Loaded <<<"`
+echo "GhostTweak Config Loaded"`
   },
   valorant: {
     id: 'valorant',
@@ -57,9 +59,8 @@ echo ">>> GhostTweak Competitive Config Loaded <<<"`
     recommendedThreads: 8,
     launchOptionsTemplate: (t) => 
       `-USEALLAVAILABLECORES -high -nomansky -nosplash`,
-    autoexecTemplate: `// Valorant System Tuning Parameters
-// Run via Riot Client in 'Exclusive Fullscreen' mode
-// GhostTweak automatically applies High IFEO & low DPC latency`
+    autoexecTemplate: `Run via Riot Client in Exclusive Fullscreen mode.
+GhostTweak applies IFEO priority and DPC latency tuning automatically.`
   },
   apex: {
     id: 'apex',
@@ -75,7 +76,7 @@ cl_forcepreload 0
 mat_compressedtextures 1
 cl_ragdoll_collide 0
 r_shadows 0
-echo ">>> GhostTweak Apex Profile Loaded <<<"`
+echo "GhostTweak Apex Profile Loaded"`
   },
   dota2: {
     id: 'dota2',
@@ -90,7 +91,7 @@ fps_max 0
 dota_cheap_water 1
 cl_globallight_shadow_mode 0
 r_deferred_additive_pass 0
-echo ">>> GhostTweak Dota 2 Profile Loaded <<<"`
+echo "GhostTweak Dota 2 Profile Loaded"`
   }
 };
 
@@ -99,6 +100,7 @@ export default function GameOptimizer() {
   const [selectedGame, setSelectedGame] = useState<SupportedGame>('cs2');
   const [loading, setLoading] = useState(true);
   const [boosting, setBoosting] = useState(false);
+  const [matchTurboRunning, setMatchTurboRunning] = useState(false);
   const [isBoosted, setIsBoosted] = useState(false);
   const [threads, setThreads] = useState(8);
   const [copiedLaunch, setCopiedLaunch] = useState(false);
@@ -108,6 +110,12 @@ export default function GameOptimizer() {
   const [ramFreedNotice, setRamFreedNotice] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [tweaks, setTweaks] = useState<TweakInfo[]>([]);
+  const [throttlingBackground, setThrottlingBackground] = useState(false);
+  const [restoringBackground, setRestoringBackground] = useState(false);
+  const [throttleResult, setThrottleResult] = useState<ProcessThrottleResult | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState('');
+  const [isPro, setIsPro] = useState<boolean>(() => isProLicense(getStoredLicense()));
 
   const activeGame = GAME_PROFILES[selectedGame];
   const launchOptions = activeGame.launchOptionsTemplate(threads);
@@ -120,6 +128,7 @@ export default function GameOptimizer() {
   const loadData = async () => {
     try {
       setLoading(true);
+      setIsPro(isProLicense(getStoredLicense()));
       const [boosted, mem, twk, sys] = await Promise.all([
         invoke<boolean>('is_cs2_boosted').catch(() => false),
         invoke<MemoryStatus>('get_memory_status').catch(() => null),
@@ -137,13 +146,44 @@ export default function GameOptimizer() {
         else if (sys.cpu.includes('8-Core') || sys.cpu.includes('i7') || sys.cpu.includes('Ryzen 7')) setThreads(8);
       }
     } catch {
-      // ignore
     } finally {
       setLoading(false);
     }
   };
 
+  const handleMatchTurbo = async () => {
+    if (!isPro) {
+      setUpgradeFeature(lang === 'ru' ? 'Match Turbo & Таймер 0.5 мс' : 'Match Turbo & 0.5ms Timer');
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    try {
+      setMatchTurboRunning(true);
+      setNotice(null);
+      const res = await invoke<MatchTurboResult>('run_match_turbo');
+      const updatedMem = await invoke<MemoryStatus>('get_memory_status').catch(() => null);
+      if (updatedMem) setMemStatus(updatedMem);
+      const gameStr = res.boosted_games.length > 0 ? ` [${res.boosted_games.join(', ')}]` : '';
+      setNotice(lang === 'ru'
+        ? `Match Turbo активирован! Выгружено ${res.ram_freed_mb} МБ кэша Standby List, оптимизировано ${res.background_trimmed} фоновых процессов, таймер прерываний 0.5мс зафиксирован.${gameStr}`
+        : `Match Turbo engaged! Purged ${res.ram_freed_mb} MB Standby RAM, trimmed ${res.background_trimmed} background tasks, 0.5ms hardware timer locked.${gameStr}`
+      );
+      setTimeout(() => setNotice(null), 7000);
+    } catch {
+      setNotice(lang === 'ru' ? 'Ошибка выполнения Match Turbo.' : 'Failed to execute Match Turbo.');
+    } finally {
+      setMatchTurboRunning(false);
+    }
+  };
+
   const handleApplyBoost = async () => {
+    if (!isPro) {
+      setUpgradeFeature(lang === 'ru' ? 'Оптимизатор процессов и IFEO приоритеты' : 'Game Booster & IFEO Priority');
+      setShowUpgradeModal(true);
+      return;
+    }
+
     try {
       setBoosting(true);
       setNotice(null);
@@ -180,9 +220,48 @@ export default function GameOptimizer() {
       const updatedMem = await invoke<MemoryStatus>('get_memory_status').catch(() => null);
       if (updatedMem) setMemStatus(updatedMem);
     } catch {
-      // ignore
     } finally {
       setFlushingRam(false);
+    }
+  };
+
+  const handleThrottleBackground = async () => {
+    if (!isPro) {
+      setUpgradeFeature(lang === 'ru' ? 'Smart Throttle фоновых приложений' : 'Background App Smart Throttle');
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    try {
+      setThrottlingBackground(true);
+      const res = await invoke<ProcessThrottleResult>('throttle_background_apps');
+      setThrottleResult(res);
+      const updatedMem = await invoke<MemoryStatus>('get_memory_status').catch(() => null);
+      if (updatedMem) setMemStatus(updatedMem);
+      const count = res.throttled_count || res.trimmed_count;
+      const msg = t.gameOpt.smartThrottledSuccess
+        .replace('{count}', String(count))
+        .replace('{mb}', String(res.ram_freed_mb));
+      setNotice(msg);
+      setTimeout(() => setNotice(null), 5000);
+    } catch {
+      setNotice(lang === 'ru' ? 'Не удалось сжать фоновые приложения' : 'Failed to throttle background apps');
+    } finally {
+      setThrottlingBackground(false);
+    }
+  };
+
+  const handleRestoreBackground = async () => {
+    try {
+      setRestoringBackground(true);
+      await invoke<number>('restore_background_apps');
+      setThrottleResult(null);
+      setNotice(t.gameOpt.smartRestoreSuccess);
+      setTimeout(() => setNotice(null), 4000);
+    } catch {
+      setNotice(lang === 'ru' ? 'Не удалось восстановить приоритеты' : 'Failed to restore priorities');
+    } finally {
+      setRestoringBackground(false);
     }
   };
 
@@ -212,13 +291,14 @@ export default function GameOptimizer() {
 
   const activeKernelTweaks = tweaks.filter(t => 
     ['cs2_priority', 'system_responsiveness', 'game_gpu_priority', 'cs2_fullscreen_opt', 
-     'unpark_cpu_cores', 'disable_power_throttling', 'bcd_low_latency', 'optimize_network'].includes(t.id)
+     'ultimate_perf_power', 'hags_gpu_scheduling', 'gpu_msi_mode', 'disable_paging_executive',
+     'disable_memory_compression', 'usb_selective_suspend', 'unpark_cpu_cores', 
+     'disable_power_throttling', 'bcd_low_latency', 'optimize_network', 'laptop_anti_throttle'].includes(t.id)
   );
 
   return (
     <div className="flex flex-col gap-6 page-enter pb-12 w-full max-w-6xl mx-auto">
       
-      {/* Header Banner */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
@@ -241,7 +321,6 @@ export default function GameOptimizer() {
           </p>
         </div>
 
-        {/* Game Discipline Switcher */}
         <div className="flex items-center gap-1.5 bg-white/[0.03] p-1.5 rounded-2xl border border-white/[0.08]">
           {(['cs2', 'valorant', 'apex', 'dota2'] as SupportedGame[]).map((gId) => {
             const p = GAME_PROFILES[gId];
@@ -277,7 +356,28 @@ export default function GameOptimizer() {
         </div>
       )}
 
-      {/* Main 1-Click Game Tuning Engine */}
+      {!isPro && (
+        <div className="bg-amber-500/10 border border-amber-500/30 p-3.5 rounded-xl flex items-center justify-between gap-3 text-amber-300 text-xs">
+          <div className="flex items-center gap-2.5">
+            <Lock size={16} className="shrink-0 text-amber-400" />
+            <span>
+              {lang === 'ru'
+                ? 'Игровой оптимизатор ядра (Match Turbo, IFEO калибровка и Smart Throttle) доступен только в PRO версии.'
+                : 'Kernel Game Optimizer (Match Turbo, IFEO calibration & Smart Throttle) is exclusive to PRO.'}
+            </span>
+          </div>
+          <button
+            onClick={() => {
+              setUpgradeFeature(lang === 'ru' ? 'Esports Game Optimizer' : 'Esports Game Optimizer');
+              setShowUpgradeModal(true);
+            }}
+            className="px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold border border-amber-500/40 text-[11px] transition-all shrink-0"
+          >
+            {lang === 'ru' ? 'Разблокировать PRO' : 'Unlock PRO'}
+          </button>
+        </div>
+      )}
+
       <div className="glass-card p-6 rounded-2xl border border-ghost-cyan/25 relative overflow-hidden shadow-[0_0_30px_rgba(0,240,255,0.07)]">
         <div className="absolute -right-12 -top-12 w-48 h-48 bg-ghost-cyan/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5">
@@ -298,30 +398,50 @@ export default function GameOptimizer() {
             </p>
           </div>
 
-          <button
-            onClick={handleApplyBoost}
-            disabled={boosting}
-            className="w-full md:w-auto px-7 py-4 rounded-xl bg-ghost-cyan text-titanium-950 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-[0_0_25px_rgba(0,240,255,0.4)] hover:shadow-[0_0_35px_rgba(0,240,255,0.6)] transition-all shrink-0 active:scale-95"
-          >
-            {boosting ? (
-              <>
-                <RotateCw size={16} className="animate-spin" />
-                <span>{t.gameOpt.btnApplying}</span>
-              </>
-            ) : (
-              <>
-                <Zap size={16} />
-                <span>{isBoosted ? (lang === 'ru' ? 'Перекалибровать настройки' : 'Recalibrate Settings') : t.gameOpt.btnApplyAll}</span>
-              </>
-            )}
-          </button>
+          <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto shrink-0">
+            <button
+              onClick={handleMatchTurbo}
+              disabled={matchTurboRunning || boosting}
+              className="w-full sm:w-auto px-5 py-4 rounded-xl bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:shadow-[0_0_30px_rgba(245,158,11,0.55)] transition-all shrink-0 active:scale-95 border border-amber-400/40"
+            >
+              {!isPro && <Lock size={14} className="text-amber-200" />}
+              {matchTurboRunning ? (
+                <>
+                  <RotateCw size={16} className="animate-spin text-amber-200" />
+                  <span>{lang === 'ru' ? 'Разгон матча...' : 'Accelerating...'}</span>
+                </>
+              ) : (
+                <>
+                  <Flame size={16} className="text-amber-200 animate-pulse" />
+                  <span>Match Turbo</span>
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={handleApplyBoost}
+              disabled={boosting || matchTurboRunning}
+              className="w-full sm:w-auto px-6 py-4 rounded-xl bg-ghost-cyan text-titanium-950 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-[0_0_25px_rgba(0,240,255,0.4)] hover:shadow-[0_0_35px_rgba(0,240,255,0.6)] transition-all shrink-0 active:scale-95"
+            >
+              {!isPro && <Lock size={14} className="text-titanium-950" />}
+              {boosting ? (
+                <>
+                  <RotateCw size={16} className="animate-spin" />
+                  <span>{t.gameOpt.btnApplying}</span>
+                </>
+              ) : (
+                <>
+                  <Zap size={16} />
+                  <span>{isBoosted ? (lang === 'ru' ? 'Перекалибровать настройки' : 'Recalibrate Settings') : t.gameOpt.btnApplyAll}</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Grid: RAM Standby Purge + Launch Options */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         
-        {/* Module 1: RAM Standby Purge */}
         <div className="glass-card p-5 rounded-2xl border border-white/[0.08] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -369,7 +489,64 @@ export default function GameOptimizer() {
           </button>
         </div>
 
-        {/* Module 2: Steam / Client Launch Options */}
+        <div className="glass-card p-5 rounded-2xl border border-white/[0.08] flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-ghost-cyan/10 border border-ghost-cyan/20 text-ghost-cyan">
+                  <Cpu size={17} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">{t.gameOpt.smartThrottleTitle}</h3>
+                  <span className="text-[10px] font-mono text-zinc-500">{t.gameOpt.smartThrottleSub}</span>
+                </div>
+              </div>
+              {throttleResult && (
+                <span className="text-[11px] font-mono font-bold text-ghost-cyan bg-ghost-cyan/10 px-2 py-0.5 rounded border border-ghost-cyan/20">
+                  +{throttleResult.ram_freed_mb} MB
+                </span>
+              )}
+            </div>
+
+            <p className="text-xs text-zinc-400 mt-2 mb-3 leading-relaxed">
+              {t.gameOpt.smartThrottleDesc}
+            </p>
+
+            {throttleResult && throttleResult.target_processes.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-1">
+                {throttleResult.target_processes.map(proc => (
+                  <span key={proc} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.08] text-zinc-400">
+                    {proc}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 pt-2">
+            <button
+              onClick={handleThrottleBackground}
+              disabled={throttlingBackground || restoringBackground}
+              className="btn-cyan flex-1 py-2.5 text-xs font-mono flex items-center justify-center gap-2 shadow-cyan-glow"
+            >
+              <RotateCw size={13} className={throttlingBackground ? "animate-spin text-titanium-950" : ""} />
+              <span>{throttlingBackground ? t.gameOpt.btnSmartThrottling : t.gameOpt.btnSmartThrottle}</span>
+            </button>
+
+            {throttleResult && (
+              <button
+                onClick={handleRestoreBackground}
+                disabled={throttlingBackground || restoringBackground}
+                className="btn-outline px-3 py-2.5 text-xs font-mono flex items-center justify-center gap-1.5"
+                title={t.gameOpt.btnRestoreThrottle}
+              >
+                <RotateCw size={12} className={restoringBackground ? "animate-spin" : ""} />
+                <span className="hidden sm:inline">{lang === 'ru' ? 'Сброс' : 'Reset'}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="glass-card p-5 rounded-2xl border border-white/[0.08] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -383,7 +560,6 @@ export default function GameOptimizer() {
                 </div>
               </div>
 
-              {/* Thread Selector */}
               <div className="flex items-center gap-1 bg-white/[0.04] p-1 rounded-lg border border-white/[0.08]">
                 {[4, 6, 8, 12, 16].map((t) => (
                   <button
@@ -405,7 +581,6 @@ export default function GameOptimizer() {
                 : `Optimized command line arguments calibrated for engine ${activeGame.engine}.`}
             </p>
 
-            {/* Launch Options Snippet */}
             <div className="bg-titanium-950 p-3 rounded-xl border border-white/[0.08] font-mono text-[11px] text-ghost-cyan break-all select-all mb-4">
               {launchOptions}
             </div>
@@ -424,7 +599,6 @@ export default function GameOptimizer() {
 
       </div>
 
-      {/* Module 3: Autoexec.cfg */}
       <div className="glass-card p-5 rounded-2xl border border-white/[0.08]">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
           <div className="flex items-center gap-2.5">
@@ -462,7 +636,6 @@ export default function GameOptimizer() {
         </pre>
       </div>
 
-      {/* Module 4: Active Kernel & Latency Matrix */}
       <div className="glass-card p-5 rounded-2xl border border-white/[0.08]">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -501,13 +674,18 @@ export default function GameOptimizer() {
                   ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' 
                   : 'bg-zinc-800 text-zinc-500'
               }`}>
-                {tweak.enabled ? (lang === 'ru' ? 'АКТИВЕН' : 'ACTIVE') : (lang === 'ru' ? 'ОТКЛ' : 'OFF')}
+                {tweak.enabled ? (lang === 'ru' ? 'Активен' : 'Active') : (lang === 'ru' ? 'Откл' : 'Off')}
               </span>
             </div>
           ))}
         </div>
       </div>
 
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        featureName={upgradeFeature}
+      />
     </div>
   );
 }

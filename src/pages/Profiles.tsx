@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { 
   Crosshair, Film, Radio, Coffee, Check, ShieldCheck, 
-  Zap, Globe, Sparkles, CheckCircle2, ArrowRight
+  Zap, Globe, Sparkles, CheckCircle2, ArrowRight, Lock
 } from 'lucide-react';
 import { invoke } from '../lib/tauri';
 import { getPreferences, savePreferences } from '../lib/theme';
 import { useI18n } from '../lib/i18n';
+import { getStoredLicense, isProLicense } from '../lib/license';
+import UpgradeModal from '../components/UpgradeModal';
 
 interface ProfileDef {
   id: 'esports' | 'cinematic' | 'streamer' | 'quiet';
@@ -25,6 +27,9 @@ export default function Profiles() {
   const [prefs, setPrefs] = useState(getPreferences());
   const [applying, setApplying] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState('');
+  const [isPro, setIsPro] = useState<boolean>(() => isProLicense(getStoredLicense()));
 
   const PROFILES: ProfileDef[] = [
     {
@@ -126,10 +131,15 @@ export default function Profiles() {
   ];
 
   const handleApplyProfile = async (profile: ProfileDef) => {
+    if (profile.id !== 'quiet' && !isPro) {
+      setUpgradeFeature(lang === 'ru' ? `Профиль оптимизации «${profile.name}»` : `${profile.name} Optimization Profile`);
+      setShowUpgradeModal(true);
+      return;
+    }
+
     try {
       setApplying(profile.id);
 
-      // Apply system tweaks matching the profile
       if (profile.id === 'esports') {
         await invoke('apply_all_tweaks').catch(() => {});
         await invoke('apply_cs2_boost').catch(() => {});
@@ -163,11 +173,10 @@ export default function Profiles() {
   return (
     <div className="flex flex-col gap-6 page-enter pb-10 w-full max-w-6xl mx-auto">
       
-      {/* Header */}
       <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="tech-badge text-zinc-400">{lang === 'ru' ? 'ИГРОВЫЕ ПРОФИЛИ' : 'GAMING PROFILES'}</span>
+            <span className="tech-badge text-zinc-400">{lang === 'ru' ? 'Профили оптимизации' : 'Profiles'}</span>
             <span className="flex items-center gap-1.5 text-[11px] font-mono text-emerald-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               {lang === 'ru' ? 'Активен:' : 'Active:'} {PROFILES.find(p => p.id === prefs.activeProfile)?.name}
@@ -187,7 +196,6 @@ export default function Profiles() {
         </div>
       )}
 
-      {/* Profiles Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {PROFILES.map((profile) => {
           const Icon = profile.icon;
@@ -204,7 +212,6 @@ export default function Profiles() {
               }`}
             >
               <div>
-                {/* Top Card Bar */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2.5">
                     <div className={`p-2.5 rounded-xl border ${
@@ -220,6 +227,11 @@ export default function Profiles() {
                         {isActive && (
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981]" />
                         )}
+                        {profile.id !== 'quiet' && !isPro && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center gap-1">
+                            <Lock size={10} /> PRO
+                          </span>
+                        )}
                       </h3>
                       <span className="text-[10px] font-mono text-zinc-500 tracking-wider uppercase">
                         {profile.badge}
@@ -229,7 +241,7 @@ export default function Profiles() {
 
                   {isActive ? (
                     <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-semibold flex items-center gap-1">
-                      <Check size={11} /> {lang === 'ru' ? 'В РАБОТЕ' : 'ACTIVE'}
+                      <Check size={11} /> {lang === 'ru' ? 'Активен' : 'Active'}
                     </span>
                   ) : null}
                 </div>
@@ -238,7 +250,6 @@ export default function Profiles() {
                   {profile.tagline}
                 </p>
 
-                {/* Score Meters */}
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   <div className="hardware-well p-2.5 rounded-xl flex flex-col">
                     <span className="text-[10px] font-mono uppercase text-zinc-500">{lang === 'ru' ? 'Задержка ввода' : 'Input Latency'}</span>
@@ -250,7 +261,6 @@ export default function Profiles() {
                   </div>
                 </div>
 
-                {/* Target Games Tags */}
                 <div className="mb-4">
                   <span className="text-[10px] font-mono uppercase text-zinc-500 block mb-1.5">{lang === 'ru' ? 'Рекомендовано для:' : 'Recommended for:'}</span>
                   <div className="flex flex-wrap gap-1.5">
@@ -262,7 +272,6 @@ export default function Profiles() {
                   </div>
                 </div>
 
-                {/* Features List */}
                 <div className="space-y-1.5 mb-5">
                   {profile.features.map((feat, idx) => (
                     <div key={idx} className="flex items-center gap-2 text-[11px] text-zinc-400">
@@ -273,7 +282,6 @@ export default function Profiles() {
                 </div>
               </div>
 
-              {/* Action Button */}
               <button
                 onClick={() => handleApplyProfile(profile)}
                 disabled={isActive || isApplyingThis}
@@ -289,7 +297,7 @@ export default function Profiles() {
                   <span>{t.profiles.btnActive}</span>
                 ) : (
                   <>
-                    <Zap size={14} />
+                    {profile.id !== 'quiet' && !isPro ? <Lock size={14} className="text-amber-300" /> : <Zap size={14} />}
                     <span>{t.profiles.btnActivate}</span>
                   </>
                 )}
@@ -299,6 +307,11 @@ export default function Profiles() {
         })}
       </div>
 
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        featureName={upgradeFeature}
+      />
     </div>
   );
 }

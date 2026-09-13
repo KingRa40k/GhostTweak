@@ -72,11 +72,10 @@ export default function Backups() {
   return (
     <div className="flex flex-col gap-5 page-enter pb-16 w-full max-w-6xl mx-auto">
       
-      {/* Header */}
       <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="tech-badge text-zinc-400">{lang === 'ru' ? 'БЕЗОПАСНОСТЬ РЕЕСТРА' : 'REGISTRY SAFETY'}</span>
+            <span className="tech-badge text-zinc-400">{lang === 'ru' ? 'Резервные копии' : 'Registry Backups'}</span>
             <span className="flex items-center gap-1 text-[11px] font-mono text-emerald-400">
               <Shield size={13} />
               {lang === 'ru' ? `Точек отката: ${backups.length}` : `Restore points: ${backups.length}`}
@@ -103,7 +102,6 @@ export default function Backups() {
         </div>
       )}
 
-      {/* Backups List */}
       {loading && backups.length === 0 ? (
         <div className="flex py-12 items-center justify-center text-ghost-cyan">
           <Loader2 className="animate-spin w-8 h-8" />
@@ -159,7 +157,6 @@ export default function Backups() {
         </div>
       )}
 
-      {/* Confirmation Modal Overlay */}
       {confirmRestore && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 animate-scale-in">
           <div className="w-full max-w-md glass-card p-6 border-white/[0.12] rounded-2xl shadow-satin flex flex-col gap-4">
