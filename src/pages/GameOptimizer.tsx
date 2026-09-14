@@ -300,15 +300,15 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="tech-badge text-ghost-cyan flex items-center gap-1">
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <span className="tech-badge text-ghost-cyan flex items-center gap-1 shrink-0">
               <Crosshair size={11} /> {t.gameOpt.badge}
             </span>
-            <span className="flex items-center gap-1.5 text-[11px] font-mono text-emerald-400">
+            <span className="flex items-center gap-1.5 text-[11px] font-mono text-emerald-400 shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981]" />
               {lang === 'ru' ? 'Статус:' : 'Status:'} {isBoosted ? (lang === 'ru' ? 'Оптимизирован' : 'Optimized') : (lang === 'ru' ? 'Стандартный режим' : 'Standard')}
             </span>
-            <span className="text-[11px] font-mono text-zinc-500">
+            <span className="text-[11px] font-mono text-zinc-500 shrink-0">
               DPC Latency & Core Unpark
             </span>
           </div>
@@ -320,7 +320,7 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-white/[0.03] p-1.5 rounded-2xl border border-white/[0.08]">
+        <div className="flex items-center gap-1.5 bg-white/[0.03] p-1.5 rounded-2xl border border-white/[0.08] flex-wrap">
           {(['cs2', 'valorant', 'apex', 'dota2'] as SupportedGame[]).map((gId) => {
             const p = GAME_PROFILES[gId];
             const isSelected = selectedGame === gId;

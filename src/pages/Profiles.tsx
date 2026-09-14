@@ -228,18 +228,18 @@ export default function Profiles({ license: propLicense }: ProfilesProps = {}) {
                       <Icon size={20} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                      <h3 className="font-bold text-sm text-white flex items-center gap-2 flex-wrap">
                         {profile.name}
                         {isActive && (
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981]" />
                         )}
                         {profile.id === 'esports' && (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 shrink-0">
                             {lang === 'ru' ? 'БЕСПЛАТНО' : 'FREE'}
                           </span>
                         )}
                         {isProProfile && !isPro && (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center gap-1">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center gap-1 shrink-0">
                             <Lock size={10} /> PRO
                           </span>
                         )}

@@ -75,8 +75,8 @@ export default function TitleBar({ license, onOpenLicense }: TitleBarProps) {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               {license.plan === 'BETA_TESTER' ? (
                 <>
-                  <Sparkles size={11} className="text-ghost-neon" />
-                  <span className="text-ghost-neon font-semibold">BETA TESTER</span>
+                  <Sparkles size={11} className="text-amber-400" />
+                  <span className="text-amber-400 font-semibold">VIP TESTER</span>
                 </>
               ) : license.plan === 'VIP_LIFETIME' ? (
                 <>

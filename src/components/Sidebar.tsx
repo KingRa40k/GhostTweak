@@ -87,7 +87,7 @@ export default function Sidebar({ activePage, onNavigate, license, onManageLicen
                 </span>
                 <span className="text-[9px] font-mono text-zinc-500 mt-0.5">
                   {license?.plan === 'BETA_TESTER'
-                    ? (lang === 'ru' ? 'Бета-тестер Pass' : 'Beta Tester Pass')
+                    ? (lang === 'ru' ? 'VIP Tester Pass' : 'VIP Tester Pass')
                     : license?.plan === 'VIP_LIFETIME' 
                       ? 'VIP Lifetime' 
                       : license?.plan === 'PRO_MONTHLY'

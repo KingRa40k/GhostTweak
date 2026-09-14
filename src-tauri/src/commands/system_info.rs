@@ -65,28 +65,37 @@ fn get_win32_ram_info() -> (f64, String) {
         raw_gb.round()
     };
 
-    // Мгновенное определение DDR5 без вызова тяжелых подпроцессов (0 мс)
-    let mut ram_type = "DDR5".to_string();
+    // Мгновенное определение DDR5/DDR4/DDR3 без вызова тяжелых подпроцессов (0 мс)
+    let mut ram_type = "DDR4".to_string();
 
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
     if let Ok(key) = hklm.open_subkey(r"HARDWARE\DESCRIPTION\System\CentralProcessor\0") {
         if let Ok(cpu_name) = key.get_value::<String, _>("ProcessorNameString") {
             let cpu_lower = cpu_name.to_lowercase();
-            // Предыдущие поколения CPU без поддержки DDR5
-            if cpu_lower.contains("i3-10") || cpu_lower.contains("i5-10") || cpu_lower.contains("i5-11") 
-                || cpu_lower.contains("i7-10") || cpu_lower.contains("i7-11") 
-                || cpu_lower.contains("i9-10") || cpu_lower.contains("i9-11")
-                || cpu_lower.contains("ryzen 3") || cpu_lower.contains("ryzen 5 3") 
-                || cpu_lower.contains("ryzen 5 5") || cpu_lower.contains("ryzen 7 3") 
-                || cpu_lower.contains("ryzen 7 5") || cpu_lower.contains("ryzen 9 3") 
-                || cpu_lower.contains("ryzen 9 5") || cpu_lower.contains("fx-") 
-                || cpu_lower.contains("athlon")
-            {
-                ram_type = "DDR4".to_string();
-            } else if cpu_lower.contains("i5-2") || cpu_lower.contains("i5-3") || cpu_lower.contains("i7-2") || cpu_lower.contains("i7-3") {
+            
+            // Платформы с поддержкой DDR5 (Intel 13/14th+, Core Ultra, AMD Ryzen 7000/8000/9000+)
+            let is_ddr5 = cpu_lower.contains("13th gen") 
+                || cpu_lower.contains("14th gen")
+                || cpu_lower.contains("core ultra")
+                || cpu_lower.contains("i5-13") || cpu_lower.contains("i5-14")
+                || cpu_lower.contains("i7-13") || cpu_lower.contains("i7-14")
+                || cpu_lower.contains("i9-13") || cpu_lower.contains("i9-14")
+                || cpu_lower.contains("ryzen 5 7") || cpu_lower.contains("ryzen 7 7") || cpu_lower.contains("ryzen 9 7")
+                || cpu_lower.contains("ryzen 5 8") || cpu_lower.contains("ryzen 7 8") || cpu_lower.contains("ryzen 9 8")
+                || cpu_lower.contains("ryzen 5 9") || cpu_lower.contains("ryzen 7 9") || cpu_lower.contains("ryzen 9 9")
+                || cpu_lower.contains("7800x3d") || cpu_lower.contains("7950x3d") || cpu_lower.contains("7600x")
+                || cpu_lower.contains("9800x3d") || cpu_lower.contains("9950x3d") || cpu_lower.contains("9700x");
+
+            // Старые платформы DDR3
+            let is_ddr3 = cpu_lower.contains("-2") || cpu_lower.contains("-3") || cpu_lower.contains("-4")
+                || cpu_lower.contains("core 2") || cpu_lower.contains("fx-") || cpu_lower.contains("phenom");
+
+            if is_ddr5 {
+                ram_type = "DDR5".to_string();
+            } else if is_ddr3 {
                 ram_type = "DDR3".to_string();
             } else {
-                ram_type = "DDR5".to_string();
+                ram_type = "DDR4".to_string();
             }
         }
     }

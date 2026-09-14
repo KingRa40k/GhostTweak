@@ -225,53 +225,53 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     <div className="flex flex-col gap-5 page-enter pb-10 w-full max-w-6xl mx-auto">
       <div className="flex justify-between items-start">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="tech-badge text-ghost-cyan flex items-center gap-1">
-              <User size={11} /> {prefs.callsign}
-            </span>
-
-            {isAdmin !== null && (
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center gap-1 border ${
-                isAdmin 
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-                  : 'bg-amber-500/15 border-amber-500/40 text-amber-300'
-              }`}>
-                {isAdmin ? <ShieldCheck size={11} /> : <ShieldAlert size={11} />}
-                <span>{isAdmin ? (lang === 'ru' ? 'Администратор' : 'Admin') : (lang === 'ru' ? 'Без прав админа' : 'No Admin')}</span>
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <span className="tech-badge text-ghost-cyan flex items-center gap-1 shrink-0">
+                <User size={11} /> {prefs.callsign}
               </span>
-            )}
 
-            <div className="flex items-center gap-1 bg-white/[0.03] p-1 rounded-xl border border-white/[0.06]">
-              {(['esports', 'cinematic', 'streamer', 'quiet'] as const).map((pId) => {
-                const isSelected = prefs.activeProfile === pId;
-                const isApplying = switchingProfile === pId;
-                const labelMap = {
-                  esports: 'Esports',
-                  cinematic: lang === 'ru' ? 'AAA игры' : 'AAA Games',
-                  streamer: lang === 'ru' ? 'Стрим' : 'Stream',
-                  quiet: lang === 'ru' ? 'Тихий' : 'Quiet'
-                };
-                return (
-                  <button
-                    key={pId}
-                    onClick={() => handleQuickSwitchProfile(pId)}
-                    disabled={isApplying || isSelected}
-                    title={`${lang === 'ru' ? 'Включить режим' : 'Enable profile'} ${labelMap[pId]}`}
-                    className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-medium transition-all ${
-                      isSelected
-                        ? 'bg-ghost-cyan/20 text-ghost-cyan border border-ghost-cyan/40 shadow-sm font-bold'
-                        : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
-                    }`}
-                  >
-                    {isApplying ? '...' : labelMap[pId]}
-                  </button>
-                );
-              })}
+              {isAdmin !== null && (
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center gap-1 border shrink-0 ${
+                  isAdmin 
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                    : 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+                }`}>
+                  {isAdmin ? <ShieldCheck size={11} /> : <ShieldAlert size={11} />}
+                  <span>{isAdmin ? (lang === 'ru' ? 'Администратор' : 'Admin') : (lang === 'ru' ? 'Без прав админа' : 'No Admin')}</span>
+                </span>
+              )}
+
+              <div className="flex items-center gap-1 bg-white/[0.03] p-1 rounded-xl border border-white/[0.06] shrink-0">
+                {(['esports', 'cinematic', 'streamer', 'quiet'] as const).map((pId) => {
+                  const isSelected = prefs.activeProfile === pId;
+                  const isApplying = switchingProfile === pId;
+                  const labelMap = {
+                    esports: 'Esports',
+                    cinematic: lang === 'ru' ? 'AAA игры' : 'AAA Games',
+                    streamer: lang === 'ru' ? 'Стрим' : 'Stream',
+                    quiet: lang === 'ru' ? 'Тихий' : 'Quiet'
+                  };
+                  return (
+                    <button
+                      key={pId}
+                      onClick={() => handleQuickSwitchProfile(pId)}
+                      disabled={isApplying || isSelected}
+                      title={`${lang === 'ru' ? 'Включить режим' : 'Enable profile'} ${labelMap[pId]}`}
+                      className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-medium transition-all ${
+                        isSelected
+                          ? 'bg-ghost-cyan/20 text-ghost-cyan border border-ghost-cyan/40 shadow-sm font-bold'
+                          : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      {isApplying ? '...' : labelMap[pId]}
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="text-[11px] font-mono text-zinc-500 shrink-0">
+                {prefs.refreshRate}Hz ({((1000 / prefs.refreshRate).toFixed(1))}ms)
+              </span>
             </div>
-            <span className="text-[11px] font-mono text-zinc-500">
-              {prefs.refreshRate}Hz ({((1000 / prefs.refreshRate).toFixed(1))}ms)
-            </span>
-          </div>
           <h1 className="text-2xl font-extrabold text-white tracking-tight">{t.dashboard.welcome}</h1>
           <p className="text-xs text-zinc-400 mt-0.5">
             {t.dashboard.welcomeSub}

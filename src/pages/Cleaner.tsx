@@ -279,9 +279,9 @@ export default function Cleaner({ license: propLicense }: CleanerProps = {}) {
       </div>
 
       <div className="mt-4 p-5 rounded-2xl border border-amber-500/20 bg-amber-500/[0.03] backdrop-blur-xl flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
               {lang === 'ru' ? 'Служебная функция GPU' : 'GPU Utility'}
             </span>
             <h3 className="text-xs font-bold text-white">
