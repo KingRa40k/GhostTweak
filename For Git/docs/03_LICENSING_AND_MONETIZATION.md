@@ -60,7 +60,7 @@ python tools/license_server.py --serve --port 8080
    python tools/license_generator.py --type lifetime --count 100 --output keys.txt
    ```
 2. Загрузите список ключей в модуль автовыдачи платёжного шлюза или торговой площадки (Lava, Boosty, Digiseller, FunPay, Robokassa).
-3. При покупке сервис автоматически выдаёт один ключ покупателю.
+3. При покупке сервис автоматически выдаёт один ключ пользователю.
 
 ### Способ Б: Интеграция через REST API (`license_server.py`)
 1. Запустите API-сервер:
@@ -68,14 +68,14 @@ python tools/license_server.py --serve --port 8080
    python tools/license_server.py --port 8080
    ```
 2. Настройте вебхук успешной оплаты (Stripe, ЮKassa, Robokassa) на эндпоинт `POST /api/create_license`.
-3. Сервер возвращает валидный токен, который отображается покупателю на странице подтверждения заказа.
+3. Сервер возвращает валидный токен, который отображается пользователю на странице подтверждения заказа.
 
 ### Защита от несанкционированной выдачи ключей на сайте
 В файле [`website/src/lib/paymentConfig.ts`](../website/src/lib/paymentConfig.ts) реализована защита от бесплатной раздачи ключей:
 * **Режим настройки (по умолчанию):**
   Пока параметры `isLivePaymentEnabled` или `paymentGatewayUrl` не заполнены, модальное окно оплаты информирует посетителя о том, что автоматический эквайринг настраивается, и предлагает оставить заявку либо связаться с администратором по email. Ключи бесплатно не выдаются.
 * **Включение боевой оплаты:**
-  Владелец указывает URL своего платёжного шлюза (Stripe Payment Link, Lava, Boosty, ЮKassa, Robokassa) и выставляет `isLivePaymentEnabled: true` (либо через переменные окружения `NEXT_PUBLIC_PAYMENT_ENABLED=true` и `NEXT_PUBLIC_PAYMENT_URL=https://...`). После этого покупатели автоматически перенаправляются на оплату.
+  Администратор указывает URL платёжного шлюза (Stripe Payment Link, Lava, Boosty, ЮKassa, Robokassa) и выставляет `isLivePaymentEnabled: true` (либо через переменные окружения `NEXT_PUBLIC_PAYMENT_ENABLED=true` и `NEXT_PUBLIC_PAYMENT_URL=https://...`). После этого пользователи автоматически перенаправляются на оплату.
 
 ---
 
