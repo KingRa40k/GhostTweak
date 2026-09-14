@@ -11,6 +11,7 @@ pub struct SystemInfo {
     pub os_version: String,
     pub cpu: String,
     pub ram_gb: f64,
+    pub ram_type: String,
     pub gpu: String,
     pub display_res: String,
     pub refresh_rate: u32,
@@ -33,18 +34,75 @@ struct MEMORYSTATUSEX {
 }
 
 #[cfg(windows)]
-fn get_win32_ram_gb() -> f64 {
+fn get_win32_ram_info() -> (f64, String) {
     extern "system" {
         fn GlobalMemoryStatusEx(lpBuffer: *mut MEMORYSTATUSEX) -> i32;
     }
+    let mut raw_gb = 16.0;
     unsafe {
         let mut status: MEMORYSTATUSEX = std::mem::zeroed();
         status.dwLength = std::mem::size_of::<MEMORYSTATUSEX>() as u32;
         if GlobalMemoryStatusEx(&mut status) != 0 {
-            return (status.ullTotalPhys as f64) / (1024.0 * 1024.0 * 1024.0);
+            raw_gb = (status.ullTotalPhys as f64) / (1024.0 * 1024.0 * 1024.0);
         }
     }
-    16.0
+
+    let rounded_gb = if raw_gb > 110.0 {
+        128.0
+    } else if raw_gb > 56.0 {
+        64.0
+    } else if raw_gb > 40.0 {
+        48.0
+    } else if raw_gb > 28.0 {
+        32.0
+    } else if raw_gb > 20.0 {
+        24.0
+    } else if raw_gb > 13.0 {
+        16.0
+    } else if raw_gb > 6.0 {
+        8.0
+    } else {
+        raw_gb.round()
+    };
+
+    let mut ram_type = "DDR4".to_string();
+
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+    let output = std::process::Command::new("powershell")
+        .args(&[
+            "-NoProfile",
+            "-Command",
+            "Get-CimInstance Win32_PhysicalMemory | ForEach-Object { $_.SMBIOSMemoryType, $_.Speed } | Select-Object -First 4"
+        ])
+        .creation_flags(CREATE_NO_WINDOW)
+        .output();
+
+    if let Ok(out) = output {
+        let text = String::from_utf8_lossy(&out.stdout);
+        let mut has_ddr5 = false;
+        let mut has_ddr3 = false;
+
+        for line in text.lines() {
+            if let Ok(val) = line.trim().parse::<u32>() {
+                if val == 34 || val >= 4800 {
+                    has_ddr5 = true;
+                    break;
+                } else if val == 24 {
+                    has_ddr3 = true;
+                }
+            }
+        }
+
+        if has_ddr5 {
+            ram_type = "DDR5".to_string();
+        } else if has_ddr3 {
+            ram_type = "DDR3".to_string();
+        }
+    }
+
+    (rounded_gb, ram_type)
 }
 
 #[cfg(windows)]
@@ -284,7 +342,7 @@ pub fn get_system_info() -> Result<SystemInfo, String> {
     #[cfg(windows)]
     {
         let cpu = get_win32_cpu_name();
-        let ram_gb = get_win32_ram_gb();
+        let (ram_gb, ram_type) = get_win32_ram_info();
         let gpu = get_win32_gpu_name();
         let (os_name, os_version) = get_win32_os_info();
         let (display_res, refresh_rate, target_w, target_h) = get_win32_display_info();
@@ -295,6 +353,7 @@ pub fn get_system_info() -> Result<SystemInfo, String> {
             os_version,
             cpu,
             ram_gb,
+            ram_type,
             gpu,
             display_res,
             refresh_rate,
@@ -308,7 +367,8 @@ pub fn get_system_info() -> Result<SystemInfo, String> {
             os_name: "Linux / Unix".to_string(),
             os_version: "Generic".to_string(),
             cpu: "Multi-core Processor".to_string(),
-            ram_gb: 16.0,
+            ram_gb: 32.0,
+            ram_type: "DDR5".to_string(),
             gpu: "Dedicated Graphics".to_string(),
             display_res: "1920 x 1080".to_string(),
             refresh_rate: 60,
@@ -423,7 +483,7 @@ fn check_is_laptop() -> bool {
 pub fn detect_hardware_tier() -> Result<HardwareTierInfo, String> {
     #[cfg(windows)]
     {
-        let ram_gb = get_win32_ram_gb();
+        let (ram_gb, _) = get_win32_ram_info();
         let cpu_name = get_win32_cpu_name();
         let gpu_name = get_win32_gpu_name();
         let is_laptop = check_is_laptop();

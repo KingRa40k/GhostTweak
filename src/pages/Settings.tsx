@@ -40,7 +40,7 @@ export default function Settings() {
         `- **OS:** ${info?.os_name || 'Windows'} (${info?.os_version || 'N/A'})`,
         `- **CPU:** ${info?.cpu || 'N/A'}`,
         `- **GPU:** ${info?.gpu || 'N/A'}`,
-        `- **RAM:** ${info?.ram_gb ? `${info.ram_gb} GB` : 'N/A'}`,
+        `- **RAM:** ${info?.ram_gb ? `${Math.round(info.ram_gb)} GB ${info.ram_type || 'DDR5'}` : 'N/A'}`,
         `- **Display:** ${info?.display_res || 'N/A'} @ ${info?.refresh_rate || prefs.refreshRate || 60}Hz`,
         `- **Admin Elevated:** ${isAdmin ? 'Yes (Elevated)' : 'No (Standard User)'}`,
         `- **HWID:** \`${hwid}\``,

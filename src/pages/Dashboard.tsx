@@ -671,7 +671,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               <div>
                 <div className="text-[9px] font-mono uppercase text-zinc-500">{t.dashboard.hwRam}</div>
                 <div className="text-xs font-semibold text-white">
-                  {sysInfo.ram_gb} GB DDR
+                  {Math.round(sysInfo.ram_gb)} GB {sysInfo.ram_type || 'DDR5'}
                 </div>
               </div>
             </div>

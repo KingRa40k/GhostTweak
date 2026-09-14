@@ -3,6 +3,7 @@ export interface SystemInfo {
   os_version: string;
   cpu: string;
   ram_gb: number;
+  ram_type?: string;
   gpu: string;
   display_res: string;
   refresh_rate: number;
