@@ -31,7 +31,7 @@ VIAddVersionKey "CompanyName" "GhostTweak"
 VIAddVersionKey "FileDescription" "GhostTweak Gaming Optimizer Portable"
 VIAddVersionKey "FileVersion" "1.0.0.0"
 
-OutFile "$projDir\website\public\downloads\GhostTweak_Beta_Portable.exe"
+OutFile "$projDir\releases\GhostTweak_Portable.exe"
 Icon "$projDir\src-tauri\icons\icon.ico"
 
 Section
@@ -47,10 +47,11 @@ $nsisScript | Set-Content -Path $tempNsi -Encoding utf8;
 & $nsisExe $tempNsi;
 Remove-Item $tempNsi -Force -ErrorAction SilentlyContinue;
 
-Copy-Item -Path "$projDir\website\public\downloads\GhostTweak_Beta_Portable.exe" -Destination "$projDir\website\public\downloads\GhostTweak_Portable.exe" -Force;
-Copy-Item -Path "$projDir\website\public\downloads\GhostTweak_Beta_Portable.exe" -Destination "$projDir\website\public\downloads\GhostTweak_Latest.exe" -Force;
-if (Test-Path "$projDir\releases") {
-    Copy-Item -Path "$projDir\website\public\downloads\GhostTweak_Beta_Portable.exe" -Destination "$projDir\releases\GhostTweak_Portable.exe" -Force;
+Copy-Item -Path "$projDir\releases\GhostTweak_Portable.exe" -Destination "$projDir\releases\GhostTweak_Setup_v1.0.0.exe" -Force;
+Copy-Item -Path "$projDir\releases\GhostTweak_Portable.exe" -Destination "$projDir\website\public\downloads\GhostTweak_Latest.exe" -Force;
+if (Test-Path "$projDir\website\public\downloads") {
+    Copy-Item -Path "$projDir\releases\GhostTweak_Portable.exe" -Destination "$projDir\website\public\downloads\GhostTweak_Portable.exe" -Force;
+    Copy-Item -Path "$projDir\releases\GhostTweak_Portable.exe" -Destination "$projDir\website\public\downloads\GhostTweak_Setup_v1.0.0.exe" -Force;
 }
 
 Write-Host "Portable build packaged successfully!";
