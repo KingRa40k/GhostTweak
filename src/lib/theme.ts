@@ -93,7 +93,9 @@ const DEFAULT_PREFERENCES: UserPreferences = {
 
 export function getPreferences(): UserPreferences {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY)
+      || localStorage.getItem('ghosttweak_user_prefs')
+      || localStorage.getItem('ghosttweak_preferences');
     if (!raw) return DEFAULT_PREFERENCES;
     return { ...DEFAULT_PREFERENCES, ...JSON.parse(raw) };
   } catch {
@@ -102,7 +104,9 @@ export function getPreferences(): UserPreferences {
 }
 
 export function savePreferences(prefs: UserPreferences): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+  const serialized = JSON.stringify(prefs);
+  localStorage.setItem(STORAGE_KEY, serialized);
+  localStorage.setItem('ghosttweak_user_prefs', serialized);
   applyThemeToCss(prefs.themeId);
   try {
     window.dispatchEvent(new CustomEvent('ghosttweak:prefs-changed', { detail: prefs }));

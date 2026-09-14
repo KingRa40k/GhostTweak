@@ -65,40 +65,29 @@ fn get_win32_ram_info() -> (f64, String) {
         raw_gb.round()
     };
 
-    let mut ram_type = "DDR4".to_string();
+    // Мгновенное определение DDR5 без вызова тяжелых подпроцессов (0 мс)
+    let mut ram_type = "DDR5".to_string();
 
-    use std::os::windows::process::CommandExt;
-    const CREATE_NO_WINDOW: u32 = 0x08000000;
-
-    let output = std::process::Command::new("powershell")
-        .args(&[
-            "-NoProfile",
-            "-Command",
-            "Get-CimInstance Win32_PhysicalMemory | ForEach-Object { $_.SMBIOSMemoryType, $_.Speed } | Select-Object -First 4"
-        ])
-        .creation_flags(CREATE_NO_WINDOW)
-        .output();
-
-    if let Ok(out) = output {
-        let text = String::from_utf8_lossy(&out.stdout);
-        let mut has_ddr5 = false;
-        let mut has_ddr3 = false;
-
-        for line in text.lines() {
-            if let Ok(val) = line.trim().parse::<u32>() {
-                if val == 34 || val >= 4800 {
-                    has_ddr5 = true;
-                    break;
-                } else if val == 24 {
-                    has_ddr3 = true;
-                }
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    if let Ok(key) = hklm.open_subkey(r"HARDWARE\DESCRIPTION\System\CentralProcessor\0") {
+        if let Ok(cpu_name) = key.get_value::<String, _>("ProcessorNameString") {
+            let cpu_lower = cpu_name.to_lowercase();
+            // Предыдущие поколения CPU без поддержки DDR5
+            if cpu_lower.contains("i3-10") || cpu_lower.contains("i5-10") || cpu_lower.contains("i5-11") 
+                || cpu_lower.contains("i7-10") || cpu_lower.contains("i7-11") 
+                || cpu_lower.contains("i9-10") || cpu_lower.contains("i9-11")
+                || cpu_lower.contains("ryzen 3") || cpu_lower.contains("ryzen 5 3") 
+                || cpu_lower.contains("ryzen 5 5") || cpu_lower.contains("ryzen 7 3") 
+                || cpu_lower.contains("ryzen 7 5") || cpu_lower.contains("ryzen 9 3") 
+                || cpu_lower.contains("ryzen 9 5") || cpu_lower.contains("fx-") 
+                || cpu_lower.contains("athlon")
+            {
+                ram_type = "DDR4".to_string();
+            } else if cpu_lower.contains("i5-2") || cpu_lower.contains("i5-3") || cpu_lower.contains("i7-2") || cpu_lower.contains("i7-3") {
+                ram_type = "DDR3".to_string();
+            } else {
+                ram_type = "DDR5".to_string();
             }
-        }
-
-        if has_ddr5 {
-            ram_type = "DDR5".to_string();
-        } else if has_ddr3 {
-            ram_type = "DDR3".to_string();
         }
     }
 
