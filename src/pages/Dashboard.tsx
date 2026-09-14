@@ -532,10 +532,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <div className="w-10 h-10 rounded-xl bg-ghost-cyan/10 border border-ghost-cyan/20 flex items-center justify-center text-ghost-cyan shrink-0">
               <Zap size={18} />
             </div>
-            <div className="flex-1 min-w-[200px]">
-              <div className="flex justify-between items-center text-xs font-mono mb-1.5">
-                <span className="text-zinc-400">{t.dashboard.statRam}</span>
-                <span className="text-white font-semibold">
+            <div className="flex-1 min-w-[240px]">
+              <div className="flex justify-between items-center text-xs font-mono mb-1.5 gap-4">
+                <span className="text-zinc-400 whitespace-nowrap">{t.dashboard.statRam}:</span>
+                <span className="text-white font-semibold whitespace-nowrap pl-2">
                   {(memStatus.used_mb / 1024).toFixed(1)} / {(memStatus.total_mb / 1024).toFixed(0)} GB
                 </span>
               </div>

@@ -3,7 +3,7 @@ import {
   Palette, User, Monitor, Globe, Check, 
   Sparkles, Shield, Cpu, Zap, Ghost, 
   Crosshair, Crown, Flame, RotateCw, CheckCircle2,
-  Bug, Copy, FileText, Download, ArrowUpCircle, ExternalLink
+  Download, ArrowUpCircle, ExternalLink
 } from 'lucide-react';
 import { 
   getPreferences, savePreferences, THEMES, ThemeId, 
@@ -21,44 +21,8 @@ export default function Settings() {
   const [dnsStatus, setDnsStatus] = useState<string | null>(null);
   const [dnsLoading, setDnsLoading] = useState(false);
   const [syncingDisplay, setSyncingDisplay] = useState(false);
-  const [copiedDiag, setCopiedDiag] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(null);
-
-  const handleCopyDiagnosticReport = async () => {
-    try {
-      const info = sysInfo || await invoke<SystemInfo>('get_system_info').catch(() => null);
-      const isAdmin = await invoke<boolean>('is_admin_elevated').catch(() => false);
-      const tweaks = await invoke<any[]>('get_tweaks_status').catch(() => []);
-      const activeTweaks = tweaks.filter(t => t.enabled).map(t => t.name || t.id).join(', ');
-      const hwid = localStorage.getItem('ghosttweak_hwid') || 'UNKNOWN';
-
-      const report = [
-        '### GhostTweak Diagnostic Report',
-        `- **Version:** v1.0.0`,
-        `- **Date:** ${new Date().toISOString()}`,
-        `- **OS:** ${info?.os_name || 'Windows'} (${info?.os_version || 'N/A'})`,
-        `- **CPU:** ${info?.cpu || 'N/A'}`,
-        `- **GPU:** ${info?.gpu || 'N/A'}`,
-        `- **RAM:** ${info?.ram_gb ? `${Math.round(info.ram_gb)} GB ${info.ram_type || 'DDR5'}` : 'N/A'}`,
-        `- **Display:** ${info?.display_res || 'N/A'} @ ${info?.refresh_rate || prefs.refreshRate || 60}Hz`,
-        `- **Admin Elevated:** ${isAdmin ? 'Yes (Elevated)' : 'No (Standard User)'}`,
-        `- **HWID:** \`${hwid}\``,
-        `- **Active Tweaks (${tweaks.filter(t => t.enabled).length}/${tweaks.length}):** ${activeTweaks || 'None'}`,
-        '',
-        '---',
-        '**Problem Description / Issue:**',
-        '> [Опишите проблему, замеры FPS до и после или сообщение об ошибке]'
-      ].join('\n');
-
-      await navigator.clipboard.writeText(report);
-      setCopiedDiag(true);
-      showToast(t.settings.diagCopied);
-      setTimeout(() => setCopiedDiag(false), 3000);
-    } catch (e) {
-      console.error('Failed to copy report:', e);
-    }
-  };
 
   const handleLanguageChange = (newLang: Language) => {
     setStoredLanguage(newLang);
@@ -564,55 +528,6 @@ export default function Settings() {
               <span>{checkingUpdate ? (lang === 'ru' ? 'Проверка...' : 'Checking...') : (lang === 'ru' ? 'Проверить обновления' : 'Check for Updates')}</span>
             </button>
           </div>
-        </div>
-      </div>
-
-      <div className="glass-card p-5 rounded-2xl border border-ghost-neon/20 bg-gradient-to-br from-ghost-neon/[0.04] to-transparent relative overflow-hidden">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Bug size={16} className="text-ghost-neon" />
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-              {t.settings.secBeta}
-            </h3>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-ghost-cyan/20 border border-ghost-cyan/40 text-ghost-cyan">
-              v1.0.0
-            </span>
-          </div>
-          <span className="text-[10px] font-mono text-zinc-400">
-            {lang === 'ru' ? 'Стабильный релиз' : 'Stable Release'}
-          </span>
-        </div>
-
-        <p className="text-xs text-zinc-400 mb-4">
-          {t.settings.secBetaDesc}
-        </p>
-
-        <div className="p-4 rounded-xl bg-titanium-950/80 border border-white/[0.08] flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1 max-w-xl">
-            <div className="flex items-center gap-2 text-xs font-bold text-white">
-              <FileText size={14} className="text-ghost-cyan" />
-              <span>{t.settings.btnCopyDiag}</span>
-            </div>
-            <p className="text-[11px] text-zinc-400">
-              {t.settings.btnCopyDiagDesc}
-            </p>
-            <p className="text-[10px] text-zinc-500 font-mono mt-1">
-              {t.settings.betaFeedbackText}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleCopyDiagnosticReport}
-            className={`px-4 py-2.5 rounded-xl font-mono text-xs font-bold border transition-all flex items-center justify-center gap-2 shrink-0 ${
-              copiedDiag
-                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-glow'
-                : 'btn-outline border-ghost-cyan/40 text-ghost-cyan hover:bg-ghost-cyan/10 hover:border-ghost-cyan'
-            }`}
-          >
-            {copiedDiag ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-            <span>{copiedDiag ? (lang === 'ru' ? 'Отчет скопирован!' : 'Report Copied!') : t.settings.btnCopyDiag}</span>
-          </button>
         </div>
       </div>
 
