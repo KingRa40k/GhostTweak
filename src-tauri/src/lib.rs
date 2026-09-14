@@ -9,6 +9,55 @@ use tauri::{
     Emitter, Manager,
 };
 
+#[cfg(windows)]
+fn setup_global_hotkey(app_handle: tauri::AppHandle) {
+    std::thread::spawn(move || {
+        #[repr(C)]
+        struct POINT {
+            x: i32,
+            y: i32,
+        }
+        #[repr(C)]
+        struct MSG {
+            hwnd: *mut std::ffi::c_void,
+            message: u32,
+            wparam: usize,
+            lparam: isize,
+            time: u32,
+            pt: POINT,
+            l_private: u32,
+        }
+
+        extern "system" {
+            fn RegisterHotKey(hWnd: *mut std::ffi::c_void, id: i32, fsModifiers: u32, vk: u32) -> i32;
+            fn GetMessageW(lpMsg: *mut MSG, hWnd: *mut std::ffi::c_void, wMsgFilterMin: u32, wMsgFilterMax: u32) -> i32;
+        }
+
+        const MOD_ALT: u32 = 0x0001;
+        const MOD_CONTROL: u32 = 0x0002;
+        const MOD_NOREPEAT: u32 = 0x4000;
+        const VK_F12: u32 = 0x7B;
+        const WM_HOTKEY: u32 = 0x0312;
+        const HOTKEY_ID: i32 = 0x4754; // "GT"
+
+        unsafe {
+            if RegisterHotKey(std::ptr::null_mut(), HOTKEY_ID, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_F12) != 0 {
+                tracing::info!("Global Hotkey registered: Ctrl + Alt + F12 (Match Turbo)");
+                let mut msg: MSG = std::mem::zeroed();
+                while GetMessageW(&mut msg, std::ptr::null_mut(), 0, 0) > 0 {
+                    if msg.message == WM_HOTKEY && msg.wparam == HOTKEY_ID as usize {
+                        tracing::info!("Global Hotkey Ctrl + Alt + F12 triggered in-game!");
+                        let _ = performance::run_match_turbo();
+                        let _ = app_handle.emit("ghosttweak:hotkey-turbo", ());
+                    }
+                }
+            } else {
+                tracing::warn!("Failed to register global hotkey Ctrl+Alt+F12 (might be in use)");
+            }
+        }
+    });
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     logging::init_logging();
@@ -78,6 +127,9 @@ pub fn run() {
 
             app.manage(tray);
 
+            #[cfg(windows)]
+            setup_global_hotkey(app.handle().clone());
+
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -92,6 +144,9 @@ pub fn run() {
             system_info::restart_as_admin,
             system_info::detect_hardware_tier,
             system_info::check_for_updates,
+            system_info::get_autostart_status,
+            system_info::set_autostart,
+            system_info::run_system_health_check,
             cleaner::scan_junk,
             cleaner::clean_junk,
             cleaner::scan_shader_cache,
@@ -102,6 +157,7 @@ pub fn run() {
             performance::run_match_turbo,
             performance::throttle_background_apps,
             performance::restore_background_apps,
+            performance::test_network_pings,
             tweaks::get_tweaks_status,
             tweaks::apply_tweak,
             tweaks::apply_all_tweaks,

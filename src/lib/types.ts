@@ -140,4 +140,25 @@ export interface UpdateCheckResult {
   download_url: string;
 }
 
+export interface PingServerResult {
+  id: string;
+  name: string;
+  host: string;
+  category: 'valve' | 'dns';
+  ping_ms: number | null;
+  status: 'optimal' | 'good' | 'fair' | 'offline';
+}
+
+export interface SystemHealthResult {
+  healthy: boolean;
+  status_text: string;
+  details: string[];
+  scanned_at: string;
+}
+
+export interface AutostartInfo {
+  enabled: boolean;
+  tray_only: boolean;
+}
+
 

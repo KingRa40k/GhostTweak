@@ -177,4 +177,34 @@
     transform: skewX(-20deg);
     animation: shimmer-sweep 2.5s infinite;
   }
+
+  .precision-border {
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, rgba(26, 29, 36, 0.75) 0%, rgba(12, 14, 18, 0.9) 100%);
+    box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .metric-pill {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-mono text-xs font-semibold bg-white/[0.04] border border-white/[0.08] text-zinc-300;
+  }
+
+  .pulse-dot {
+    @apply relative flex h-2 w-2;
+  }
+  .pulse-dot::before {
+    content: '';
+    @apply animate-ping absolute inline-flex h-full w-full rounded-full opacity-75;
+    background-color: currentColor;
+  }
+  .pulse-dot::after {
+    content: '';
+    @apply relative inline-flex rounded-full h-2 w-2;
+    background-color: currentColor;
+  }
+
+  .satin-laser {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), var(--accent-color, #00f0ff), rgba(255, 255, 255, 0.15), transparent);
+  }
 }

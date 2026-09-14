@@ -3,15 +3,17 @@ import {
   Palette, User, Monitor, Globe, Check, 
   Sparkles, Shield, Cpu, Zap, Ghost, 
   Crosshair, Crown, Flame, RotateCw, CheckCircle2,
-  Download, ArrowUpCircle, ExternalLink
+  Download, ArrowUpCircle, ExternalLink, Volume2, VolumeX,
+  Keyboard, Power, Activity, HeartPulse, Sliders, ShieldCheck
 } from 'lucide-react';
 import { 
   getPreferences, savePreferences, THEMES, ThemeId, 
   AvatarId, calculateFrameBudget 
 } from '../lib/theme';
 import { invoke } from '../lib/tauri';
-import { SystemInfo, UpdateCheckResult } from '../lib/types';
+import { SystemInfo, UpdateCheckResult, AutostartInfo, SystemHealthResult } from '../lib/types';
 import { useI18n, Language, setStoredLanguage } from '../lib/i18n';
+import { playClick, playSwitch, playTurbo, playSuccess, playBlip, getSoundEnabled, setSoundEnabled } from '../lib/sound';
 
 export default function Settings() {
   const { t, lang } = useI18n();
@@ -23,13 +25,57 @@ export default function Settings() {
   const [syncingDisplay, setSyncingDisplay] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(null);
+  const [autostart, setAutostart] = useState(false);
+  const [autostartLoading, setAutostartLoading] = useState(false);
+  const [soundOn, setSoundOn] = useState(getSoundEnabled());
+  const [healthCheckLoading, setHealthCheckLoading] = useState(false);
+  const [healthResult, setHealthResult] = useState<SystemHealthResult | null>(null);
 
   const handleLanguageChange = (newLang: Language) => {
+    playSwitch();
     setStoredLanguage(newLang);
     showToast(newLang === 'ru' ? 'Язык изменен на Русский' : 'Language switched to English');
   };
 
+  const handleToggleAutostart = async () => {
+    try {
+      playSwitch();
+      setAutostartLoading(true);
+      const next = !autostart;
+      await invoke('set_autostart', { enabled: next });
+      setAutostart(next);
+      showToast(next ? (lang === 'ru' ? 'Автозапуск в трей включен' : 'Autostart to tray enabled') : (lang === 'ru' ? 'Автозапуск отключен' : 'Autostart disabled'));
+    } catch {
+      showToast(lang === 'ru' ? 'Ошибка изменения автозапуска' : 'Failed to update autostart');
+    } finally {
+      setAutostartLoading(false);
+    }
+  };
+
+  const handleToggleSound = () => {
+    const next = !soundOn;
+    setSoundEnabled(next);
+    setSoundOn(next);
+    if (next) playSuccess();
+    showToast(next ? (lang === 'ru' ? 'Звуковой отклик включен' : 'Sound effects enabled') : (lang === 'ru' ? 'Звук отключен' : 'Sound effects disabled'));
+  };
+
+  const handleRunHealthCheck = async () => {
+    try {
+      playClick();
+      setHealthCheckLoading(true);
+      const res = await invoke<SystemHealthResult>('run_system_health_check');
+      setHealthResult(res);
+      playSuccess();
+    } catch {
+      showToast(lang === 'ru' ? 'Ошибка диагностики системы' : 'System diagnostics failed');
+    } finally {
+      setHealthCheckLoading(false);
+    }
+  };
+
   const handleCheckUpdate = async () => {
+    playClick();
     setCheckingUpdate(true);
     try {
       const res = await invoke<UpdateCheckResult>('check_for_updates');
@@ -53,6 +99,9 @@ export default function Settings() {
   };
 
   useEffect(() => {
+    invoke<AutostartInfo>('get_autostart_status')
+      .then((info) => setAutostart(info.enabled))
+      .catch(() => {});
     invoke<SystemInfo>('get_system_info')
       .then((info) => {
         setSysInfo(info);
@@ -438,6 +487,184 @@ export default function Settings() {
               <span className="text-[9px] text-zinc-500 font-mono mt-2 uppercase">{item.label}</span>
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* System Integration, Autostart & Tactile Audio */}
+      <div className="glass-card p-5 rounded-2xl border border-white/[0.08]">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Power size={16} className="text-ghost-cyan" />
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              {lang === 'ru' ? 'Системная интеграция и звук' : 'System Integration & Audio'}
+            </h3>
+          </div>
+          <span className="text-[10px] font-mono text-zinc-500">Windows Services</span>
+        </div>
+        <p className="text-xs text-zinc-400 mb-4">
+          {lang === 'ru' 
+            ? 'Управление автозагрузкой Windows, внутриигровым триггером и звуковым синтезатором Web Audio.' 
+            : 'Configure Windows startup, global gaming hotkey, and procedural Web Audio feedback.'}
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-4">
+          {/* Autostart */}
+          <div className="hardware-well p-4 rounded-xl border border-white/[0.06] flex items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white">
+                  {lang === 'ru' ? 'Автозапуск при старте Windows' : 'Start with Windows'}
+                </span>
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-ghost-cyan">
+                  Tray
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400">
+                {lang === 'ru' 
+                  ? 'Запуск в свернутом виде в системный трей без появления окон' 
+                  : 'Silent startup minimized to notification area'}
+              </p>
+            </div>
+
+            <button
+              onClick={handleToggleAutostart}
+              disabled={autostartLoading}
+              className={`w-12 h-6 rounded-full transition-colors relative p-0.5 border ${
+                autostart ? 'bg-ghost-cyan border-ghost-cyan' : 'bg-white/[0.08] border-white/[0.1]'
+              }`}
+            >
+              <div
+                className={`w-4.5 h-4.5 rounded-full transition-transform ${
+                  autostart ? 'translate-x-6 bg-black' : 'translate-x-0.5 bg-zinc-400'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Sound Toggle */}
+          <div className="hardware-well p-4 rounded-xl border border-white/[0.06] flex items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white">
+                  {lang === 'ru' ? 'Тактильный звуковой отклик' : 'Acoustic Sound Feedback'}
+                </span>
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-emerald-400">
+                  WebAudio
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400">
+                {lang === 'ru' 
+                  ? 'Синтез механических щелчков и турбо-эффектов без задержек' 
+                  : 'Hardware synthesis for buttons, switches and match boost'}
+              </p>
+            </div>
+
+            <button
+              onClick={handleToggleSound}
+              className={`w-12 h-6 rounded-full transition-colors relative p-0.5 border ${
+                soundOn ? 'bg-emerald-400 border-emerald-400' : 'bg-white/[0.08] border-white/[0.1]'
+              }`}
+            >
+              <div
+                className={`w-4.5 h-4.5 rounded-full transition-transform ${
+                  soundOn ? 'translate-x-6 bg-black' : 'translate-x-0.5 bg-zinc-400'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
+        {/* Global Hotkey Banner & Sound Sampler */}
+        <div className="p-4 rounded-xl bg-titanium-950/80 border border-white/[0.06] flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+              <Keyboard size={18} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white">
+                  {lang === 'ru' ? 'Глобальная горячая клавиша в играх' : 'Global In-Game Hotkey'}
+                </span>
+                <kbd className="px-2 py-0.5 text-[10px] font-mono font-bold bg-white/[0.08] text-amber-300 rounded border border-white/[0.12]">
+                  Ctrl + Alt + F12
+                </kbd>
+              </div>
+              <p className="text-[11px] text-zinc-400 mt-0.5">
+                {lang === 'ru' 
+                  ? 'Активирует Match Turbo, сбрасывает кэш Standby памяти и фиксирует таймер прямо во время игры' 
+                  : 'Fires Match Turbo, purges Standby RAM and locks 0.5ms timer directly in match without Alt-Tab'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] font-mono text-zinc-500 mr-1">{lang === 'ru' ? 'Тест звуков:' : 'Test:'}</span>
+            <button
+              onClick={() => playClick()}
+              className="px-2 py-1 rounded bg-white/[0.04] hover:bg-white/[0.08] text-[10px] font-mono text-zinc-300 border border-white/[0.06]"
+            >
+              Click
+            </button>
+            <button
+              onClick={() => playSwitch()}
+              className="px-2 py-1 rounded bg-white/[0.04] hover:bg-white/[0.08] text-[10px] font-mono text-zinc-300 border border-white/[0.06]"
+            >
+              Switch
+            </button>
+            <button
+              onClick={() => playBlip()}
+              className="px-2 py-1 rounded bg-white/[0.04] hover:bg-white/[0.08] text-[10px] font-mono text-zinc-300 border border-white/[0.06]"
+            >
+              Blip
+            </button>
+            <button
+              onClick={() => playTurbo()}
+              className="px-2 py-1 rounded bg-amber-500/15 hover:bg-amber-500/25 text-[10px] font-mono text-amber-300 border border-amber-500/30"
+            >
+              Turbo
+            </button>
+          </div>
+        </div>
+
+        {/* System Health Check (SFC / DISM component store) */}
+        <div className="p-4 rounded-xl bg-titanium-950/80 border border-white/[0.06]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+            <div className="flex items-center gap-2">
+              <HeartPulse size={16} className="text-rose-400" />
+              <span className="text-xs font-bold text-white">
+                {lang === 'ru' ? 'Диагностика целостности хранилища компонентов Windows' : 'Windows Component Store Integrity'}
+              </span>
+            </div>
+
+            <button
+              onClick={handleRunHealthCheck}
+              disabled={healthCheckLoading}
+              className="btn-outline text-[11px] py-1.5 px-3 flex items-center gap-1.5 font-mono self-start sm:self-auto"
+            >
+              <RotateCw size={12} className={healthCheckLoading ? "animate-spin text-ghost-cyan" : ""} />
+              <span>{healthCheckLoading ? (lang === 'ru' ? 'Анализ...' : 'Scanning...') : (lang === 'ru' ? 'Экспресс-проверка' : 'Run Diagnostics')}</span>
+            </button>
+          </div>
+
+          {healthResult ? (
+            <div className="space-y-1.5 mt-2.5 pt-2.5 border-t border-white/[0.04]">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${healthResult.healthy ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                <span className="text-xs font-bold text-white">{healthResult.status_text}</span>
+              </div>
+              <ul className="text-[11px] font-mono text-zinc-400 space-y-0.5 pl-4 list-disc">
+                {healthResult.details.map((d, i) => (
+                  <li key={i}>{d}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-[11px] text-zinc-500">
+              {lang === 'ru'
+                ? 'Проверка флагов CBS/DISM, целостности реестра и статуса отложенных перезагрузок.'
+                : 'Scans CBS/DISM pending flags, registry health and reboot locks.'}
+            </p>
+          )}
         </div>
       </div>
 

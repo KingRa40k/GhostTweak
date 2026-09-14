@@ -391,3 +391,63 @@ pub fn run_match_turbo() -> Result<MatchTurboResult, String> {
     }
 }
 
+#[derive(Serialize, Clone)]
+pub struct PingServerResult {
+    pub id: String,
+    pub name: String,
+    pub host: String,
+    pub category: String,
+    pub ping_ms: Option<u32>,
+    pub status: String,
+}
+
+#[tauri::command]
+pub fn test_network_pings() -> Result<Vec<PingServerResult>, String> {
+    use std::net::{TcpStream, ToSocketAddrs};
+    use std::time::{Duration, Instant};
+
+    let servers = [
+        ("valve_frankfurt", "Valve Frankfurt (EU Central)", "162.254.197.180:80", "valve"),
+        ("valve_warsaw", "Valve Warsaw (EU East)", "155.133.238.1:27015", "valve"),
+        ("valve_stockholm", "Valve Stockholm (EU North)", "155.133.252.1:27015", "valve"),
+        ("valve_helsinki", "Valve Helsinki (Finland)", "155.133.242.1:27015", "valve"),
+        ("cloudflare_dns", "Cloudflare DNS (1.1.1.1)", "1.1.1.1:53", "dns"),
+        ("google_dns", "Google DNS (8.8.8.8)", "8.8.8.8:53", "dns"),
+        ("quad9_dns", "Quad9 Secure DNS (9.9.9.9)", "9.9.9.9:53", "dns"),
+    ];
+
+    let mut results = Vec::new();
+    let timeout = Duration::from_millis(900);
+
+    for (id, name, addr_str, category) in servers {
+        let mut ping_ms: Option<u32> = None;
+        if let Ok(mut addrs) = addr_str.to_socket_addrs() {
+            if let Some(addr) = addrs.next() {
+                let start = Instant::now();
+                if let Ok(_stream) = TcpStream::connect_timeout(&addr, timeout) {
+                    let elapsed = start.elapsed().as_millis() as u32;
+                    ping_ms = Some(elapsed.max(1));
+                }
+            }
+        }
+
+        let status = match ping_ms {
+            Some(ms) if ms < 35 => "optimal",
+            Some(ms) if ms < 65 => "good",
+            Some(_) => "fair",
+            None => "offline",
+        };
+
+        results.push(PingServerResult {
+            id: id.to_string(),
+            name: name.to_string(),
+            host: addr_str.to_string(),
+            category: category.to_string(),
+            ping_ms,
+            status: status.to_string(),
+        });
+    }
+
+    Ok(results)
+}
+

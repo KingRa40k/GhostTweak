@@ -3,13 +3,14 @@ import {
   Crosshair, Zap, RotateCw, Check, Copy, Download, Flame, 
   ShieldCheck, Cpu, Layers, Wifi, Clock, AlertTriangle, 
   CheckCircle2, HardDrive, Terminal, Sliders, ChevronRight,
-  Gamepad2, Lock
+  Gamepad2, Lock, Globe, Activity, Server
 } from 'lucide-react';
 import { invoke } from '../lib/tauri';
-import { MemoryStatus, FlushResult, TweakInfo, SystemInfo, MatchTurboResult, ProcessThrottleResult } from '../lib/types';
+import { MemoryStatus, FlushResult, TweakInfo, SystemInfo, MatchTurboResult, ProcessThrottleResult, PingServerResult } from '../lib/types';
 import { getPreferences } from '../lib/theme';
 import { useI18n } from '../lib/i18n';
 import { getStoredLicense, isProLicense, LicenseData } from '../lib/license';
+import { playClick, playSwitch, playTurbo, playSuccess, playBlip } from '../lib/sound';
 import UpgradeModal from '../components/UpgradeModal';
 
 type SupportedGame = 'cs2' | 'valorant' | 'apex' | 'dota2';
@@ -119,6 +120,8 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
   const [throttleResult, setThrottleResult] = useState<ProcessThrottleResult | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState('');
+  const [pings, setPings] = useState<PingServerResult[]>([]);
+  const [testingPing, setTestingPing] = useState(false);
   
   // Directly and reactively derive isPro so it's impossible to be out-of-sync
   const isPro = isProLicense(propLicense || getStoredLicense());
@@ -164,9 +167,11 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
     }
 
     try {
+      playTurbo();
       setMatchTurboRunning(true);
       setNotice(null);
       const res = await invoke<MatchTurboResult>('run_match_turbo');
+      playSuccess();
       const updatedMem = await invoke<MemoryStatus>('get_memory_status').catch(() => null);
       if (updatedMem) setMemStatus(updatedMem);
       const gameStr = res.boosted_games.length > 0 ? ` [${res.boosted_games.join(', ')}]` : '';
@@ -184,11 +189,13 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
 
   const handleApplyBoost = async () => {
     try {
+      playTurbo();
       setBoosting(true);
       setNotice(null);
 
       await invoke('apply_cs2_boost');
       const flushRes = await invoke<FlushResult>('flush_memory').catch(() => null);
+      playSuccess();
 
       setIsBoosted(true);
       const updatedMem = await invoke<MemoryStatus>('get_memory_status').catch(() => null);
@@ -212,8 +219,10 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
 
   const handleFlushRam = async () => {
     try {
+      playClick();
       setFlushingRam(true);
       const res = await invoke<FlushResult>('flush_memory');
+      playBlip();
       setRamFreedNotice(lang === 'ru' ? `Выгружено ${res.freed_mb} МБ Standby-памяти. Своп на накопитель исключен.` : `Freed ${res.freed_mb} MB Standby RAM. Disk paging eliminated.`);
       setTimeout(() => setRamFreedNotice(null), 4000);
       const updatedMem = await invoke<MemoryStatus>('get_memory_status').catch(() => null);
@@ -232,8 +241,10 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
     }
 
     try {
+      playClick();
       setThrottlingBackground(true);
       const res = await invoke<ProcessThrottleResult>('throttle_background_apps');
+      playSuccess();
       setThrottleResult(res);
       const updatedMem = await invoke<MemoryStatus>('get_memory_status').catch(() => null);
       if (updatedMem) setMemStatus(updatedMem);
@@ -252,8 +263,10 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
 
   const handleRestoreBackground = async () => {
     try {
+      playClick();
       setRestoringBackground(true);
       await invoke<number>('restore_background_apps');
+      playBlip();
       setThrottleResult(null);
       setNotice(t.gameOpt.smartRestoreSuccess);
       setTimeout(() => setNotice(null), 4000);
@@ -264,19 +277,36 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
     }
   };
 
+  const handleTestPings = async () => {
+    try {
+      playClick();
+      setTestingPing(true);
+      const res = await invoke<PingServerResult[]>('test_network_pings');
+      setPings(res);
+      playSuccess();
+    } catch {
+      setNotice(lang === 'ru' ? 'Ошибка измерения сетевых задержек' : 'Failed to measure network latency');
+    } finally {
+      setTestingPing(false);
+    }
+  };
+
   const copyLaunchOptions = () => {
+    playClick();
     navigator.clipboard.writeText(launchOptions);
     setCopiedLaunch(true);
     setTimeout(() => setCopiedLaunch(false), 2000);
   };
 
   const copyAutoexec = () => {
+    playClick();
     navigator.clipboard.writeText(autoexecContent);
     setCopiedAutoexec(true);
     setTimeout(() => setCopiedAutoexec(false), 2000);
   };
 
   const downloadAutoexec = () => {
+    playClick();
     const blob = new Blob([autoexecContent], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -626,6 +656,109 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
         <pre className="bg-titanium-950 p-3.5 rounded-xl border border-white/[0.06] text-[11px] font-mono text-zinc-400 overflow-x-auto max-h-40 leading-relaxed">
           {autoexecContent}
         </pre>
+      </div>
+
+      {/* Network Latency & Valve CS2 Datacenter Benchmark */}
+      <div className="glass-card p-5 rounded-2xl border border-white/[0.08]">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-lg bg-ghost-cyan/10 border border-ghost-cyan/20 text-ghost-cyan">
+              <Globe size={18} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                  {lang === 'ru' ? 'Замер пинга: Датацентры Valve & DNS' : 'Network Benchmark: Valve Servers & DNS'}
+                </h3>
+                <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-ghost-cyan/10 text-ghost-cyan border border-ghost-cyan/20 font-semibold">
+                  Direct TCP
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400 mt-0.5">
+                {lang === 'ru' 
+                  ? 'Прямой TCP handshake без потерь ICMP. Замер реального времени отклика в миллисекундах.' 
+                  : 'Real socket handshake latency to CS2 competitive servers and gaming resolvers.'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleTestPings}
+            disabled={testingPing}
+            className="btn-cyan px-4 py-2 text-xs font-mono flex items-center gap-2 shrink-0"
+          >
+            <RotateCw size={13} className={testingPing ? "animate-spin" : ""} />
+            <span>{testingPing ? (lang === 'ru' ? "Измерение..." : "Measuring...") : (lang === 'ru' ? "Замерить задержку" : "Run Benchmark")}</span>
+          </button>
+        </div>
+
+        {pings.length === 0 ? (
+          <div className="hardware-well p-4 rounded-xl border border-white/[0.06] text-center">
+            <p className="text-xs text-zinc-400">
+              {lang === 'ru' 
+                ? 'Нажмите «Замерить задержку» для проверки пинга до серверов Франкфурта, Варшавы, Стокгольма, Хельсинки и DNS.' 
+                : 'Click "Run Benchmark" to test latency to Frankfurt, Warsaw, Stockholm, Helsinki, and gaming DNS.'}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+              {pings.filter(p => p.category === 'valve').map((p, idx) => (
+                <div key={idx} className="hardware-well p-3 rounded-xl border border-white/[0.06] flex items-center justify-between gap-2">
+                  <div className="overflow-hidden">
+                    <div className="text-xs font-bold text-white truncate">{p.name}</div>
+                    <div className="text-[10px] font-mono text-zinc-500 truncate">{p.host}</div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    {p.ping_ms !== null && p.ping_ms !== undefined ? (
+                      <span className={`px-2 py-0.5 rounded font-mono text-xs font-bold ${
+                        p.ping_ms < 35 
+                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' 
+                          : p.ping_ms < 75 
+                            ? 'bg-ghost-cyan/15 text-ghost-cyan border border-ghost-cyan/25' 
+                            : 'bg-amber-500/15 text-amber-400 border border-amber-500/25'
+                      }`}>
+                        {p.ping_ms} ms
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded font-mono text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                        TimeOut
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hardware-well p-3 rounded-xl border border-white/[0.06]">
+              <div className="text-[10px] font-mono uppercase text-zinc-400 mb-2 flex items-center gap-1.5">
+                <Server size={11} className="text-ghost-cyan" />
+                <span>{lang === 'ru' ? 'DNS Резолверы' : 'DNS Resolvers'}</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {pings.filter(p => p.category === 'dns').map((p, idx) => (
+                  <div key={idx} className="bg-titanium-950 p-2.5 rounded-lg border border-white/[0.04] flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-semibold text-zinc-200">{p.name}</div>
+                      <div className="text-[10px] font-mono text-zinc-500">{p.host}</div>
+                    </div>
+                    <div>
+                      {p.ping_ms !== null && p.ping_ms !== undefined ? (
+                        <span className={`font-mono text-xs font-bold ${
+                          p.ping_ms < 25 ? 'text-emerald-400' : p.ping_ms < 50 ? 'text-ghost-cyan' : 'text-amber-400'
+                        }`}>
+                          {p.ping_ms} ms
+                        </span>
+                      ) : (
+                        <span className="font-mono text-xs text-rose-400">N/A</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="glass-card p-5 rounded-2xl border border-white/[0.08]">
