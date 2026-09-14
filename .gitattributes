@@ -1,0 +1,11 @@
+# GitHub Linguist overrides
+# Treat promotional website as vendored so repository is recognized as a native Rust application
+website/** linguist-vendored
+docs/** linguist-documentation
+scripts/** linguist-vendored
+
+# Ensure consistent line endings across platforms
+*.rs text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.bat text eol=crlf
