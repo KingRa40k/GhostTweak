@@ -38,8 +38,10 @@ GhostTweak/
 │   └── create_test_certificate.bat
 │
 ├── build.bat                  # СБОРКА РЕЛИЗА В 1 КЛИК (Frontend + Rust + Sign)
+├── setup_env.bat              # ПРОВЕРКА И ДОУСТАНОВКА ОКРУЖЕНИЯ (Node, Rust, npm)
 ├── keygen.bat                 # ГЕНЕРАТОР КЛЮЧЕЙ В 1 КЛИК
-└── run_dev.bat                # ЗАПУСК РЕЖИМА РАЗРАБОТКИ
+├── run_dev.bat                # ЗАПУСК РЕЖИМА РАЗРАБОТКИ
+└── OWNER_GUIDE.html           # ИНТЕРАКТИВНОЕ РУКОВОДСТВО ДЛЯ БРАУЗЕРА
 ```
 
 ---

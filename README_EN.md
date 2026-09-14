@@ -2,14 +2,22 @@
 
 # GhostTweak
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Rust-1.80+-dea584?style=for-the-badge&logo=rust&logoColor=white" alt="Rust" />
+  <img src="https://img.shields.io/badge/Tauri-v2-24c8db?style=for-the-badge&logo=tauri&logoColor=white" alt="Tauri v2" />
+  <img src="https://img.shields.io/badge/React-19-61dafb?style=for-the-badge&logo=react&logoColor=black" alt="React 19" />
+  <img src="https://img.shields.io/badge/Platform-Windows_10_|_11-0078d6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
+  <img src="https://img.shields.io/badge/Security-Authenticode_Signed-8b5cf6?style=for-the-badge&logo=windows-terminal&logoColor=white" alt="Signed" />
+</p>
+
 A Windows desktop utility designed for operating system optimization, targeted at competitive gaming and performance-constrained PCs.
 
 > **Documentation & Owner Manuals:**
-> * [Owner Handover Guide](HANDOVER_GUIDE.md) | [English Owner Manual](docs/01_BUYER_GUIDE_EN.md)
+> * [Owner Handover Guide (MD)](HANDOVER_GUIDE.md) | [Interactive Owner Guide (HTML)](OWNER_GUIDE.html) | [English Owner Manual](docs/01_BUYER_GUIDE_EN.md)
 > * [01. Architecture](docs/01_ARCHITECTURE.md) • [02. Build & Release](docs/02_BUILD_AND_RELEASE.md) • [03. Licensing](docs/03_LICENSING_AND_MONETIZATION.md) • [04. Branding](docs/04_CUSTOMIZATION_AND_CONTACTS.md) • [05. Vercel Deploy](docs/05_DEPLOYMENT_VERCEL.md) • [06. FAQ](docs/06_FAQ_AND_TROUBLESHOOTING.md)
 
 Tech Stack: **Tauri v2, Rust, React 19, TypeScript, Tailwind CSS**.  
-Executable Size: **~12 MB** (15x lighter than Electron). Operates without background web servers and without Electron.
+Executable Size: **~12.5 MB** (15x lighter than Electron). Operates without background web servers and without Electron.
 
 ---
 

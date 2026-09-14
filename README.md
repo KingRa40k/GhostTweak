@@ -2,14 +2,22 @@
 
 # GhostTweak
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Rust-1.80+-dea584?style=for-the-badge&logo=rust&logoColor=white" alt="Rust" />
+  <img src="https://img.shields.io/badge/Tauri-v2-24c8db?style=for-the-badge&logo=tauri&logoColor=white" alt="Tauri v2" />
+  <img src="https://img.shields.io/badge/React-19-61dafb?style=for-the-badge&logo=react&logoColor=black" alt="React 19" />
+  <img src="https://img.shields.io/badge/Platform-Windows_10_|_11-0078d6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
+  <img src="https://img.shields.io/badge/Security-Authenticode_Signed-8b5cf6?style=for-the-badge&logo=windows-terminal&logoColor=white" alt="Signed" />
+</p>
+
 Настольное приложение для Windows, предназначенное для оптимизации системы под соревновательные игры и ПК с ограниченной производительностью.
 
 > **Документация и руководство владельца:**
-> * [Руководство владельца (HANDOVER GUIDE)](HANDOVER_GUIDE.md) | [English Owner Guide](docs/01_BUYER_GUIDE_EN.md)
+> * [Руководство владельца (HANDOVER GUIDE)](HANDOVER_GUIDE.md) | [Интерактивный гайд (HTML)](OWNER_GUIDE.html) | [English Owner Guide](docs/01_BUYER_GUIDE_EN.md)
 > * [01. Архитектура](docs/01_ARCHITECTURE.md) • [02. Сборка](docs/02_BUILD_AND_RELEASE.md) • [03. Лицензии](docs/03_LICENSING_AND_MONETIZATION.md) • [04. Контакты](docs/04_CUSTOMIZATION_AND_CONTACTS.md) • [05. Деплой Vercel](docs/05_DEPLOYMENT_VERCEL.md) • [06. FAQ](docs/06_FAQ_AND_TROUBLESHOOTING.md)
 
 Стек: **Tauri v2, Rust, React 19, TypeScript, Tailwind CSS**.  
-Размер исполняемого файла: **~12 МБ** (в 15 раз легче Electron). Приложение работает без веб-серверов в фоне и без платформы Electron.
+Размер исполняемого файла: **~12.5 МБ** (в 15 раз легче Electron). Приложение работает без веб-серверов в фоне и без платформы Electron.
 
 ---
 
@@ -98,7 +106,7 @@ GhostTweak устраняет микрофризы (stuttering), выравни�
 | Ядро / Бэкенд | Rust 1.92, Tauri v2 (`tray-icon`, `winreg`, `psapi`, `kernel32`) |
 | Клиентский интерфейс | React 19, TypeScript, Vite, Tailwind CSS, `lucide-react` |
 | Промо-сайт | Next.js 15 (App Router), Tailwind CSS, мультиязычность (RU / EN) |
-| Сборка | Бинарный файл `.exe` (4.8 МБ), инсталляторы NSIS (1.58 МБ) и MSI (2.39 МБ) |
+| Сборка | Портативный `.exe` (~12.5 МБ), инсталляторы NSIS (1.58 МБ) и MSI (2.39 МБ) |
 
 ---
 
