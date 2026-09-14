@@ -59,3 +59,15 @@ tools/*.db
 *.pfx
 *.p12
 
+# Buyer package & Private handover assets (Confidential)
+buyer_package/
+OWNER_GUIDE.html
+HANDOVER_GUIDE.md
+keygen.bat
+setup_env.bat
+releases/*.zip
+scripts/pack_buyer_kit.ps1
+scripts/prepare_buyer_package.ps1
+scripts/keygen.mjs
+
+

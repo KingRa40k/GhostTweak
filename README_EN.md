@@ -12,8 +12,7 @@
 
 A Windows desktop utility designed for operating system optimization, targeted at competitive gaming and performance-constrained PCs.
 
-> **Documentation & Owner Manuals:**
-> * [Owner Handover Guide (MD)](HANDOVER_GUIDE.md) | [Interactive Owner Guide (HTML)](OWNER_GUIDE.html) | [English Owner Manual](docs/01_BUYER_GUIDE_EN.md)
+> **Project Documentation:**
 > * [01. Architecture](docs/01_ARCHITECTURE.md) • [02. Build & Release](docs/02_BUILD_AND_RELEASE.md) • [03. Licensing](docs/03_LICENSING_AND_MONETIZATION.md) • [04. Branding](docs/04_CUSTOMIZATION_AND_CONTACTS.md) • [05. Vercel Deploy](docs/05_DEPLOYMENT_VERCEL.md) • [06. FAQ](docs/06_FAQ_AND_TROUBLESHOOTING.md)
 
 Tech Stack: **Tauri v2, Rust, React 19, TypeScript, Tailwind CSS**.  
