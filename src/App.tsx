@@ -11,10 +11,11 @@ import Settings from './pages/Settings';
 import AuthScreen from './pages/AuthScreen';
 import LicenseModal from './components/LicenseModal';
 import LanguageSelectModal from './components/LanguageSelectModal';
+import TrialLockoutModal from './components/TrialLockoutModal';
 import { getStoredLicense, removeLicense, resetLicense, syncStoredLicenseWithNative, LicenseData } from './lib/license';
 import { getPreferences, applyThemeToCss } from './lib/theme';
 import { invoke } from './lib/tauri';
-import { SecurityStatus } from './lib/types';
+import { SecurityStatus, TrialStatus } from './lib/types';
 import { getStoredLanguage } from './lib/i18n';
 import { ShieldAlert } from 'lucide-react';
 
@@ -26,6 +27,7 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
   const [themeVersion, setThemeVersion] = useState(0);
   const [securityStatus, setSecurityStatus] = useState<SecurityStatus | null>(null);
+  const [trialStatus, setTrialStatus] = useState<TrialStatus | null>(null);
   const [isTermsAgreed, setIsTermsAgreed] = useState<boolean>(() => {
     return localStorage.getItem('ghosttweak_agreement_accepted') === 'true';
   });
@@ -85,7 +87,30 @@ export default function App() {
       setIsReady(true);
     });
 
+    const pollTrial = () => {
+      invoke<TrialStatus>('get_trial_status')
+        .then((ts) => {
+          setTrialStatus(ts);
+          if (ts.is_trial && !ts.is_expired) {
+            setLicense((prev) => prev || {
+              key: '24H-EVALUATION-TRIAL',
+              plan: 'TRIAL',
+              hwid: 'EVAL-DEVICE',
+              activatedAt: ts.started_at_human,
+              expiresAt: ts.formatted_time_remaining,
+              userName: 'Evaluation Buyer',
+            });
+            setIsTermsAgreed(true);
+          }
+        })
+        .catch(() => {});
+    };
+
+    pollTrial();
+    const trialInterval = setInterval(pollTrial, 15000);
+
     return () => {
+      clearInterval(trialInterval);
       window.removeEventListener('contextmenu', handleContextMenu);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('ghosttweak:theme-changed', handleThemeEvent);
@@ -143,6 +168,7 @@ export default function App() {
       <TitleBar 
         key={`titlebar-${themeVersion}`}
         license={license} 
+        trialStatus={trialStatus}
         onOpenLicense={() => setIsLicenseModalOpen(true)} 
       />
 
@@ -177,6 +203,10 @@ export default function App() {
         onUpdateLicense={(updated: LicenseData) => setLicense(updated)}
         onLogout={handleLogout}
       />
+
+      {trialStatus?.is_expired && (
+        <TrialLockoutModal trialStatus={trialStatus} />
+      )}
 
       {showLangModal && (
         <LanguageSelectModal onSelect={() => setShowLangModal(false)} />

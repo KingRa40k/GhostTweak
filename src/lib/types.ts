@@ -161,4 +161,13 @@ export interface AutostartInfo {
   tray_only: boolean;
 }
 
+export interface TrialStatus {
+  is_trial: boolean;
+  is_expired: boolean;
+  seconds_remaining: number;
+  total_seconds: number;
+  formatted_time_remaining: string;
+  started_at_human: string;
+}
+
 

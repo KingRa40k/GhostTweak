@@ -5,14 +5,16 @@ import {
   startDraggingWindow, isWindowMaximized, invoke 
 } from '../lib/tauri';
 import { LicenseData } from '../lib/license';
+import { TrialStatus } from '../lib/types';
 import { useI18n } from '../lib/i18n';
 
 interface TitleBarProps {
   license?: LicenseData | null;
+  trialStatus?: TrialStatus | null;
   onOpenLicense?: () => void;
 }
 
-export default function TitleBar({ license, onOpenLicense }: TitleBarProps) {
+export default function TitleBar({ license, trialStatus, onOpenLicense }: TitleBarProps) {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const { lang, setLang, t } = useI18n();
@@ -63,7 +65,14 @@ export default function TitleBar({ license, onOpenLicense }: TitleBarProps) {
           <span>GhostTweak</span>
         </div>
 
-        {license && (
+        {trialStatus?.is_trial && (
+          <div data-no-drag className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border bg-amber-500/10 border-amber-500/30 text-amber-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            <span>24H TRIAL: {trialStatus.formatted_time_remaining}</span>
+          </div>
+        )}
+
+        {license && !trialStatus?.is_trial && (
           <div data-no-drag className="flex items-center gap-2">
             <button
               type="button"

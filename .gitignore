@@ -1,4 +1,4 @@
-﻿# Node dependencies
+# Node dependencies
 node_modules/
 website/node_modules/
 .pnp
@@ -44,3 +44,4 @@ tools/
 
 # Commercial Buyer Package (Strictly Local)
 buyer_package/
+GhostTweak_24h_Trial.exe

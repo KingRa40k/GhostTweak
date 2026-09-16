@@ -2,7 +2,7 @@ mod commands;
 pub mod error;
 pub mod logging;
 
-use commands::{backup, cleaner, performance, security, system_info, tweaks, window_controls};
+use commands::{backup, cleaner, performance, security, system_info, trial, tweaks, window_controls};
 use tauri::{
     menu::MenuBuilder,
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -183,6 +183,9 @@ pub fn run() {
             window_controls::window_exit,
             window_controls::window_start_dragging,
             window_controls::window_is_maximized,
+            trial::get_trial_status,
+            trial::check_trial_allowed,
+            trial::trigger_self_destruct,
         ])
         .run(tauri::generate_context!())
         .expect("error while running GhostTweak");
