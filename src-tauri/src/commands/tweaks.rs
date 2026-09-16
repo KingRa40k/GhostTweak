@@ -436,10 +436,10 @@ const TWEAKS: &[TweakDef] = &[
     },
     TweakDef {
         id: "optimize_network",
-        name: "Optimize Network (TCP No Delay)",
-        description: "Reduces network latency via Nagle algorithm tweak (TcpAckFrequency = 1)",
+        name: "Low-Latency TCP No Delay (Nagle Off)",
+        description: "Disables delayed ACKs. Recommended only for direct wired Ethernet. May cause packet queueing/jitter on Wi-Fi, budget routers, or VPN tunnels.",
         category: "network",
-        risky: false,
+        risky: true,
     },
 
     TweakDef {
@@ -935,19 +935,31 @@ fn do_apply_internal(id: &str, enable: bool, do_backup: bool) -> Result<(), Stri
             )
         }
         "optimize_network" => {
-            let v = if enable { 1u32 } else { 0u32 };
-            tx.set_dword(
-                HKEY_LOCAL_MACHINE,
-                r"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters",
-                "TcpAckFrequency",
-                v,
-            )?;
-            tx.set_dword(
-                HKEY_LOCAL_MACHINE,
-                r"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters",
-                "TCPNoDelay",
-                v,
-            )
+            if enable {
+                tx.set_dword(
+                    HKEY_LOCAL_MACHINE,
+                    r"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters",
+                    "TcpAckFrequency",
+                    1u32,
+                )?;
+                tx.set_dword(
+                    HKEY_LOCAL_MACHINE,
+                    r"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters",
+                    "TCPNoDelay",
+                    1u32,
+                )
+            } else {
+                tx.delete_value(
+                    HKEY_LOCAL_MACHINE,
+                    r"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters",
+                    "TcpAckFrequency",
+                )?;
+                tx.delete_value(
+                    HKEY_LOCAL_MACHINE,
+                    r"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters",
+                    "TCPNoDelay",
+                )
+            }
         }
         "ultimate_perf_power" => {
             if enable {
