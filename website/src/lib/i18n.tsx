@@ -676,6 +676,13 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       const saved = localStorage.getItem("gt_lang") as Language;
       if (saved === "ru" || saved === "en") {
         setLangState(saved);
+      } else {
+        const navLang = typeof navigator !== "undefined" ? (navigator.language || "").toLowerCase() : "";
+        if (navLang.startsWith("ru") || navLang.startsWith("be") || navLang.startsWith("uk")) {
+          setLangState("ru");
+        } else {
+          setLangState("en");
+        }
       }
     } catch {}
   }, []);

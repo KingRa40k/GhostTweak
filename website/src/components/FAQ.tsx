@@ -19,7 +19,7 @@ interface FAQItem {
   tags: string[];
 }
 
-const FAQS: FAQItem[] = [
+const FAQS_RU: FAQItem[] = [
   {
     id: 'anti-cheat',
     question: 'Безопасен ли GhostTweak для Riot Vanguard, Easy Anti-Cheat, BattlEye и VAC?',
@@ -37,7 +37,7 @@ const FAQS: FAQItem[] = [
   {
     id: 'rust-vs-electron',
     question: 'Почему Rust + Tauri v2, а не Electron или C# .NET?',
-    answer: 'Приложения на базе Electron запускают внутри себя Chromium и среду Node.js, потребляя сотни мегабайт ОЗУ. GhostTweak написан на Rust и скомпилирован в нативный машинный код. Программа весит 4.8 МБ, стартует менее чем за 20 миллисекунд и потребляет около 8.4 МБ оперативной памяти в простое.',
+    answer: 'Приложения на базе Electron запускают внутри себя Chromium и среду Node.js, потребляя сотни мегабайт ОЗУ. GhostTweak написан на Rust и скомпилирован в нативный машинный код. Программа весит 4.8 МБ, стартует менее чем за 20 миллисекунд и потребляет около 14 МБ оперативной памяти в простое.',
     category: 'Архитектура',
     tags: ['Rust', 'Tauri', 'Производительность'],
   },
@@ -61,6 +61,51 @@ const FAQS: FAQItem[] = [
     answer: 'Права администратора необходимы для изменения системных параметров в ветке HKEY_LOCAL_MACHINE, остановки службы сбора телеметрии DiagTrack и управления мультимедийным таймером ядра Windows (MMCSS). Запрос прав происходит стандартно через окно контроля учетных записей (UAC).',
     category: 'Безопасность',
     tags: ['UAC', 'Администратор', 'Привилегии'],
+  },
+];
+
+const FAQS_EN: FAQItem[] = [
+  {
+    id: 'anti-cheat',
+    question: 'Is GhostTweak safe with Riot Vanguard, Easy Anti-Cheat, BattlEye & VAC?',
+    answer: 'Yes, 100% safe. GhostTweak never modifies game executables, never hooks game memory, and never injects third-party DLLs into foreign processes. All optimizations are applied strictly through the official Win32 API: documented Windows registry group policy values, kernel multimedia timer resolution (timeBeginPeriod), and native TCP/IP networking parameters.',
+    category: 'Safety',
+    tags: ['Anti-Cheat', 'Vanguard', 'EAC', 'Faceit'],
+  },
+  {
+    id: 'rollback',
+    question: 'How do I revert Windows settings back to stock?',
+    answer: 'Before applying any optimization, GhostTweak automatically exports the affected registry branches into an industry-standard .reg file inside %APPDATA%\\GhostTweak\\backups. In the Backups section, you can roll back your system to its original state at any time with a single click.',
+    category: 'Safety',
+    tags: ['Rollback', 'Backup', 'Safety'],
+  },
+  {
+    id: 'rust-vs-electron',
+    question: 'Why Rust + Tauri v2 instead of Electron or C# .NET?',
+    answer: 'Electron-based tools package a full Chromium browser and Node.js runtime, consuming hundreds of megabytes of RAM. GhostTweak is built with pure Rust and compiles directly to native machine code. The standalone binary is ~4.8 MB, launches in under 20 milliseconds, and consumes only ~14 MB of RAM at idle.',
+    category: 'Architecture',
+    tags: ['Rust', 'Tauri v2', 'Performance'],
+  },
+  {
+    id: 'xbox-store',
+    question: 'Will optimizations affect Microsoft Store and Xbox services?',
+    answer: 'No. GhostTweak never strips critical Windows system packages. Microsoft Store, Microsoft accounts, and Xbox Live networking services remain completely intact. Only background diagnostic telemetry tasks (DiagTrack) and background GameDVR recording are disabled.',
+    category: 'Compatibility',
+    tags: ['Windows Store', 'Xbox Live', 'Game Pass'],
+  },
+  {
+    id: 'win11-support',
+    question: 'Are Windows 11 (including 24H2) and Windows 10 supported?',
+    answer: 'Yes. GhostTweak has been thoroughly tested on Windows 10 (21H2+) and Windows 11, including the latest 24H2 release. On startup, the app detects your OS kernel version and applies only verified, version-compatible registry keys.',
+    category: 'Compatibility',
+    tags: ['Win 11 24H2', 'Win 10', 'Compatibility'],
+  },
+  {
+    id: 'uac-admin',
+    question: 'Why does GhostTweak require Administrator privileges?',
+    answer: 'Administrator rights are required to modify system-wide parameters in HKEY_LOCAL_MACHINE, stop the DiagTrack telemetry service, and configure the Windows kernel multimedia scheduler (MMCSS). Elevation is handled transparently via standard Windows User Account Control (UAC).',
+    category: 'Permissions',
+    tags: ['UAC', 'Admin', 'Privileges'],
   },
 ];
 
@@ -95,7 +140,7 @@ export const FAQ: React.FC = () => {
 
         {/* Accordion List */}
         <div className="space-y-3">
-          {FAQS.map((faq) => {
+          {(lang === 'en' ? FAQS_EN : FAQS_RU).map((faq) => {
             const isOpen = openId === faq.id;
 
             return (

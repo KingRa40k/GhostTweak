@@ -59,7 +59,7 @@ export default function AppMockup() {
               />
               <span className="font-sans font-extrabold text-xs text-white tracking-tight">GhostTweak</span>
             </div>
-            <span className="text-[10px] font-mono text-zinc-500 hidden sm:inline-block">v1.0.0</span>
+            <span className="text-[10px] font-mono text-zinc-500 hidden sm:inline-block">Precision Suite</span>
           </div>
 
           <div className="flex items-center gap-3 text-zinc-400">
