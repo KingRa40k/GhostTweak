@@ -3,6 +3,7 @@
 import React from "react";
 import { ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Logo from "@/components/Logo";
 
 interface HeroProps {
   eyebrow?: string;
@@ -47,6 +48,14 @@ export function Hero({
           boxShadow: "0 0 100px -20px var(--accent-color, #00f0ff)",
         }}
       />
+
+      {/* Brand Badge with Ghost Logo */}
+      <div className="animate-fade-in inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.1] shadow-sm mb-6">
+        <Logo className="w-5 h-5 text-accent drop-shadow-[0_0_8px_rgba(0,240,255,0.5)]" />
+        <span className="text-xs font-mono font-bold tracking-wider uppercase text-slate-200">
+          GhostTweak Precision Suite
+        </span>
+      </div>
 
       {/* Title with sleek metallic/accent gradient */}
       <h1
