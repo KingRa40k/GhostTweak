@@ -71,8 +71,8 @@ Safely purges temporary files and stale cache entries:
 
 - **Gaming Stack**: Disables background Xbox Game Bar overlays, Game DVR broadcast capture services, and optimizes DWM full-screen presentation.
 - **Privacy & Telemetry**: Stops and disables `DiagTrack` (Connected User Experiences and Telemetry), sets `AllowTelemetry = 0`, and disables Cortana search background integrations.
-- **Power & Visuals**: Activates the Ultimate Performance power plan (`SCHEME_MIN`), turns off GPU-taxing transparency effects, and disables window minimize/maximize animations.
-- **Network Pipeline**: Removes TCP acknowledgment delays (`TcpAckFrequency = 1`, `TCPNoDelay = 1`) and disables network throttling limits (`NetworkThrottlingIndex = 0xFFFFFFFF`).
+- **Power & Visuals**: Activates High Performance power plan, turns off GPU-taxing transparency effects, and disables window animations.
+- **Network Pipeline**: Disables network throttling index (`NetworkThrottlingIndex = 0xFFFFFFFF`) to eliminate packet queuing in online games.
 
 ### 6. Backups & Rollbacks
 
