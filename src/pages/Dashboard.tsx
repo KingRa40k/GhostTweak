@@ -55,7 +55,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     };
     window.addEventListener('ghosttweak:prefs-changed', handlePrefsChange);
 
-    // Listen for global hotkey & quick optimize events from tray / background
     let unlistenHotkey: (() => void) | undefined;
     let unlistenOptimize: (() => void) | undefined;
 

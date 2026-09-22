@@ -1151,7 +1151,6 @@ pub fn apply_cs2_boost() -> Result<ApplyResult, String> {
         "disable_power_throttling",
         "bcd_low_latency",
         "network_throttling_disable",
-        "optimize_network",
         "disable_game_bar",
         "disable_game_dvr",
     ];
@@ -1306,7 +1305,6 @@ pub fn apply_safe_lowspec_profile() -> Result<SuperOptimizeResult, String> {
         "disable_power_throttling",
         "bcd_low_latency",
         "network_throttling_disable",
-        "optimize_network",
         "disable_game_bar",
         "disable_game_dvr",
         "disable_telemetry",

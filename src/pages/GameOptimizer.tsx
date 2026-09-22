@@ -123,7 +123,6 @@ export default function GameOptimizer({ license: propLicense }: GameOptimizerPro
   const [pings, setPings] = useState<PingServerResult[]>([]);
   const [testingPing, setTestingPing] = useState(false);
   
-  // Directly and reactively derive isPro so it's impossible to be out-of-sync
   const isPro = isProLicense(propLicense || getStoredLicense());
 
   const activeGame = GAME_PROFILES[selectedGame];

@@ -43,7 +43,6 @@ export function playSwitch(enabled: boolean = true): void {
   const now = ctx.currentTime;
 
   if (prefs.soundStyle === 'mechanical') {
-    // Tactile mechanical keyboard switch click + bottom-out thud
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';
@@ -58,7 +57,6 @@ export function playSwitch(enabled: boolean = true): void {
     osc.start(now);
     osc.stop(now + 0.045);
   } else if (prefs.soundStyle === 'scifi') {
-    // Futuristic cybernetic pulse
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
@@ -75,7 +73,6 @@ export function playSwitch(enabled: boolean = true): void {
     osc.start(now);
     osc.stop(now + 0.06);
   } else if (prefs.soundStyle === 'soft') {
-    // Subtle, muted acoustic blip
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
@@ -120,7 +117,6 @@ export function playTurbo(): void {
   if (!ctx) return;
 
   const now = ctx.currentTime;
-  // Deep power-up sweep with resonant sub-harmonics
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
 
@@ -128,7 +124,6 @@ export function playTurbo(): void {
   osc.frequency.setValueAtTime(110, now);
   osc.frequency.exponentialRampToValueAtTime(880, now + 0.28);
 
-  // Filter sweep
   const filter = ctx.createBiquadFilter();
   filter.type = 'lowpass';
   filter.frequency.setValueAtTime(400, now);
@@ -152,7 +147,6 @@ export function playSuccess(): void {
   if (!ctx) return;
 
   const now = ctx.currentTime;
-  // Harmonious high-tech two-tone chime
   [0, 0.08].forEach((delay, idx) => {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();

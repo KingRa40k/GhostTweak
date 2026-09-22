@@ -357,7 +357,7 @@ pub fn run_match_turbo() -> Result<MatchTurboResult, String> {
         {
             use std::os::windows::process::CommandExt;
             let _ = std::process::Command::new("powercfg")
-                .args(["/setactive", "SCHEME_MIN"])
+                .args(["/setactive", "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"])
                 .creation_flags(0x08000000)
                 .output();
         }

@@ -26,7 +26,6 @@ export default function TrialLockoutModal({ trialStatus }: TrialLockoutModalProp
     try {
       await invoke('trigger_self_destruct');
     } catch {
-      // Fallback exit if invocation errors
       window.close();
     }
   };
