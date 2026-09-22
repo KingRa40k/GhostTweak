@@ -3,8 +3,7 @@ import {
   Trash2, Shield, Activity, Loader2, Cpu, Monitor, 
   Zap, HardDrive, Sparkles, CheckCircle2, Flame, User,
   Globe, RotateCw, ArrowRight, Crosshair, Gamepad2,
-  ShieldAlert, ShieldCheck, AlertTriangle, X, Laptop,
-  Gauge, Clock, Terminal, ChevronRight
+  ShieldAlert, ShieldCheck, AlertTriangle, X, Laptop
 } from 'lucide-react';
 import { invoke } from '../lib/tauri';
 import { SystemInfo, ScanResult, TweakInfo, MemoryStatus, FlushResult, SuperOptimizeResult, MatchTurboResult, HardwareTierInfo } from '../lib/types';
@@ -43,7 +42,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [ramFreedNotice, setRamFreedNotice] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [switchingProfile, setSwitchingProfile] = useState<string | null>(null);
-  const [customHz, setCustomHz] = useState<number | null>(null);
 
   const [prefs, setPrefs] = useState(getPreferences());
 
@@ -660,154 +658,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 </span>
               </>
             )}
-          </button>
-        </div>
-      </div>
-
-      {/* Frame Budget & Latency Engine */}
-      <div className="glass-card p-5 rounded-2xl border border-white/[0.08] relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-32 bg-ghost-cyan/[0.03] blur-3xl pointer-events-none" />
-        
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-ghost-cyan/10 border border-ghost-cyan/20 text-ghost-cyan">
-              <Gauge size={16} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                  {lang === 'ru' ? 'Кадровый бюджет и задержка ввода' : 'Frame Budget & Display Latency'}
-                </h3>
-                <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  0.50ms HPET
-                </span>
-              </div>
-              <p className="text-[11px] text-zinc-400 mt-0.5">
-                {lang === 'ru' 
-                  ? 'Интерактивный расчет окна отрисовки кадра и сглаживания микрофризов' 
-                  : 'Real-time calculation of frame delivery window and render pacing'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 bg-titanium-950/80 p-1 rounded-xl border border-white/[0.06] self-start sm:self-auto">
-            {[60, 144, 165, 240, 360, 540].map((hz) => {
-              const active = (customHz ?? (sysInfo?.refresh_rate || 240)) === hz;
-              return (
-                <button
-                  key={hz}
-                  onClick={() => {
-                    playClick();
-                    setCustomHz(hz);
-                  }}
-                  className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold transition-all ${
-                    active
-                      ? 'bg-ghost-cyan text-black shadow-sm'
-                      : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
-                  }`}
-                >
-                  {hz}Hz
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {(() => {
-          const activeHz = customHz ?? (sysInfo?.refresh_rate || 240);
-          const frameBudgetMs = (1000 / activeHz).toFixed(2);
-          const defaultWinTimerMs = 15.62;
-          const jitterSavedMs = Math.max(0.5, (defaultWinTimerMs - 0.5) * (60 / activeHz)).toFixed(1);
-
-          return (
-            <div className="space-y-3.5">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="hardware-well p-3.5 rounded-xl border border-white/[0.06] flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 uppercase">
-                    <span>{lang === 'ru' ? 'Окно кадра' : 'Frame Budget'}</span>
-                    <Clock size={12} className="text-ghost-cyan" />
-                  </div>
-                  <div className="mt-2 flex items-baseline gap-1.5">
-                    <span className="text-xl font-extrabold font-mono text-white tracking-tight">{frameBudgetMs}</span>
-                    <span className="text-xs font-mono text-zinc-400">ms</span>
-                  </div>
-                  <div className="text-[10px] text-zinc-500 font-mono mt-1">
-                    {lang === 'ru' ? `Цель для стабильных ${activeHz} FPS` : `Target for lock-in ${activeHz} FPS`}
-                  </div>
-                </div>
-
-                <div className="hardware-well p-3.5 rounded-xl border border-white/[0.06] flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 uppercase">
-                    <span>{lang === 'ru' ? 'Квантование таймера' : 'Timer Quantum'}</span>
-                    <Activity size={12} className="text-emerald-400" />
-                  </div>
-                  <div className="mt-2 flex items-baseline gap-1.5">
-                    <span className="text-xl font-extrabold font-mono text-emerald-400 tracking-tight">0.50</span>
-                    <span className="text-xs font-mono text-emerald-400/80">ms</span>
-                    <span className="text-[10px] font-mono text-zinc-500 line-through ml-1">15.6ms</span>
-                  </div>
-                  <div className="text-[10px] text-emerald-400/70 font-mono mt-1">
-                    {lang === 'ru' ? 'Мгновенный опрос мыши и потоков' : 'Microsecond thread dispatch'}
-                  </div>
-                </div>
-
-                <div className="hardware-well p-3.5 rounded-xl border border-white/[0.06] flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 uppercase">
-                    <span>{lang === 'ru' ? 'Снижение разброса 1%' : '1% Low Jitter Cut'}</span>
-                    <ShieldCheck size={12} className="text-amber-400" />
-                  </div>
-                  <div className="mt-2 flex items-baseline gap-1.5">
-                    <span className="text-xl font-extrabold font-mono text-amber-400 tracking-tight">-{jitterSavedMs}</span>
-                    <span className="text-xs font-mono text-amber-400/80">ms</span>
-                  </div>
-                  <div className="text-[10px] text-zinc-500 font-mono mt-1">
-                    {lang === 'ru' ? 'Без задержки планировщика ядер' : 'Reduced queue scheduling lag'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress visualizer of frame budget */}
-              <div className="hardware-well p-3 rounded-xl border border-white/[0.06] flex flex-col gap-2">
-                <div className="flex justify-between items-center text-[10px] font-mono">
-                  <span className="text-zinc-400">{lang === 'ru' ? 'Доля времени кадра в 1 секунде:' : 'Pacing slice per frame:'}</span>
-                  <span className="text-ghost-cyan font-bold">{frameBudgetMs} ms / frame ({activeHz} Hz)</span>
-                </div>
-                <div className="w-full h-2 rounded-full bg-white/[0.04] overflow-hidden p-0.5 border border-white/[0.06]">
-                  <div 
-                    className="h-full rounded-full bg-gradient-to-r from-ghost-cyan to-emerald-400 transition-all duration-300"
-                    style={{ width: `${Math.min(100, Math.max(12, (Number(frameBudgetMs) / 16.67) * 100))}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Global Hotkey Ribbon */}
-        <div className="mt-3.5 pt-3 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
-            </span>
-            <span className="text-[11px] font-mono text-zinc-300 font-medium">
-              {lang === 'ru' ? 'Внутриигровой триггер:' : 'In-game trigger:'}
-            </span>
-            <kbd className="px-2 py-0.5 text-[10px] font-mono font-bold bg-white/[0.08] text-amber-300 rounded border border-white/[0.12] shadow-sm">
-              Ctrl + Alt + F12
-            </kbd>
-            <span className="text-[10px] text-zinc-500 hidden md:inline">
-              ({lang === 'ru' ? 'сброс Standby RAM и ускорение прямо во время матча без Alt-Tab' : 'flush Standby RAM and boost in-match without Alt-Tab'})
-            </span>
-          </div>
-
-          <button
-            onClick={() => onNavigate?.('settings')}
-            className="text-[11px] font-mono text-ghost-cyan hover:underline flex items-center gap-1 self-end sm:self-auto"
-          >
-            <span>{lang === 'ru' ? 'Настройки автозапуска' : 'Autostart settings'}</span>
-            <ChevronRight size={12} />
           </button>
         </div>
       </div>
